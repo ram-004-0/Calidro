@@ -26,7 +26,8 @@ const Login = () => {
         localStorage.setItem("token", data.token);
         login(data.user); // This saves to localStorage "user" and updates state
 
-        navigate(data.role === "admin" ? "/admin-overview" : "/userhome");
+        const userRole = data.user.role;
+        navigate(userRole === "admin" ? "/admin-overview" : "/userhome");
       } else {
         alert(data.message || "Invalid credentials!");
       }
@@ -49,7 +50,8 @@ const Login = () => {
         localStorage.setItem("token", data.token);
         login(data.user); // 4. Critical: Ensure the server returns the user object
 
-        navigate(data.role === "admin" ? "/admin-overview" : "/userhome");
+        const userRole = data.user.role;
+        navigate(userRole === "admin" ? "/admin-overview" : "/userhome");
       } else {
         alert("Google Login failed on server.");
       }
