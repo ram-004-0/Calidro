@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { io } from "socket.io-client";
 //tangina talaga
-const API_URL = "calidro-production.up.railway.app";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const socket = io(API_URL);
 
 const ChatContext = createContext();
