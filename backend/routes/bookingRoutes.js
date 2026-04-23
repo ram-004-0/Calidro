@@ -317,7 +317,7 @@ router.put("/:id/update-payment", async (req, res) => {
 
     const remainingBalance = rows[0].total_amount - newTotalPaid;
 
-    const newStatus = remainingBalance <= 0 ? "Confirmed" : "Partial";
+    const newStatus = remainingBalance <= 0 ? "confirmed" : "partial";
 
     await db.query(
       "UPDATE booking SET amount_paid = ?, status = ? WHERE id = ?",
@@ -325,7 +325,7 @@ router.put("/:id/update-payment", async (req, res) => {
       [newTotalPaid, newStatus, id],
     );
 
-    if (newStatus === "Confirmed") {
+    if (newStatus === "confirmed") {
       const updatedBooking = {
         ...rows[0],
 

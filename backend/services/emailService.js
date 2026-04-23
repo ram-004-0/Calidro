@@ -40,6 +40,7 @@ const formatTime = (timeString) => {
 };
 
 const sendBookingConfirmation = async (booking) => {
+  console.log("Attempting to send email to:", booking.email);
   const balance = booking.total_amount - booking.amount_paid;
 
   const mailOptions = {
