@@ -1,8 +1,9 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
-  // --- ADD THIS LINE TO FORCE IPV4 ---
+  host: "smtp.gmail.com",
+  port: 587, // Try this if 465 fails
+  secure: false, // TLS
   family: 4,
   auth: {
     user: process.env.EMAIL_USER,
