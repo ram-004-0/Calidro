@@ -3,7 +3,7 @@ import { Ellipsis, X } from "lucide-react";
 import image1 from "../assets/Images/sabook.JPG";
 
 const API_URL =
-  "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
+  "https://calidro-production.up.railway.app" || "http://localhost:5000";
 
 const OverviewBook = () => {
   const [showMenu, setShowMenu] = useState(false);
