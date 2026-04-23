@@ -98,7 +98,7 @@ const UserHeader = () => {
     <>
       <div className="sticky top-0 z-40 w-full bg-[#433633] text-[#f4dfba] px-4 md:px-10">
         <div className="flex items-center justify-between h-20 md:h-24">
-          <h2 className="text-4xl md:text-5xl font-imperialscript shrink-0">
+          <h2 className="text-3xl md:text-5xl font-imperialscript shrink-0">
             Calidro
           </h2>
 
@@ -194,8 +194,30 @@ const UserHeader = () => {
                 </div>
               )}
             </div>
+            <button
+              className="lg:hidden p-1 text-[#f4dfba]"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
           </div>
         </div>
+        {isMobileMenuOpen && (
+          <div className="lg:hidden absolute top-full left-0 w-full bg-[#433633] border-t border-white/10 p-5 space-y-4 shadow-2xl z-50">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* --- EDIT PROFILE MODAL --- */}
