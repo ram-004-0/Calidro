@@ -3,16 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // 1. Import your hook
 import { GoogleLogin } from "@react-oauth/google"; // Use the component for easier ID Token access
 import LoginBg from "../assets/LoginBg.png";
+require("dotenv").config();
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth(); // 2. Destructure the login function
+  const API_URL = process.env.REACT_APP_API_URL;
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
