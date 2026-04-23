@@ -7,7 +7,13 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("❌ Nodemailer Configuration Error:", error);
+  } else {
+    console.log("✅ Nodemailer is ready to send emails");
+  }
+});
 // Helper to remove the 00:00:00 GMT part
 const formatDate = (dateString) => {
   if (!dateString) return "";
