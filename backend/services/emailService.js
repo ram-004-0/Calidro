@@ -1,6 +1,6 @@
 const { Resend } = require("resend");
 
-// Initialize Resend with your API Key
+// This line looks for the key in your Railway environment variables
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Helper to remove the 00:00:00 GMT part
