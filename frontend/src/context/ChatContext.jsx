@@ -8,7 +8,8 @@ import React, {
 import { io } from "socket.io-client";
 //tangina talaga
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-const socket = io(API_URL);
+// Example for your Socket connection
+const socket = io("https://calidro-production.up.railway.app");
 
 const ChatContext = createContext();
 

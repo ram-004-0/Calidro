@@ -1,7 +1,9 @@
 import axios from "axios";
 
-// Fallback to localhost if environment variable is missing
-const NGROK_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+//amf
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://calidro-production.up.railway.app/api";
 
 console.log("🚀 API connecting to:", NGROK_URL);
 

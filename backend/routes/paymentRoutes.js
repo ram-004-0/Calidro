@@ -45,17 +45,30 @@ router.post("/create-checkout", async (req, res) => {
   }
 });
 
+const crypto = require("crypto");
+
 router.post("/webhook", (req, res) => {
+  const signature = req.headers["paymongo-signature"];
+  const payload = JSON.stringify(req.body);
+
+  // Verify the signature to ensure the request is actually from PayMongo
+  const hmac = crypto.createHmac("sha256", process.env.PAYMONGO_WEBHOOK_SECRET);
+  const digest = hmac.update(payload).digest("hex");
+
+  if (signature !== digest) {
+    return res.status(401).send("Unauthorized");
+  }
+
   const event = req.body;
-  // Ensure this path matches the actual PayMongo webhook payload structure
   if (event.data?.attributes?.type === "checkout.session.payment.paid") {
     const bookingId = event.data.attributes.data.attributes.metadata.booking_id;
+
     db.query(
       "UPDATE booking SET status = 'paid' WHERE id = ?",
       [bookingId],
       (err) => {
         if (err) return res.status(500).send("DB Error");
-        res.status(200).send("OK");
+        return res.status(200).send("OK");
       },
     );
   } else {
