@@ -78,8 +78,8 @@ const OverviewVirtualTour = () => {
         Virtual Tour
       </h1>
 
-      <div className="flex gap-6 items-start">
-        <div className="relative bg-white rounded-2xl shadow-md p-4 w-105">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="relative bg-white rounded-2xl shadow-md p-4 w-full lg:max-w-md">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-gray-600">
               {uploadedImage
@@ -88,7 +88,7 @@ const OverviewVirtualTour = () => {
             </span>
             <button
               type="button"
-              className="p-1 rounded-full hover:bg-gray-200 transition"
+              className="p-1 rounded-full hover:bg-gray-200 transition shrink-0"
               onClick={() => setShowMenu(!showMenu)}
             >
               <Ellipsis size={18} />
@@ -96,7 +96,7 @@ const OverviewVirtualTour = () => {
           </div>
 
           {showMenu && (
-            <div className="absolute right-4 top-10 bg-white border border-[#4a3733] rounded shadow-lg w-42">
+            <div className="absolute right-4 top-12 z-10 bg-white border border-[#4a3733] rounded shadow-lg w-40">
               <button
                 className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded"
                 onClick={() => {
@@ -112,13 +112,13 @@ const OverviewVirtualTour = () => {
           <img
             src={uploadedImage || preview || image1}
             alt="Virtual Tour"
-            className="rounded-xl w-full h-50 object-cover"
+            className="rounded-xl w-full h-auto aspect-video object-cover"
           />
         </div>
 
         {showModal && (
           <div
-            className="bg-white p-6 rounded-2xl shadow-md w-80 shrink-0 relative"
+            className="bg-white p-6 rounded-2xl shadow-md w-full lg:w-80 relative"
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
@@ -132,17 +132,17 @@ const OverviewVirtualTour = () => {
             <h2 className="text-xl font-bold mb-4">Upload New Photo</h2>
 
             <div
-              className="border-2 border-dashed border-gray-400 p-6 text-center mb-4 cursor-pointer"
+              className="border-2 border-dashed border-gray-400 p-6 text-center mb-4 cursor-pointer hover:border-[#4a3733] transition"
               onClick={() => fileInputRef.current.click()}
             >
               {preview ? (
                 <img
                   src={preview}
                   alt="Preview"
-                  className="mx-auto rounded mb-2 max-h-48 object-cover"
+                  className="mx-auto rounded mb-2 max-h-40 object-cover"
                 />
               ) : (
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-sm">
                   Drag & drop an image here, or click to select
                 </p>
               )}
@@ -158,7 +158,7 @@ const OverviewVirtualTour = () => {
             <button
               onClick={handleUpload}
               disabled={!selectedFile || uploading}
-              className={`mt-2 w-full px-4 py-2 rounded text-white ${
+              className={`w-full px-4 py-2 rounded text-white font-semibold transition ${
                 selectedFile
                   ? "bg-[#4a3733] hover:bg-[#3a2c28]"
                   : "bg-gray-400 cursor-not-allowed"
