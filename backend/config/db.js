@@ -9,12 +9,10 @@ const pool = mysql.createPool({
   port: 24097,
   ssl: { rejectUnauthorized: false },
 });
-// Add this temporarily above the pool creation
 console.log("DEBUG: Attempting DB connect with:", {
   host: process.env.DB_HOST,
   port: process.env.PORT,
   user: process.env.DB_USER,
-  // DO NOT log the password, but log if it exists
   hasPassword: !!process.env.DB_PASSWORD,
 });
 module.exports = pool;
