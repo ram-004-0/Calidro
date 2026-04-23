@@ -8,10 +8,7 @@ const app = express();
 const bookingRoutes = require("./routes/bookingRoutes");
 const authRoutes = require("./routes/authRoutes");
 
-const allowedOrigins = [
-  "https://calidro.vercel.app",
-  "http://localhost:5173", // Keep for local development
-];
+const allowedOrigins = ["https://calidro.vercel.app"];
 // --- 1. CORS CONFIG (MUST BE AT THE TOP) ---
 app.use(
   cors({

@@ -4,9 +4,6 @@ const jwt = require("jsonwebtoken");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-/**
- * Handle Traditional Username/Password Login
- */
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 
