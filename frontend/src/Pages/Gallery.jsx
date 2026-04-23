@@ -9,7 +9,7 @@ import image4 from "../assets/Images/lilith.JPG";
 import image5 from "../assets/Images/debut.JPG";
 import image6 from "../assets/Images/review1.JPG";
 import image7 from "../assets/Images/review2.JPG";
-import image8 from "../assets/Images/review3.JPG";
+import image8 from "../assets/Images/review3.jpg";
 import image9 from "../assets/Images/review4.JPG";
 
 const Gallery = () => {
