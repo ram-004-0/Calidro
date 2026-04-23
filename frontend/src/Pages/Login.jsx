@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // 1. Import your hook
 import { GoogleLogin } from "@react-oauth/google"; // Use the component for easier ID Token access
-import LoginBg from "../Assets/LoginBg.png";
+import LoginBg from "../assets/LoginBg.png";
 
 const Login = () => {
   const [username, setUsername] = useState("");
