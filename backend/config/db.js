@@ -1,11 +1,6 @@
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
-// If these values are missing, log them so we can see which one is undefined
-if (!process.env.DB_HOST || !process.env.DB_PORT) {
-  console.error("❌ MISSING DATABASE ENVIRONMENT VARIABLES!");
-}
-
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
