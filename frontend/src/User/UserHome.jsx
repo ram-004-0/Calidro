@@ -2,6 +2,7 @@ import { useState } from "react";
 import UserHeader from "../Components/UserHeader";
 import Sample from "../Props/sample.jsx";
 import UserRatingCard from "../Props/UserRatingCard.jsx";
+
 const UserHome = () => {
   const staticReviews = [
     {
@@ -11,10 +12,7 @@ const UserHome = () => {
       comment:
         "The venue is absolutely stunning. Perfect for our wedding! The staff was very helpful.",
       created_at: "2 weeks ago",
-      review_images: [
-        "https://via.placeholder.com/150",
-        "https://via.placeholder.com/150",
-      ],
+      review_images: [],
     },
     {
       id: 2,
@@ -41,7 +39,7 @@ const UserHome = () => {
       comment:
         "Amazing experience! The virtual tour was exactly like the real thing.",
       created_at: "3 days ago",
-      review_images: ["https://via.placeholder.com/150"],
+      review_images: [],
     },
   ];
 
@@ -107,7 +105,7 @@ const UserHome = () => {
               Ratings
             </h1>
 
-            {/* --- Summary Chart --- */}
+            {/* --- User Ratings after the event --- */}
             <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-16 mb-12 pb-12 border-b border-gray-100">
               <div className="flex flex-col items-center justify-center border-r border-gray-100 pr-8">
                 <span className="text-8xl font-bold text-[#4a3733]">5.0</span>

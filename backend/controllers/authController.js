@@ -11,9 +11,11 @@ exports.login = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const [rows] = await db.execute("SELECT * FROM user WHERE username = ?", [
-      username,
-    ]);
+    // Explicitly select phone_number and address
+    const [rows] = await db.execute(
+      "SELECT id, username, email, password, role, phone_number, address FROM user WHERE username = ?",
+      [username],
+    );
 
     if (rows.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -21,7 +23,6 @@ exports.login = async (req, res) => {
 
     const user = rows[0];
 
-    // Plain text check (Update to bcrypt.compare(password, user.password) later!)
     if (password !== user.password) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -39,6 +40,8 @@ exports.login = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
+        phone_number: user.phone_number, // Now included
+        address: user.address, // Now included
       },
     });
   } catch (error) {
@@ -51,20 +54,21 @@ exports.login = async (req, res) => {
  * Handle Google OAuth Login
  */
 exports.googleLogin = async (req, res) => {
-  const { idToken } = req.body; // Ensure this matches the frontend body key
+  const { idToken } = req.body;
 
   try {
     const ticket = await client.verifyIdToken({
-      idToken: idToken, // The token from frontend
+      idToken: idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
     const { email, name } = payload;
 
-    // Check if user exists
-    let [users] = await db.execute("SELECT * FROM user WHERE email = ?", [
-      email,
-    ]);
+    // Select existing user data
+    let [users] = await db.execute(
+      "SELECT id, username, email, role, phone_number, address FROM user WHERE email = ?",
+      [email],
+    );
     let user = users[0];
 
     if (!user) {
@@ -73,7 +77,16 @@ exports.googleLogin = async (req, res) => {
         "INSERT INTO user (username, email, role) VALUES (?, ?, 'user')",
         [name, email],
       );
-      user = { id: result.insertId, role: "user" };
+
+      // Fetch the newly created user to get the full profile
+      user = {
+        id: result.insertId,
+        username: name,
+        email: email,
+        role: "user",
+        phone_number: null,
+        address: null,
+      };
     }
 
     const token = jwt.sign(
@@ -89,6 +102,8 @@ exports.googleLogin = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
+        phone_number: user.phone_number,
+        address: user.address,
       },
     });
   } catch (error) {

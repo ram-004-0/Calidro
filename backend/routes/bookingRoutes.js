@@ -1,17 +1,429 @@
-const express = require("express");
-const router = express.Router();
-const bookingController = require("../controllers/bookingController");
+console.log("🔥 FILE LOADED: bookingRoutes.js");
 
-// Middleware to log all booking route requests
+const express = require("express");
+
+const router = express.Router();
+
 router.use((req, res, next) => {
-  console.log(`[Booking Route] ${req.method} ${req.originalUrl}`);
+  // This version tells us EXACTLY what the URL looks like inside this router
+
+  console.log(`📍 ROUTER INBOUND: ${req.method} ${req.url}`);
+
   next();
 });
 
-// Paths:
-// POST /api/bookings/create
-// GET /api/bookings/details/:id
-router.post("/create", bookingController.createBooking);
-router.get("/details/:id", bookingController.getBookingDetails);
+const axios = require("axios");
+
+const db = require("../config/db");
+
+const { sendBookingConfirmation } = require("../services/emailService");
+
+// Helper for SQL Queries
+
+const query = async (sql, params) => {
+  try {
+    console.log("DEBUG: Executing SQL:", sql);
+
+    const [results] = await db.query(sql, params);
+
+    console.log("DEBUG: SQL Success!");
+
+    return results;
+  } catch (err) {
+    console.error("DEBUG: SQL ERROR:", err);
+
+    throw err;
+  }
+};
+
+// Helper to format time for MySQL Time column
+
+const formatTimeTo24H = (timeStr) => {
+  if (!timeStr) return "00:00:00";
+
+  if (/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+
+  const [time, modifier] = timeStr.split(" ");
+
+  let [hours, minutes] = time.split(":");
+
+  if (!minutes) minutes = "00";
+
+  let hoursNum = parseInt(hours, 10);
+
+  if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
+
+  if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
+
+  return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
+};
+
+//testing langch
+
+router.post("/test-post", (req, res) => {
+  res.json({ message: "POST matching is working!" });
+});
+
+// 1. Create New Booking and Launch PayMongo
+
+router.post("/create-booking-and-checkout", async (req, res) => {
+  console.log("1. Route Triggered. Event:", req.body.eventName);
+
+  try {
+    const {
+      userId,
+      eventName,
+      eventType,
+      eventDate,
+      time,
+      duration,
+      guests,
+      ingress,
+      egress,
+      totalAmount,
+      amount_paid,
+      paymentType,
+      payment_methods,
+    } = req.body;
+
+    // --- STEP 1: Fetch User Details from the 'user' table ---
+    // We do this to ensure we have the correct phone, address, and email
+    const [userData] = await query(
+      "SELECT username, email, phone_number, address FROM user WHERE id = ?",
+      [userId],
+    );
+
+    if (!userData) {
+      return res
+        .status(404)
+        .json({ error: "User not found. Please log in again." });
+    }
+
+    // --- STEP 2: Prepare the Booking Data ---
+    const bookingData = {
+      user_id: userId,
+      username: userData.username, // From 'user' table
+      email: userData.email, // From 'user' table
+      phone_number: userData.phone_number, // From 'user' table
+      address: userData.address, // From 'user' table
+      event_name: eventName,
+      event_type: eventType,
+      event_date: eventDate,
+      event_time: formatTimeTo24H(time),
+      event_duration: duration,
+      ingress_time: ingress ? `${ingress}:00:00` : "02:00:00",
+      egress_time: egress ? `${egress}:00:00` : "01:00:00",
+      guests: guests || 0,
+      total_amount: totalAmount,
+      amount_paid: amount_paid || 0,
+      payment_type: paymentType,
+      status: "pending",
+    };
+
+    console.log("2. Attempting Database Insert for User:", userData.username);
+    const result = await query("INSERT INTO booking SET ?", [bookingData]);
+    const bookingId = result.insertId;
+
+    // --- STEP 3: PayMongo Integration ---
+    const secretKey = process.env.PAYMONGO_SECRET_KEY;
+    const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
+
+    const paymongoResponse = await axios.post(
+      "https://api.paymongo.com/v1/checkout_sessions",
+      {
+        data: {
+          attributes: {
+            billing: {
+              email: userData.email,
+              name: userData.username,
+              phone: userData.phone_number,
+            },
+            line_items: [
+              {
+                currency: "PHP",
+                amount: Math.round(amount_paid * 100),
+                name: `Calidro Booking: ${eventName}`,
+                quantity: 1,
+              },
+            ],
+            payment_method_types: payment_methods,
+            success_url: `${process.env.FRONTEND_URL}/ReviewDetails?bookingId=${bookingId}`,
+            cancel_url: `${process.env.FRONTEND_URL}/userbook`,
+            reference_number: bookingId.toString(),
+          },
+        },
+      },
+      {
+        headers: {
+          Authorization: authHeader,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    res.status(200).json({
+      bookingId,
+      checkout_url: paymongoResponse.data.data.attributes.checkout_url,
+    });
+  } catch (error) {
+    console.error("❌ FINAL ROUTE ERROR:", error.message);
+    res.status(500).json({
+      error: "Process failed",
+      details: error.response?.data?.details || error.message,
+    });
+  }
+});
+
+// 2. Fetch all bookings for Admin/User View
+
+router.get("/my-bookings", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM booking ORDER BY event_date DESC",
+    );
+
+    const formatted = rows.map((b) => ({
+      id: b.id,
+
+      eventName: b.event_name,
+
+      userName: b.username,
+
+      email: b.email,
+
+      contactNo: b.phone_number,
+
+      address: b.address,
+
+      typeOfEvent: b.event_type,
+
+      duration: `${b.event_duration} hrs`,
+
+      ingress: `${parseInt(b.ingress_time || 0)} hr`,
+
+      egress: `${parseInt(b.egress_time || 0)} hr`,
+
+      noOfGuests: b.guests,
+
+      total: b.total_amount,
+
+      paid: b.amount_paid,
+      paymentType: b.payment_type,
+
+      bookingStatus: b.status,
+
+      date: b.event_date,
+
+      time: b.event_time,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Update Status and Send Email
+
+router.put("/update-status/:id", async (req, res) => {
+  const { status } = req.body;
+  const { id } = req.params;
+
+  // 1. Safety Check: Is the ID valid?
+  if (!id || id === "undefined") {
+    return res.status(400).json({ error: "Booking ID is required" });
+  }
+
+  try {
+    // 2. Get the current booking
+    const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Booking not found in DB" });
+    }
+
+    const booking = rows[0];
+
+    // 3. Update the status
+    await db.query("UPDATE booking SET status = ? WHERE id = ?", [status, id]);
+
+    // 4. Email Logic (Wrapped in its own try/catch so it doesn't crash the 200 response)
+    if (booking.status !== "confirmed" && status === "confirmed") {
+      try {
+        await sendBookingConfirmation(booking);
+        console.log("📧 Email sent successfully");
+      } catch (emailErr) {
+        console.error("📧 Email failed but DB was updated:", emailErr.message);
+        // We don't return error here because the DB update actually worked!
+      }
+    }
+
+    res.status(200).json({ message: "Status updated successfully" });
+  } catch (err) {
+    console.error("❌ BACKEND CRASH:", err);
+    res
+      .status(500)
+      .json({ error: "Database update failed", details: err.message });
+  }
+});
+
+// 4. Get specific booking details
+
+router.get("/details/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [results] = await db.query("SELECT * FROM booking WHERE id = ?", [
+      id,
+    ]);
+
+    if (results.length === 0)
+      return res.status(404).json({ error: "Booking not found" });
+
+    res.status(200).json(results[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 5. Get confirmed dates only (for calendar blocking)
+
+router.get("/all", async (req, res) => {
+  try {
+    const [results] = await db.query(
+      "SELECT event_date FROM booking WHERE status = 'confirmed'",
+    );
+
+    res.status(200).json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+});
+
+// 6. Manual Payment Update (Admin)
+
+router.put("/:id/update-payment", async (req, res) => {
+  const { id } = req.params;
+
+  const { paymentAmount } = req.body;
+
+  try {
+    const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Booking not found" });
+
+    const newTotalPaid = rows[0].amount_paid + parseFloat(paymentAmount);
+
+    const remainingBalance = rows[0].total_amount - newTotalPaid;
+
+    const newStatus = remainingBalance <= 0 ? "Confirmed" : "Partial";
+
+    await db.query(
+      "UPDATE booking SET amount_paid = ?, status = ? WHERE id = ?",
+
+      [newTotalPaid, newStatus, id],
+    );
+
+    if (newStatus === "Confirmed") {
+      const updatedBooking = {
+        ...rows[0],
+
+        amount_paid: newTotalPaid,
+
+        status: newStatus,
+      };
+
+      await sendBookingConfirmation(updatedBooking);
+    }
+
+    res.json({ success: true, remainingBalance });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. Settle Existing Balance via PayMongo
+
+router.post("/checkout-balance", async (req, res) => {
+  const { bookingId, payment_methods } = req.body;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE id = ?",
+
+      [bookingId],
+    );
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Booking not found" });
+
+    const booking = rows[0];
+
+    const actualBalance = booking.total_amount - booking.amount_paid;
+
+    if (actualBalance <= 0) {
+      return res
+
+        .status(400)
+
+        .json({ details: "This booking is already fully paid." });
+    }
+
+    const secretKey = process.env.PAYMONGO_SECRET_KEY;
+
+    const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
+
+    const response = await axios.post(
+      "https://api.paymongo.com/v1/checkout_sessions",
+
+      {
+        data: {
+          attributes: {
+            billing: { email: booking.email },
+
+            line_items: [
+              {
+                name: `Balance: ${booking.event_name}`,
+
+                amount: Math.round(actualBalance * 100),
+
+                currency: "PHP",
+
+                quantity: 1,
+              },
+            ],
+
+            payment_method_types: payment_methods,
+
+            metadata: {
+              bookingId: bookingId.toString(),
+
+              type: "balance_update",
+            },
+
+            success_url: `${process.env.FRONTEND_URL}/ReviewDetails?bookingId=${bookingId}`,
+
+            cancel_url: `${process.env.FRONTEND_URL}/userbook`,
+          },
+        },
+      },
+
+      {
+        headers: {
+          Authorization: authHeader,
+
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    res.json({ checkout_url: response.data.data.attributes.checkout_url });
+  } catch (err) {
+    console.error("PayMongo Balance Error:", err.response?.data || err.message);
+
+    res.status(500).json({ details: err.message });
+  }
+});
 
 module.exports = router;

@@ -1,16 +1,28 @@
 import React, { useState } from "react";
 import AdminHeader from "../Components/AdminHeader";
 import AdminGalleryCard from "../Props/AdminGalleryCard";
-
+//static images
+import image1 from "../assets/Images/16.png";
+import image2 from "../assets/Images/15.png";
+import image3 from "../assets/Images/debut.JPG";
 const AdminGallery = () => {
   const [events, setEvents] = useState([
     {
       id: 1,
-      title: "Title",
+      title: "Leni Robredo's Signing",
       date: "2024-05-20",
-      type: "Wedding",
-      description: "Garden ceremony.",
-      images: ["Img 1", "Img 2"],
+      type: "Corporate",
+      description:
+        "Former Vice President Leni Robredo delivered an engaging talk, sharing her insights and experiences, followed by a book signing afterwards.",
+      images: [image2, image1],
+    },
+    {
+      id: 2,
+      title: "Sofia's Debut",
+      date: "2024-06-12",
+      type: "Birthday",
+      description: "18th birthday celebration at the grand ballroom.",
+      images: [image3],
     },
   ]);
 

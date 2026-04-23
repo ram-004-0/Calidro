@@ -34,6 +34,8 @@ exports.createBooking = async (req, res) => {
     eventDate,
     time,
     duration,
+    ingress_time,
+    egress_time,
     guests,
     totalAmount,
     amount_paid,
@@ -50,7 +52,9 @@ exports.createBooking = async (req, res) => {
     event_type: eventType, // Changed from eventType
     event_date: eventDate, // Changed from eventDate
     event_time: formatTimeTo24H(time), // Use the helper!
-    event_duration: duration, // Changed from eventDuration
+    event_duration: duration,
+    ingress: ingress_time,
+    egress: egress_time,
     guests: guests,
     total_amount: totalAmount, // Changed from totalAmount
     amount_paid: amount_paid || 0,

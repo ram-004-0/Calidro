@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Ellipsis, X } from "lucide-react";
+import image1 from "../assets/Images/sabook.JPG";
 
 const OverviewBook = () => {
   const [showMenu, setShowMenu] = useState(false);
@@ -80,9 +81,7 @@ const OverviewBook = () => {
         <div className="relative bg-white rounded-2xl shadow-md p-4 w-105">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-gray-600">
-              {uploadedImage
-                ? uploadedImage.split("/").pop()
-                : "bookbg.jpg"}
+              {uploadedImage ? uploadedImage.split("/").pop() : "bookbg.jpg"}
             </span>
             <button
               type="button"
@@ -110,7 +109,7 @@ const OverviewBook = () => {
 
           {/* Main Image */}
           <img
-            src={uploadedImage || preview || "/path/to/bookbg.jpg"} // default image
+            src={uploadedImage || preview || image1} // default image
             alt="Book Overview"
             className="rounded-xl w-full h-50 object-cover"
           />

@@ -15,7 +15,7 @@ const StepByStep = ({ currentStep = 1 }) => {
 
   return (
     <div className="w-full pb-2 px-7">
-      <div className="grid grid-cols-5 gap-6 items-center w-full uppercase font-medium px-3">
+      <div className="grid grid-cols-4 gap-6 items-center w-full uppercase font-medium px-3">
         {/* Back Button */}
         <Link to="/userbook" className={backButtonStyle}>
           <ChevronLeft strokeWidth={3} size={20} />
@@ -26,9 +26,6 @@ const StepByStep = ({ currentStep = 1 }) => {
 
         {/* Step 2 */}
         <div className={`${stepStyle} ${getStepStyle(2)}`}>Step 2</div>
-
-        {/* Step 3 */}
-        <div className={`${stepStyle} ${getStepStyle(3)}`}>Step 3</div>
 
         <div />
       </div>

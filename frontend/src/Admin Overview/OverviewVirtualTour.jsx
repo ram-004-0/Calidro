@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Ellipsis, X } from "lucide-react";
+import image1 from "../assets/Images/savt.JPG";
 
 const OverviewVirtualTour = () => {
   const [showMenu, setShowMenu] = useState(false);
@@ -37,7 +38,7 @@ const OverviewVirtualTour = () => {
     const xhr = new XMLHttpRequest();
     xhr.open(
       "POST",
-      `http://localhost:5000/api/images/upload?category=${category}`
+      `http://localhost:5000/api/images/upload?category=${category}`,
     );
 
     xhr.upload.onprogress = (e) => {
@@ -110,7 +111,7 @@ const OverviewVirtualTour = () => {
           )}
 
           <img
-            src={uploadedImage || preview || "/path/to/default-virtualtour.jpg"}
+            src={uploadedImage || preview || image1}
             alt="Virtual Tour"
             className="rounded-xl w-full h-50 object-cover"
           />

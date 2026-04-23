@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import UserHeader from "../Components/UserHeader";
 import UserGalleryCard from "../Props/UserGalleryCard";
+//static images
+import image1 from "../assets/Images/16.png";
+import image2 from "../assets/Images/15.png";
+import image3 from "../assets/Images/debut.JPG";
 
 const UserGallery = () => {
   const [events] = useState([
@@ -9,8 +13,9 @@ const UserGallery = () => {
       title: "Leni Robredo's Signing",
       date: "2024-05-20",
       type: "Corporate",
-      description: "Book signing and meet and greet event.",
-      images: ["Image 1", "Image 2", "Image 3"],
+      description:
+        "Former Vice President Leni Robredo delivered an engaging talk, sharing her insights and experiences, followed by a book signing afterwards.",
+      images: [image2, image1],
     },
     {
       id: 2,
@@ -18,9 +23,10 @@ const UserGallery = () => {
       date: "2024-06-12",
       type: "Birthday",
       description: "18th birthday celebration at the grand ballroom.",
-      images: ["Image 1", "Image 2", "Image 3"],
+      images: [image3],
     },
   ]);
+  // ... rest of component
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full overflow-x-hidden">

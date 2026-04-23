@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import bookbg from "../Assets/bookbg.jpg";
+import bookbg from "../Assets/Images/sabook.jpg";
 
 const Book = () => {
   return (
@@ -12,11 +12,11 @@ const Book = () => {
 
       <Link
         to="/login"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10
+        className="absolute bottom-15 left-1/2 -translate-x-1/2 z-10
                    bg-white/80 text-black px-6 py-3 rounded-lg
                    hover:bg-white transition font-medium uppercase"
       >
-        Book Now
+        Book Now!
       </Link>
     </section>
   );

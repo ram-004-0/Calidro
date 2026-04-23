@@ -1,97 +1,222 @@
+import React, { useState, useEffect } from "react";
 import AdminHeader from "../Components/AdminHeader";
 
 const AdminBook = () => {
+  const [bookings, setBookings] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+
+  // FETCH DATA FROM BACKEND
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/bookings/my-bookings",
+        );
+        if (!response.ok) throw new Error("Network response was not ok");
+        const data = await response.json();
+        setBookings(data);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  const getStatusStyles = (status) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return "bg-emerald-500 text-white";
+      case "confirmed":
+        return "bg-blue-500 text-white";
+      case "pending":
+        return "bg-yellow-400 text-black";
+      case "cancelled":
+        return "bg-red-500 text-white";
+      default:
+        return "bg-gray-200 text-gray-700";
+    }
+  };
+
+  const getPaymentStatusStyles = (paid, total) => {
+    if (paid >= total) return "bg-emerald-500 text-white";
+    if (paid > 0) return "bg-amber-400 text-black";
+    return "bg-red-500 text-white";
+  };
+
   return (
-    <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full">
+    <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full relative">
       <AdminHeader />
-      <section className="relative w-full flex-1">
-        {/* ================= Container ================= */}
-        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl p-6 h-140 flex flex-col">
+
+      {/* MODAL OVERLAY */}
+      {selectedBooking && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div className="bg-[#4a3733] p-6 flex justify-between items-center text-white">
+              <h2 className="text-xl font-bold uppercase tracking-wide">
+                Event Details
+              </h2>
+              <button
+                onClick={() => setSelectedBooking(null)}
+                className="hover:bg-white/20 rounded-full p-1 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content (Kept as you requested) */}
+            <div className="p-8 grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
+              <div className="col-span-2 border-b pb-2">
+                <p className="text-gray-400 font-bold uppercase text-[10px]">
+                  Address
+                </p>
+                <p className="text-lg font-semibold">
+                  {selectedBooking.address}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-bold uppercase text-[10px]">
+                  Duration
+                </p>
+                <p className="font-medium text-gray-700">
+                  {selectedBooking.duration}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-bold uppercase text-[10px]">
+                  Guests
+                </p>
+                <p className="font-medium text-gray-700">
+                  {selectedBooking.noOfGuests} Pax
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-bold uppercase text-[10px]">
+                  Ingress
+                </p>
+                <p className="font-medium text-gray-700">
+                  {selectedBooking.ingress}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-bold uppercase text-[10px]">
+                  Egress
+                </p>
+                <p className="font-medium text-gray-700">
+                  {selectedBooking.egress}
+                </p>
+              </div>
+              <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-100 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-gray-400 font-bold uppercase text-[10px]">
+                    Total Amount
+                  </p>
+                  <p className="font-bold">
+                    ₱{selectedBooking.total?.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-400 font-bold uppercase text-[10px]">
+                    Balance
+                  </p>
+                  <p className="font-bold text-red-500">
+                    ₱
+                    {(
+                      selectedBooking.total - selectedBooking.paid
+                    )?.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-gray-100 flex justify-end">
+              <button
+                onClick={() => setSelectedBooking(null)}
+                className="bg-[#4a3733] text-white px-8 py-2 rounded-full font-bold uppercase text-xs hover:opacity-90 transition-opacity"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TABLE SECTION */}
+      <section className="flex-1 flex flex-col items-center p-4 md:p-0">
+        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 h-[600px] flex flex-col">
           <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
             Reservation Requests
           </h1>
 
-          {/* ================= Search ================= */}
-          <div className="grid grid-cols-3 gap-10 mb-4">
-            <select className="bg-white border border-gray-300 rounded-full p-3">
-              <option>Type of event</option>
-              <option>Wedding</option>
-              <option>Birthday</option>
-              <option>Corporate</option>
-            </select>
-            <input
-              className="bg-white border border-gray-300 rounded-full p-3"
-              placeholder="Search"
-            />
-            <select className="bg-white border border-gray-300 rounded-full p-3">
-              <option>Sort by</option>
-              <option>Date</option>
-              <option>Type</option>
-            </select>
-          </div>
-
-          {/* ================= Book History ================= */}
-          <div className="bg-white border border-white rounded-lg shadow-lg overflow-y-auto flex-1 text-[#4a3733] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-            <table className="table-fixed w-full text-left">
-              <thead className="font-medium sticky top-0 bg-white z-10">
-                <tr className="border-b border-gray-200">
-                  <th className="py-3 px-2">ID</th>
-                  <th className="py-3 px-2">Name</th>
-                  <th className="py-3 px-2">Event</th>
-                  <th className="py-3 px-2">Date & Time</th>
-                  <th className="py-3 px-2">Pax</th>
-                  <th className="py-3 px-2">Event</th>
-                  <th className="py-3 px-2">Payment Status</th>
-                  <th className="py-3 px-2">Booking Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Example rows */}
-                {[...Array(5)].map((_, i) => (
-                  <tr key={i} className="border-b border-gray-200">
-                    <td className="py-8 px-2"></td>
-                    <td className="py-8 px-2"></td>
-                    <td className="py-8 px-2"></td>
-                    <td className="py-8 px-2"></td>
-                    <td className="py-8 px-2"></td>
-                    <td className="py-8 px-2 flex flex-col items-start gap-2">
-                      Wedding
-                      <button className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-300">
-                        ••• View Details
-                      </button>
-                    </td>
-                    <td className="py-8 px-2">
-                      <span className="bg-yellow-300 text-[#4a3733] px-3 py-1 rounded-full text-sm">
-                        Partially Paid
-                      </span>
-                      <br />
-                      <a
-                        href="#"
-                        className="text-blue-600 text-sm hover:underline"
-                      >
-                        Update Payment
-                      </a>
-                    </td>
-                    <td className="py-8 px-2">
-                      <span className="bg-yellow-300 text-[#4a3733] px-3 py-1 rounded-full text-sm">
-                        Pending
-                      </span>
-                    </td>
+          {/* Table Wrapper: flex-1 ensures it fills available space, overflow-hidden keeps it contained */}
+          <div className="bg-white border rounded-lg shadow-lg flex-1 overflow-hidden flex flex-col">
+            {/* The table container: This is the part that scrolls */}
+            <div className="overflow-y-auto flex-1">
+              <table className="table-fixed w-full text-left border-collapse">
+                {/* Header is sticky and stays at the top */}
+                <thead className="sticky top-0 bg-white z-10 border-b shadow-sm">
+                  <tr>
+                    <th className="py-4 px-2 w-1/6">Name</th>
+                    <th className="py-4 px-2 w-1/8">Contact</th>
+                    <th className="py-4 px-2 w-1/6">Email</th>
+                    <th className="py-4 px-2 w-1/6">Event Name</th>
+                    <th className="py-4 px-2 w-1/6">Date & Time</th>
+                    <th className="py-4 px-2 w-1/8">Type of Event</th>
+                    <th className="py-4 px-2 w-1/8">Payment Type</th>
+                    <th className="py-4 px-2 w-1/8">Booking Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y">
+                  {bookings.map((b) => (
+                    <tr key={b.id} className="hover:bg-gray-50">
+                      <td className="py-4 px-2 truncate">{b.userName}</td>
+                      <td className="py-4 px-2 truncate">{b.contactNo}</td>
+                      <td className="py-4 px-2 truncate text-sm">{b.email}</td>
+                      <td className="py-4 px-2 truncate">{b.eventName}</td>
+                      <td className="py-4 px-2 text-sm">
+                        {new Date(b.date).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                        <br />
+                        {new Date(`1970-01-01T${b.time}`).toLocaleTimeString(
+                          "en-US",
+                          {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          },
+                        )}
+                      </td>
+                      <td className="py-4 px-2">
+                        {b.typeOfEvent}
+                        <button
+                          onClick={() => setSelectedBooking(b)}
+                          className="block text-blue-600 text-xs mt-1 hover:underline"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span className="bg-gray-200 text-gray-800 rounded-full px-3 py-1 text-[10px] font-bold uppercase">
+                          {b.paymentType || "N/A"}
+                        </span>
+                      </td>
+                      <td className="py-4 px-2">
+                        <span
+                          className={`rounded-full px-3 py-1 text-[10px] font-bold ${getStatusStyles(b.bookingStatus)}`}
+                        >
+                          {b.bookingStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
-
-      <div className="w-full">
-        <div className="flex justify-end text-[#4a3733] uppercase font-medium px-7 py-4">
-          <button className="bg-[#f4dfba] hover:bg-white hover:text-[#4a3733] px-10 py-3 rounded-full text-sm font-bold uppercase">
-            Save
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

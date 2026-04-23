@@ -24,6 +24,8 @@ import OverviewRatings from "./Admin Overview/OverviewRatings";
 import OverviewEvents from "./Admin Overview/OverviewEvents";
 import OverviewBook from "./Admin Overview/OverviewBook";
 import OverviewContact from "./Admin Overview/OverviewContact";
+import ReviewDetails from "./Booking Process/ReviewDetails";
+import PaymentPage from "./Booking Process/PaymentPage";
 
 import RootLayout from "./RootLayout";
 
@@ -34,25 +36,25 @@ const router = createBrowserRouter(
     <Route path="/" element={<RootLayout />}>
       <Route index element={<Landing />} />
       <Route path="login" element={<Login />} />
-
       <Route path="userhome" element={<UserHome />} />
       <Route path="user-virtual-tour" element={<UserVirtualTour />} />
       <Route path="usergallery" element={<UserGallery />} />
       <Route path="userbook" element={<UserBook />} />
       <Route path="booking" element={<Booking />} />
-
       <Route path="admin-overview" element={<AdminOverview />} />
       <Route path="admin-home" element={<AdminHome />} />
       <Route path="admin-gallery" element={<AdminGallery />} />
       <Route path="admin-book" element={<AdminBook />} />
       <Route path="admin-reports" element={<AdminReports />} />
-
       <Route path="overview-aboutUs" element={<OverviewAboutUs />} />
       <Route path="overview-virtualTour" element={<OverviewVirtualTour />} />
       <Route path="overview-ratings" element={<OverviewRatings />} />
       <Route path="overview-events" element={<OverviewEvents />} />
       <Route path="overview-book" element={<OverviewBook />} />
       <Route path="overview-contact" element={<OverviewContact />} />
+
+      <Route path="/ReviewDetails" element={<ReviewDetails />} />
+      <Route path="/payment" element={<PaymentPage />} />
     </Route>,
   ),
 );

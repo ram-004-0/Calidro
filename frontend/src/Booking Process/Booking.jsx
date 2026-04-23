@@ -31,13 +31,6 @@ const Booking = () => {
               onNext={handleNextStep}
             />
           )}
-
-          {step === 3 && (
-            <ReviewDetails
-              bookingData={bookingData}
-              onBack={() => setStep(2)}
-            />
-          )}
         </div>
       </section>
     </div>

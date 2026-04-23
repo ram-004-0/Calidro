@@ -93,12 +93,6 @@ const Login = () => {
             />
           </div>
 
-          <div className="flex items-center gap-3 text-gray-400 text-sm">
-            <div className="flex-1 h-px bg-gray-300" />
-            or
-            <div className="flex-1 h-px bg-gray-300" />
-          </div>
-
           {/* To maintain design precisely, we wrap the hidden GoogleLogin 
              around your custom button or use the standard button.
              Standard Google button is required by Google for brand guidelines, 

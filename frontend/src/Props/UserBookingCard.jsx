@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import {
   ChevronDown,
@@ -10,12 +10,63 @@ import {
   User,
   CalendarDays,
   XCircle,
+  SquarePen,
+  Banknote,
 } from "lucide-react";
+import axios from "axios";
+
+const formatTime = (timeString) => {
+  if (!timeString) return "N/A";
+
+  // If the string already contains AM/PM, it's likely already formatted
+  if (timeString.includes("AM") || timeString.includes("PM")) return timeString;
+
+  try {
+    // Splits "14:30" or "14:30:00"
+    const parts = timeString.split(":");
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+
+    if (isNaN(hours) || isNaN(minutes)) return timeString;
+
+    const date = new Date();
+    date.setHours(hours, minutes, 0);
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch (e) {
+    console.error("Time parsing error:", e);
+    return timeString;
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    const date = new Date(dateString);
+    // This will format it to something like "April 21, 2026"
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    return dateString; // Fallback to raw string if it fails
+  }
+};
 
 const UserBookingCard = ({ booking: initialBooking }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [booking, setBooking] = useState(initialBooking);
+  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate(); // Initialize the navigate function
+
+  const balance = useMemo(() => {
+    return (booking.total || 0) - (booking.paid || 0);
+  }, [booking.total, booking.paid]);
 
   const getStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
@@ -32,12 +83,39 @@ const UserBookingCard = ({ booking: initialBooking }) => {
     }
   };
 
-  const handleCancel = () => {
+  const handleUpdatePayment = () => {
+    navigate("/payment", {
+      state: {
+        bookingId: booking.id,
+        bookingData: booking,
+        amountToPay: balance,
+        paymentTypeRestriction: "Full",
+      },
+    });
+  };
+
+  const handleCancel = async () => {
     const confirmCancel = window.confirm(
       `Are you sure you want to cancel "${booking.eventName}"?`,
     );
-    if (confirmCancel) {
-      setBooking({ ...booking, bookingStatus: "Cancelled" });
+    if (!confirmCancel) return;
+
+    setIsProcessing(true);
+    try {
+      // 🔥 FIX: Changed 'id' to 'booking.id'
+      await axios.put(
+        `http://localhost:5000/api/bookings/update-status/${booking.id}`,
+        { status: "cancelled" },
+      );
+
+      // This state update forces React to re-render and remove the buttons
+      setBooking((prev) => ({ ...prev, bookingStatus: "cancelled" }));
+      alert("Booking cancelled successfully.");
+    } catch (err) {
+      console.error("Failed to cancel:", err);
+      alert("Could not cancel booking. Check console for details.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -47,6 +125,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
     navigate("/booking", { state: { rescheduleData: booking } });
   };
 
+  console.log("Current Status:", booking.bookingStatus);
   return (
     <div className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
       {/* --- CARD HEADER --- */}
@@ -60,10 +139,10 @@ const UserBookingCard = ({ booking: initialBooking }) => {
           </h3>
           <div className="flex items-center gap-3 text-sm text-gray-500">
             <span className="flex items-center gap-1">
-              <Calendar size={14} /> {booking.date}
+              <Calendar size={14} /> {formatDate(booking.date)}
             </span>
             <span className="flex items-center gap-1">
-              <Clock size={14} /> {booking.time}
+              <Clock size={14} /> {formatTime(booking.time)}
             </span>
           </div>
         </div>
@@ -154,33 +233,47 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                 </div>
                 <div className="mt-1 flex justify-between border-t border-gray-200 pt-1 text-base font-bold text-red-500">
                   <span>Balance:</span>
-                  <span>₱{booking.balance?.toLocaleString()}</span>
+                  <span>₱{balance.toLocaleString()}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* --- ACTION BUTTONS --- */}
-          {booking.bookingStatus !== "Completed" &&
-            booking.bookingStatus !== "Cancelled" && (
-              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleReschedule}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 hover:text-blue-600"
-                >
-                  <CalendarDays size={16} />
-                  Reschedule
-                </button>
+          {booking.bookingStatus !== "completed" &&
+          booking.bookingStatus !== "cancelled" ? (
+            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleUpdatePayment}
+                className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-600 hover:bg-green-200 transition-colors"
+              >
+                <Banknote size={16} />
+                Update Payment
+              </button>
+              <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                <SquarePen size={16} />
+                Edit
+              </button>
+              <button
+                onClick={handleReschedule}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+              >
+                <CalendarDays size={16} />
+                Reschedule
+              </button>
 
-                <button
-                  onClick={handleCancel}
-                  className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
-                >
-                  <XCircle size={16} />
-                  Cancel Booking
-                </button>
-              </div>
-            )}
+              <button
+                disabled={isProcessing}
+                onClick={handleCancel}
+                className={`flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 ${
+                  isProcessing ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <XCircle size={16} />
+                {isProcessing ? "Cancelling..." : "Cancel Booking"}
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

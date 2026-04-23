@@ -6,7 +6,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user from storage on startup
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -20,8 +19,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
+    console.log("🔥 SAVING USER TO CONTEXT:", userData);
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData)); // Save to storage
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {

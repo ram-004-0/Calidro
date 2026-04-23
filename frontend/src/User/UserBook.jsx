@@ -1,62 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import UserHeader from "../Components/UserHeader";
 import UserBookingCard from "../Props/UserBookingCard";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const UserBook = () => {
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      eventName: "Wedding Celebration",
-      date: "1/25/2026",
-      time: "5:00PM",
-      typeOfEvent: "Wedding",
-      duration: "8 Hours",
-      noOfGuests: 150,
-      total: 45000,
-      paid: 45000,
-      balance: 0,
-      bookingStatus: "Completed",
-      serName: "Maria Clara delos Santos",
-      email: "maria.clara@email.com",
-      contactNo: "0917-123-4567",
-      address: "123 Balagtas St., Binondo, Manila",
-    },
-    {
-      id: 2,
-      eventName: "Birhtday Party",
-      date: "4/27/2026",
-      time: "8:00PM",
-      typeOfEvent: "Birthday",
-      duration: "5 Hours",
-      noOfGuests: 60,
-      total: 30000,
-      paid: 5000,
-      balance: 25000,
-      bookingStatus: "Confirmed",
-      userName: "Maria Clara delos Santos",
-      email: "maria.clara@email.com",
-      contactNo: "0917-123-4567",
-      address: "123 Balagtas St., Binondo, Manila",
-    },
-    {
-      id: 3,
-      eventName: "Reunion",
-      date: "5/15/2026",
-      time: "8:00PM",
-      typeOfEvent: "Etc.",
-      duration: "4",
-      noOfGuests: 50,
-      total: 25000,
-      paid: 5000,
-      balance: 20000,
-      bookingStatus: "Pending",
-      serName: "Maria Clara delos Santos",
-      email: "maria.clara@email.com",
-      contactNo: "0917-123-4567",
-      address: "123 Balagtas St., Binondo, Manila",
-    },
-  ]);
+  const [bookings, setBookings] = useState([]); // Start empty
+  const [loading, setLoading] = useState(true); // Add loading state
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/bookings/my-bookings",
+        );
+        // Ensure the data structure matches what UserBookingCard expects
+        setBookings(response.data);
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
+  }, []);
+
+  if (loading)
+    return <div className="text-white p-10">Loading bookings...</div>;
 
   const sortedBookings = [...bookings].sort(
     (a, b) => new Date(b.date) - new Date(a.date),
