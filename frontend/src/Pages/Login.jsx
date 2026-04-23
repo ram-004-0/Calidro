@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext"; //
 import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = "calidro-production.up.railway.app";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -40,7 +40,6 @@ const Login = () => {
       const res = await fetch(`${API_URL}/api/auth/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // GoogleLogin component provides 'credential', which is the idToken
         body: JSON.stringify({ idToken: credentialResponse.credential }),
       });
       const data = await res.json();
