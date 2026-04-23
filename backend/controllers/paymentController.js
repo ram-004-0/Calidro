@@ -1,4 +1,5 @@
 const axios = require("axios");
+const CLIENT_URL = process.env.CLIENT_URL || "https://calidro.vercel.app";
 
 exports.createCheckout = async (req, res) => {
   const { amount, bookingId, description, customerEmail, payment_methods } =
@@ -21,8 +22,8 @@ exports.createCheckout = async (req, res) => {
               },
             ],
             payment_method_types: payment_methods,
-            success_url: "http://localhost:5173/success",
-            cancel_url: "http://localhost:5173/payment-failed",
+            success_url: `${CLIENT_URL}/success?bookingId=${bookingId}`,
+            cancel_url: `${CLIENT_URL}/payment-failed`,
             reference_number: bookingId.toString(), // Crucial for tracking
           },
         },

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-
 import { useSearchParams, useNavigate } from "react-router-dom";
-
 import axios from "axios";
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const ReviewDetails = () => {
   const [searchParams] = useSearchParams();
@@ -21,7 +21,7 @@ const ReviewDetails = () => {
 
     if (bookingId) {
       axios
-        .get(`http://localhost:5000/api/bookings/details/${bookingId}`)
+        .get(`${API_URL}/api/bookings/details/${bookingId}`)
         .then((res) => {
           if (!isMounted) return;
           setDetails(res.data);
@@ -51,16 +51,9 @@ const ReviewDetails = () => {
     }
 
     try {
-      // Force the log to see what is being sent
-      console.log(
-        "Sending PUT to:",
-        `http://localhost:5000/api/bookings/update-status/${id}`,
-      );
-
-      await axios.put(
-        `http://localhost:5000/api/bookings/update-status/${id}`,
-        { status: "confirmed" },
-      );
+      await axios.put(`${API_URL}/api/bookings/update-status/${id}`, {
+        status: "confirmed",
+      });
       // ... rest of your code
     } catch (err) {
       console.error("Failed to update status:", err);

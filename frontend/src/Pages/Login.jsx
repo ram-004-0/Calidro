@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext"; // 1. Import your hook
 import { GoogleLogin } from "@react-oauth/google"; // Use the component for easier ID Token access
 import LoginBg from "../assets/LoginBg.png";
 require("dotenv").config();
-
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +37,7 @@ const Login = () => {
   // Logic for Google Success
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/google-login", {
+      const res = await fetch(`${API_URL}/api/auth/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // GoogleLogin component provides 'credential', which is the idToken

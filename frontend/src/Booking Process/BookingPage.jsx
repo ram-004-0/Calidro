@@ -20,6 +20,8 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 export default function BookingPage({ onNext }) {
   const { user } = useAuth();
 
@@ -46,9 +48,7 @@ export default function BookingPage({ onNext }) {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/bookings/all",
-        );
+        const response = await axios.get(`${API_URL}/api/bookings/all`);
 
         // Ensure we are pulling the date correctly and formatting it
 

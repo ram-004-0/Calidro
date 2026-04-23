@@ -14,7 +14,7 @@ import {
   Banknote,
 } from "lucide-react";
 import axios from "axios";
-
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const formatTime = (timeString) => {
   if (!timeString) return "N/A";
 
@@ -102,11 +102,10 @@ const UserBookingCard = ({ booking: initialBooking }) => {
 
     setIsProcessing(true);
     try {
-      // 🔥 FIX: Changed 'id' to 'booking.id'
-      await axios.put(
-        `http://localhost:5000/api/bookings/update-status/${booking.id}`,
-        { status: "cancelled" },
-      );
+      // Use dynamic API_URL
+      await axios.put(`${API_URL}/api/bookings/update-status/${booking.id}`, {
+        status: "cancelled",
+      });
 
       // This state update forces React to re-render and remove the buttons
       setBooking((prev) => ({ ...prev, bookingStatus: "cancelled" }));

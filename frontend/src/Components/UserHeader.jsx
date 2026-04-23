@@ -5,6 +5,8 @@ import { useChat } from "../context/ChatContext";
 import UserChatbot from "./UserChatbot";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const UserHeader = () => {
   const navigate = useNavigate();
   const [isAccountOpen, setIsAccountOpen] = useState(false);
@@ -45,7 +47,7 @@ const UserHeader = () => {
       const token = localStorage.getItem("token");
       if (!token) return navigate("/login");
 
-      const res = await axios.get("http://localhost:5000/api/user/profile", {
+      const res = await axios.get(`${API_URL}/api/user/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFormData({
@@ -68,7 +70,7 @@ const UserHeader = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await axios.put("http://localhost:5000/api/user/profile", formData, {
+      await axios.put(`${API_URL}/api/user/profile`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Profile updated successfully!");

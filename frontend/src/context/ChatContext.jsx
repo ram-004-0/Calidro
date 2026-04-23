@@ -7,7 +7,9 @@ import React, {
 } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const socket = io(API_URL);
+
 const ChatContext = createContext();
 
 // Persistent ID so refreshing the browser doesn't break the room

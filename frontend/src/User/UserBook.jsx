@@ -4,17 +4,18 @@ import UserBookingCard from "../Props/UserBookingCard";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
+// Using the environment variable defined in your Vercel/Railway setup
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const UserBook = () => {
-  const [bookings, setBookings] = useState([]); // Start empty
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/bookings/my-bookings",
-        );
-        // Ensure the data structure matches what UserBookingCard expects
+        // Updated to use dynamic API_URL
+        const response = await axios.get(`${API_URL}/api/bookings/my-bookings`);
         setBookings(response.data);
       } catch (err) {
         console.error("Error fetching bookings:", err);
@@ -42,7 +43,7 @@ const UserBook = () => {
             Bookings
           </h1>
 
-          <div className=" flex flex-col gap-4 overflow-y-auto pr-2 flex-1 min-h-0">
+          <div className="flex flex-col gap-4 overflow-y-auto pr-2 flex-1 min-h-0">
             {sortedBookings.length > 0 ? (
               sortedBookings.map((booking) => (
                 <div key={booking.id} className="w-full shrink-0">
@@ -58,7 +59,6 @@ const UserBook = () => {
         </div>
       </section>
 
-      {/* Footer area with button */}
       <div className="w-full shrink-0">
         <div className="flex justify-end text-[#4a3733] uppercase font-medium px-7 py-3">
           <Link

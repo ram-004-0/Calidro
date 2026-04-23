@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { Ellipsis, X } from "lucide-react";
 import image1 from "../assets/Images/sabook.JPG";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const OverviewBook = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -37,7 +39,7 @@ const OverviewBook = () => {
     setProgress(0);
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://localhost:5000/api/images/upload");
+    xhr.open("POST", `${API_URL}/api/images/upload`);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
