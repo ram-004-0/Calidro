@@ -7,6 +7,11 @@ const db = require("./config/db");
 const app = express();
 const bookingRoutes = require("./routes/bookingRoutes");
 const authRoutes = require("./routes/authRoutes");
+
+const allowedOrigins = [
+  "https://calidro.vercel.app",
+  "http://localhost:5173", // Keep for local development
+];
 // --- 1. CORS CONFIG (MUST BE AT THE TOP) ---
 app.use(
   cors({
@@ -109,10 +114,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(
-    `📡 Booking route ready at: http://localhost:${PORT}/api/bookings/create-booking-and-checkout`,
-  );
 });
