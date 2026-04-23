@@ -10,6 +10,7 @@ const API_URL =
 
 const UserHeader = () => {
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
