@@ -7,7 +7,7 @@ router.post("/create-checkout", async (req, res) => {
   try {
     const { amount, bookingId, description, payment_methods } = req.body;
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
-    const clientUrl = process.env.FRONTEND_URL;
+    const clientUrl = "https://calidro.vercel.app";
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
     const response = await axios.post(
