@@ -5,7 +5,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
 
 const API_URL =
-  "https://calidro-production.up.railway.app" || "http://localhost:5000";
+  "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
 
 const Login = () => {
   const [username, setUsername] = useState("");
