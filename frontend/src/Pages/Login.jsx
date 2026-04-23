@@ -60,10 +60,10 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center p-4"
+      className="min-h-screen flex items-center justify-center lg:justify-start bg-cover bg-center p-4"
       style={{ backgroundImage: `url(${LoginBg})` }}
     >
-      <div className="w-full max-w-lg bg-white/70 backdrop-blur-md shadow-xl p-8 rounded-2xl">
+      <div className="w-full max-w-lg bg-white/70 backdrop-blur-md shadow-xl p-8 rounded-2xl lg:ml-30 mx-auto">
         <div className="flex justify-between mb-8">
           <button className="text-lg font-semibold border-b-2 border-black pb-2">
             LOGIN
@@ -109,7 +109,6 @@ const Login = () => {
               size="large"
               text="continue_with"
               shape="circle"
-              // Set to 100% so it respects the container's width
               width="100%"
             />
           </div>
