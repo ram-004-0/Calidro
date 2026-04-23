@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // 1. Import your hook
 import { GoogleLogin } from "@react-oauth/google"; // Use the component for easier ID Token access
 import LoginBg from "../assets/LoginBg.png";
-require("dotenv").config();
+
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const Login = () => {
   const [username, setUsername] = useState("");
