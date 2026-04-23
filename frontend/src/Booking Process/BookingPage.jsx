@@ -19,9 +19,8 @@ import {
 } from "date-fns";
 
 import { useAuth } from "../context/AuthContext";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
+const API_URL =
+  "https://calidro-production.up.railway.app" || "http://localhost:5000";
 export default function BookingPage({ onNext }) {
   const { user } = useAuth();
 
