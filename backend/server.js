@@ -9,6 +9,20 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const authRoutes = require("./routes/authRoutes");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
+//pang test
+const net = require("net");
+const client = new net.Socket();
+client.setTimeout(5000); // 5 second timeout
+
+client.connect(process.env.DB_PORT, process.env.DB_HOST, () => {
+  console.log("✅ TCP Connection to Database is possible!");
+  client.destroy();
+});
+
+client.on("timeout", () => {
+  console.log("❌ TCP Connection TIMED OUT. Firewall or Wrong Host/Port.");
+  client.destroy();
+});
 // --- 1. CORS CONFIG (MUST BE AT THE TOP) ---
 app.use(
   cors({

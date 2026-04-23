@@ -1,4 +1,4 @@
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 const pool = mysql.createPool({
@@ -7,12 +7,12 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306,
+  ssl: {
+    rejectUnauthorized: false, // This allows the connection to proceed without a custom CA cert
+  },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: {
-    rejectUnauthorized: false, // This is mandatory for Aiven/cloud MySQL
-  },
 });
 
-module.exports = pool.promise();
+module.exports = pool;
