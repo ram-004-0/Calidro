@@ -32,6 +32,10 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (req, res) => {
+  res.status(200).send("Calidro Backend is running!");
+});
+
 // --- 3. ROUTES REGISTRATION ---
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", require("./routes/bookingRoutes"));
@@ -44,9 +48,6 @@ app.use((req, res, next) => {
     `[DEBUG] ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`,
   );
   next();
-});
-app.get("/", (req, res) => {
-  res.status(200).send("Calidro Backend is running!");
 });
 
 // Check if this file exists in /routes/

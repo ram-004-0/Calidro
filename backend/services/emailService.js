@@ -70,6 +70,15 @@ const sendBookingConfirmation = async (booking) => {
       </div>
     `,
   };
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent successfully:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("❌ Nodemailer Failed:", error);
+    // This will print the specific error (e.g., "Invalid login", "DNS timeout") to your logs
+    throw error;
+  }
 
   return transporter.sendMail(mailOptions);
 };
