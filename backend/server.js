@@ -10,7 +10,7 @@ const authRoutes = require("./routes/authRoutes");
 // --- 1. CORS CONFIG (MUST BE AT THE TOP) ---
 app.use(
   cors({
-    origin: "https://calidro.vercel.app",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
