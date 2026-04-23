@@ -4,7 +4,8 @@ import { useAuth } from "../context/AuthContext"; //
 import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL =
+  "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
 
 const Login = () => {
   const [username, setUsername] = useState("");
