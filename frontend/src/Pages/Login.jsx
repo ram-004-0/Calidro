@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // 1. Import your hook
-import { GoogleLogin } from "@react-oauth/google"; // Use the component for easier ID Token access
+import { useAuth } from "../context/AuthContext"; //
+import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
@@ -9,7 +9,7 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth(); // 2. Destructure the login function
+  const { login } = useAuth();
   const API_URL = process.env.REACT_APP_API_URL;
 
   const handleLogin = async () => {
