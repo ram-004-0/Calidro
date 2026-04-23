@@ -30,8 +30,8 @@ const sendBookingConfirmation = async (booking) => {
 
   try {
     const data = await resend.emails.send({
-      from: "garinganramy44@gmail.com", // MUST be verified in Resend
-      to: booking.email, // MUST be verified in Resend Audiences
+      from: "onboarding@resend.dev", // MUST be verified in Resend
+      to: "garinganramy44@gmaiil.com", // MUST be verified in Resend Audiences
       subject: `Booking Confirmed: ${booking.event_name}`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; color: #333;">
