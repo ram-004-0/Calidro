@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import img from "../Assets/VTBg.jpg";
+import img from "../assets/VTBg.jpg";
 
 function Home() {
   return (
