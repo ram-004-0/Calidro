@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 // Using the environment variable defined in your Vercel/Railway setup
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL =
+  "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
 
 const UserBook = () => {
   const [bookings, setBookings] = useState([]);

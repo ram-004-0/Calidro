@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import AdminHeader from "../Components/AdminHeader";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL =
+  "https://calidro-production.up.railway.app" || "http://localhost:5000";
 
 const AdminBook = () => {
   const [bookings, setBookings] = useState([]);

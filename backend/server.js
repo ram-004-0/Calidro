@@ -45,6 +45,9 @@ app.use((req, res, next) => {
   );
   next();
 });
+app.get("/", (req, res) => {
+  res.status(200).send("Calidro Backend is running!");
+});
 
 // Check if this file exists in /routes/
 // --- 5. TEST ENDPOINTS ---
