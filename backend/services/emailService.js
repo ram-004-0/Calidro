@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587, // Try this if 465 fails
+  port: 465, // Try this if 465 fails
   secure: false, // TLS
   family: 4,
   auth: {
@@ -44,7 +44,7 @@ const sendBookingConfirmation = async (booking) => {
   const balance = booking.total_amount - booking.amount_paid;
 
   const mailOptions = {
-    from: '"Calidro Team" <no-reply@calidro.com>',
+    from: `"Calidro Team" <${process.env.EMAIL_USER}>`,
     to: booking.email,
     subject: `Booking Confirmed: ${booking.event_name}`,
     html: `
