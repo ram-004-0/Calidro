@@ -43,13 +43,12 @@ export default function BookingPage({ onNext }) {
 
     const fetchBookings = async () => {
       try {
+        // This hits the route router.get("/all", ...) in your backend
         const response = await axios.get(`${API_URL}/api/bookings/all`);
 
-        // Ensure we are pulling the date correctly and formatting it
-
+        // The backend returns an array of objects: [{ event_date: "..." }, ...]
         const formattedDates = response.data.map((b) => {
-          // If event_date comes as full timestamp, format it to YYYY-MM-DD
-
+          // Format the date to match YYYY-MM-DD
           return format(new Date(b.event_date), "yyyy-MM-dd");
         });
 
@@ -401,10 +400,7 @@ export default function BookingPage({ onNext }) {
         </div>
       </div>
 
-      {/* CALENDAR PANEL */}
-
       {/* RIGHT PANEL - CALENDAR */}
-
       <div className="bg-white rounded-2xl shadow-inner p-4 flex flex-col justify-start h-auto shadow-md ml-0 md:ml-10">
         <div>
           <div className="flex justify-between items-center mb-4">
