@@ -109,13 +109,13 @@ export default function BookingPage({ onNext }) {
     end: calendarEnd,
   });
 
-  //const isUnavailable = (date) => {
-  //  return unavailableDates.includes(format(date, "yyyy-MM-dd"));
-  //};
+  const isUnavailable = (date) => {
+    return unavailableDates.includes(format(date, "yyyy-MM-dd"));
+  };
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const isUnavailable = bookedDates.includes(dateStr); //dagdagch
+    //const isUnavailable = bookedDates.includes(dateStr);
     const isPastDate = isBefore(date, startOfToday());
 
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
