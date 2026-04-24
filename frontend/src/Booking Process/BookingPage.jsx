@@ -36,8 +36,7 @@ export default function BookingPage({ onNext }) {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    console.log("useEffect triggered - attempting to fetch bookings"); // Debug check
-
+    //view from mobile
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
 
@@ -391,7 +390,7 @@ export default function BookingPage({ onNext }) {
           </div>
         </FormRow>
 
-        <div className="pt-2 hidden md:block">
+        <div className="pt-2 block">
           <button
             onClick={handleNextClick}
             className="bg-[#f4dfba] hover:bg-white transition px-10 py-3 rounded-full font-bold uppercase text-sm shadow-md"
