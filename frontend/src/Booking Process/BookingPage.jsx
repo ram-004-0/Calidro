@@ -23,28 +23,24 @@ const API_URL =
   "https://calidro-production.up.railway.app" || "http://localhost:5000";
 export default function BookingPage({ onNext }) {
   const { user } = useAuth();
-
   const [currentMonth, setCurrentMonth] = useState(new Date());
-
   const [selectedDate, setSelectedDate] = useState(null);
-
   const [selectedTime, setSelectedTime] = useState("");
-
   const [guestCount, setGuestCount] = useState("");
-
   const today = startOfToday();
-
   const [username, setUsername] = useState(user?.username || "");
-
   const [email, setEmail] = useState(user?.email || "");
-
   const [phoneNumber, setPhoneNumber] = useState(user?.phone_number || "");
-
   const [address, setAddress] = useState(user?.address || "");
-
   const [bookedDates, setBookedDates] = useState([]);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   useEffect(() => {
+    // for mobile viewing
+    const handleResize = () => setIsMobileView(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+
     const fetchBookings = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
@@ -71,24 +67,17 @@ export default function BookingPage({ onNext }) {
   // Captured states for the new pricing logic
 
   const [eventType, setEventType] = useState("");
-
   const [eventName, setEventName] = useState("");
-
   const [duration, setDuration] = useState(4);
-
   const [ingress, setIngress] = useState(2);
-
   const [egress, setEgress] = useState(1);
 
   const timeSlots = useMemo(() => {
     if (!selectedDate) return [];
 
     const slots = [];
-
     const isSunday = getDay(selectedDate) === 0;
-
     const startHour = isSunday ? 15 : 8;
-
     const endHour = 20;
 
     for (let i = startHour; i <= endHour; i++) {
@@ -102,28 +91,19 @@ export default function BookingPage({ onNext }) {
 
   const durationOptions = useMemo(() => {
     const defaultDurations = [4, 5, 6, 7, 8, 9, 10];
-
     if (!selectedTime) return defaultDurations;
-
     const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
-
     if (!selectedSlot) return defaultDurations;
-
     const startHour = selectedSlot.hour24;
-
     const hoursRemaining = 24 - startHour;
 
     return defaultDurations.filter((h) => h <= hoursRemaining);
   }, [selectedTime, timeSlots]);
 
   const monthStart = startOfMonth(currentMonth);
-
   const monthEnd = endOfMonth(monthStart);
-
   const calendarStart = startOfWeek(monthStart);
-
   const calendarEnd = endOfWeek(monthEnd);
-
   const days = eachDayOfInterval({
     start: calendarStart,
 
@@ -324,7 +304,9 @@ export default function BookingPage({ onNext }) {
           />
         </FormRow>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className={`grid ${isMobileView ? "grid-cols-1" : "grid-cols-2"} gap-2`} //adjusting the four formrows in mobile view
+        >
           <FormRow label="TIME">
             <select
               className="input-style w-full cursor-pointer"
@@ -358,7 +340,9 @@ export default function BookingPage({ onNext }) {
           </FormRow>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className={`grid ${isMobileView ? "grid-cols-1" : "grid-cols-2"} gap-2`} //adjusting the four formrows in mobile view
+        >
           <FormRow label="INGRESS">
             <select
               className="input-style w-full"
