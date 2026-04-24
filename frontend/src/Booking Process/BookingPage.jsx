@@ -36,29 +36,31 @@ export default function BookingPage({ onNext }) {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    // for mobile viewing
+    console.log("useEffect triggered - attempting to fetch bookings"); // Debug check
+
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
 
     const fetchBookings = async () => {
       try {
+        console.log("Fetching from:", `${API_URL}/api/bookings/all`); // Debug check
         const response = await axios.get(`${API_URL}/api/bookings/all`);
-        // Ensure the data format is an array of strings like "YYYY-MM-DD"
+
+        console.log("API Response:", response.data); // Debug check
+
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
         setBookedDates(formattedDates);
       } catch (err) {
-        console.error("Failed to fetch bookings", err);
+        console.error("Failed to fetch bookings:", err);
       }
     };
 
     fetchBookings();
 
-    // 3. Cleanup: This is the ONLY thing that should be returned
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount
 
   const unavailableDates = [...bookedDates];
 
