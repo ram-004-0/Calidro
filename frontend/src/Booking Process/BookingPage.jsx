@@ -43,15 +43,11 @@ export default function BookingPage({ onNext }) {
 
     const fetchBookings = async () => {
       try {
-        // This hits the route router.get("/all", ...) in your backend
         const response = await axios.get(`${API_URL}/api/bookings/all`);
-
-        // The backend returns an array of objects: [{ event_date: "..." }, ...]
-        const formattedDates = response.data.map((b) => {
-          // Format the date to match YYYY-MM-DD
-          return format(new Date(b.event_date), "yyyy-MM-dd");
-        });
-
+        // Assuming response.data is an array of objects with an 'event_date' field
+        const formattedDates = response.data.map((b) =>
+          format(new Date(b.event_date), "yyyy-MM-dd"),
+        );
         setBookedDates(formattedDates);
       } catch (err) {
         console.error("Failed to fetch bookings", err);
@@ -59,6 +55,9 @@ export default function BookingPage({ onNext }) {
     };
 
     fetchBookings();
+
+    // 3. Cleanup function must be at the very end
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const unavailableDates = [...bookedDates];
