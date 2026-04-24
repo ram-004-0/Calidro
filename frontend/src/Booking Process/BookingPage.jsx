@@ -405,7 +405,7 @@ export default function BookingPage({ onNext }) {
 
       {/* RIGHT PANEL - CALENDAR */}
 
-      <div className="bg-white rounded-2xl shadow-inner p-4 flex flex-col justify-start h-auto shadow-md">
+      <div className="bg-white rounded-2xl shadow-inner p-4 flex flex-col justify-start h-auto shadow-md ml-0 md:ml-4">
         <div>
           <div className="flex justify-between items-center mb-4">
             <button
