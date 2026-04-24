@@ -44,7 +44,7 @@ export default function BookingPage({ onNext }) {
     const fetchBookings = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
-        // Assuming response.data is an array of objects with an 'event_date' field
+        // Ensure the data format is an array of strings like "YYYY-MM-DD"
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
@@ -56,7 +56,7 @@ export default function BookingPage({ onNext }) {
 
     fetchBookings();
 
-    // 3. Cleanup function must be at the very end
+    // 3. Cleanup: This is the ONLY thing that should be returned
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -114,7 +114,7 @@ export default function BookingPage({ onNext }) {
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const isBooked = bookedDates.includes(dateStr);
+    const isBooked = bookedDates.includes(dateStr); //dagdag
     const isPastDate = isBefore(date, startOfToday());
 
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
