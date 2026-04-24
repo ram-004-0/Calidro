@@ -225,6 +225,51 @@ router.get("/my-bookings/:userId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Fetch all bookings for Admin View
+router.get("/all-bookings", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM booking ORDER BY event_date DESC",
+    );
+    const formatted = rows.map((b) => ({
+      id: b.id,
+
+      eventName: b.event_name,
+
+      userName: b.username,
+
+      email: b.email,
+
+      contactNo: b.phone_number,
+
+      address: b.address,
+
+      typeOfEvent: b.event_type,
+
+      duration: `${b.event_duration} hrs`,
+
+      ingress: `${parseInt(b.ingress_time || 0)} hr`,
+
+      egress: `${parseInt(b.egress_time || 0)} hr`,
+
+      noOfGuests: b.guests,
+
+      total: b.total_amount,
+
+      paid: b.amount_paid,
+      paymentType: b.payment_type,
+
+      bookingStatus: b.status,
+
+      date: b.event_date,
+
+      time: b.event_time,
+    }));
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // 3. Update Status and Send Email
 
