@@ -242,7 +242,7 @@ export default function BookingPage({ onNext }) {
   };
 
   return (
-    <div className="bg-[#f1f1f1] w-full max-w-7xl rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="bg-[#f1f1f1] w-full max-w-7xl rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-2">
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
           Booking Details

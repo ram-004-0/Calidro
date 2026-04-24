@@ -174,12 +174,15 @@ router.post("/create-booking-and-checkout", async (req, res) => {
   }
 });
 
-// 2. Fetch all bookings for Admin/User View
+// 2. Fetch all bookings for User View
 
-router.get("/my-bookings", async (req, res) => {
+router.get("/my-bookings/:userId", async (req, res) => {
+  const { userId } = req.params;
+
   try {
     const [rows] = await db.query(
-      "SELECT * FROM booking ORDER BY event_date DESC",
+      "SELECT * FROM booking WHERE user_id = ? ORDER BY event_date DESC",
+      [userId],
     );
 
     const formatted = rows.map((b) => ({

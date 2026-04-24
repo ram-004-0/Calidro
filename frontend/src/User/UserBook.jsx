@@ -15,8 +15,10 @@ const UserBook = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        // Updated to use dynamic API_URL
-        const response = await axios.get(`${API_URL}/api/bookings/my-bookings`);
+        //changed
+        const response = await axios.get(
+          `${API_URL}/api/bookings/my-bookings/${user.id}`,
+        );
         setBookings(response.data);
       } catch (err) {
         console.error("Error fetching bookings:", err);
