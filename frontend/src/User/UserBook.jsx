@@ -14,22 +14,31 @@ const UserBook = () => {
 
   useEffect(() => {
     const fetchBookings = async () => {
-      //added
-      const storedUser = localStorage.getItem("user");
-      const user = storedUser ? JSON.parse(storedUser) : null;
-
       try {
-        //changed
-        const response = await axios.get(
-          `${API_URL}/api/bookings/my-bookings/${user.id}`,
-        );
-        setBookings(response.data);
+        const response = await axios.get(`${API_URL}/api/bookings/all`);
+
+        // DEBUG: See exactly what we got
+        console.log("API Response Data:", response.data);
+
+        // Safety check: Ensure it is an array before mapping
+        if (Array.isArray(response.data)) {
+          const formattedDates = response.data
+            .map((b) => {
+              // Ensure event_date exists
+              if (!b.event_date) return null;
+              return format(new Date(b.event_date), "yyyy-MM-dd");
+            })
+            .filter((date) => date !== null); // Remove any nulls
+
+          setBookedDates(formattedDates);
+        } else {
+          console.error("API did not return an array:", response.data);
+        }
       } catch (err) {
-        console.error("Error fetching bookings:", err);
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch bookings", err);
       }
     };
+
     fetchBookings();
   }, []);
 

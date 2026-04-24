@@ -115,7 +115,7 @@ export default function BookingPage({ onNext }) {
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const isUnavailable = bookedDates.includes(dateStr);
+    const isUnavailable = bookedDates.includes(dateStr); //dagdagch
     const isPastDate = isBefore(date, startOfToday());
 
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
