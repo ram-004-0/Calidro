@@ -14,6 +14,10 @@ const UserBook = () => {
 
   useEffect(() => {
     const fetchBookings = async () => {
+      //added
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+
       try {
         //changed
         const response = await axios.get(

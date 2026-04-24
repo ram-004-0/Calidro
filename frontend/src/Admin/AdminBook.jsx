@@ -12,7 +12,7 @@ const AdminBook = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/bookings/all-bookings`);
+        const response = await fetch(`${API_URL}/api/bookings/all-bookings`); //changed
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         setBookings(data);
