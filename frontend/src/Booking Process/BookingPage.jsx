@@ -109,9 +109,9 @@ export default function BookingPage({ onNext }) {
     end: calendarEnd,
   });
 
-  const isUnavailable = (date) => {
-    return unavailableDates.includes(format(date, "yyyy-MM-dd"));
-  };
+  //const isUnavailable = (date) => {
+  //  return unavailableDates.includes(format(date, "yyyy-MM-dd"));
+  //};
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
