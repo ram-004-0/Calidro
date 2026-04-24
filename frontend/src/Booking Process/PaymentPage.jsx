@@ -185,7 +185,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
         <button
           onClick={onBack}
-          className="bg-gray-300 px-8 py-2 rounded-full uppercase text-sm font-bold"
+          className="hidden md:block bg-gray-300 px-8 py-2 rounded-full uppercase text-sm font-bold"
         >
           Back
         </button>
