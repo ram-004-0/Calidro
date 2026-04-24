@@ -390,7 +390,7 @@ export default function BookingPage({ onNext }) {
           </div>
         </FormRow>
 
-        <div className="pt-2 block">
+        <div className="pt-2 hidden md:block">
           <button
             onClick={handleNextClick}
             className="bg-[#f4dfba] hover:bg-white transition px-10 py-3 rounded-full font-bold uppercase text-sm shadow-md"
@@ -470,6 +470,16 @@ export default function BookingPage({ onNext }) {
           <Legend color="bg-yellow-300" label="Selected" />
         </div>
       </div>
+      {isMobileView && (
+        <div className="mt-6">
+          <button
+            onClick={handleNextClick}
+            className="bg-[#f4dfba] hover:bg-white transition w-full py-4 rounded-full font-bold uppercase text-sm shadow-md"
+          >
+            Next &gt;
+          </button>
+        </div>
+      )}
     </div>
   );
 }
