@@ -85,12 +85,18 @@ const UserBookingCard = ({ booking: initialBooking }) => {
   };
 
   const handleUpdatePayment = () => {
+    // If they have a balance, they are by definition making a "partial" payment
+    // (unless this payment covers the remainder, making it "full")
+    const isFinalPayment = balance === booking.total - booking.paid;
+
     navigate("/payment", {
       state: {
         bookingId: booking.id,
         bookingData: booking,
         amountToPay: balance,
-        paymentTypeRestriction: "Full",
+        // Pass the current state so your payment page knows what to do
+        paymentType:
+          balance >= booking.total - booking.paid ? "full" : "partial",
       },
     });
   };
