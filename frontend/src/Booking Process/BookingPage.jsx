@@ -45,6 +45,22 @@ export default function BookingPage({ onNext }) {
   const [egress, setEgress] = useState(
     isRescheduling ? rescheduleData.egress_time : 1,
   );
+
+  const timeSlots = useMemo(() => {
+    if (!selectedDate) return [];
+    const slots = [];
+    const isSunday = getDay(selectedDate) === 0;
+    const startHour = isSunday ? 15 : 8;
+    const endHour = 20;
+
+    for (let i = startHour; i <= endHour; i++) {
+      let label = i < 12 ? `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`;
+      slots.push({ label: label, hour24: i });
+    }
+
+    return slots;
+  }, [selectedDate]);
+
   const durationOptions = useMemo(() => {
     const baseOptions = [4, 5, 6, 7, 8, 9, 10];
     // If rescheduling, enforce the "No Decrease" rule
@@ -106,22 +122,6 @@ export default function BookingPage({ onNext }) {
   }, []); // Empty dependency array ensures this runs once on mount
 
   const unavailableDates = [...bookedDates];
-
-  const timeSlots = useMemo(() => {
-    if (!selectedDate) return [];
-    const slots = [];
-    const isSunday = getDay(selectedDate) === 0;
-    const startHour = isSunday ? 15 : 8;
-    const endHour = 20;
-
-    for (let i = startHour; i <= endHour; i++) {
-      let label = i < 12 ? `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`;
-      slots.push({ label: label, hour24: i });
-    }
-
-    return slots;
-  }, [selectedDate]);
-
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
   const calendarStart = startOfWeek(monthStart);
