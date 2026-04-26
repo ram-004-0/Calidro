@@ -64,9 +64,10 @@ export default function BookingPage({ onNext }) {
   const durationOptions = useMemo(() => {
     const baseOptions = [4, 5, 6, 7, 8, 9, 10];
 
-    if (isRescheduling) {
-      // Only allow durations equal to or greater than the original
-      return baseOptions.filter((h) => h >= rescheduleData.duration);
+    // Ensure rescheduleData exists and duration is a number
+    if (isRescheduling && rescheduleData?.duration) {
+      const minDuration = parseInt(rescheduleData.duration);
+      return baseOptions.filter((h) => h >= minDuration);
     }
 
     if (!selectedTime) return baseOptions;
@@ -77,23 +78,38 @@ export default function BookingPage({ onNext }) {
     return baseOptions.filter((h) => h <= hoursRemaining);
   }, [isRescheduling, rescheduleData, selectedTime, timeSlots]);
 
-  // 1. Define ingressOptions
   const ingressOptions = useMemo(() => {
     const baseOptions = [1, 2, 3, 4];
-    if (isRescheduling) {
-      return baseOptions.filter((h) => h >= rescheduleData.ingress_time);
+    if (isRescheduling && rescheduleData?.ingress_time) {
+      const minIngress = parseInt(rescheduleData.ingress_time);
+      return baseOptions.filter((h) => h >= minIngress);
     }
     return baseOptions;
   }, [isRescheduling, rescheduleData]);
 
-  // 2. Define egressOptions
   const egressOptions = useMemo(() => {
     const baseOptions = [1, 2, 3, 4];
-    if (isRescheduling) {
-      return baseOptions.filter((h) => h >= rescheduleData.egress_time);
+    if (isRescheduling && rescheduleData?.egress_time) {
+      const minEgress = parseInt(rescheduleData.egress_time);
+      return baseOptions.filter((h) => h >= minEgress);
     }
     return baseOptions;
   }, [isRescheduling, rescheduleData]);
+
+  const updateBookingOnly = async (payload) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/bookings/reschedule/${rescheduleData.id}`,
+        payload,
+      );
+      alert("Booking updated successfully!");
+      // Navigate back to dashboard or home
+      // navigate("/dashboard");
+    } catch (err) {
+      console.error("Update failed:", err);
+      alert("Failed to update booking. Please try again.");
+    }
+  };
 
   const [eventType, setEventType] = useState("");
   const [eventName, setEventName] = useState("");
