@@ -22,8 +22,8 @@ exports.createCheckout = async (req, res) => {
               },
             ],
             payment_method_types: payment_methods,
-            success_url: `${CLIENT_URL}/success?bookingId=${bookingId}`,
-            cancel_url: `${CLIENT_URL}/payment-failed`,
+            success_url: `https://calidro.vercel.app/success?bookingId=${bookingId}`,
+            cancel_url: `https://calidro.vercel.app/payment-failed`,
             reference_number: bookingId.toString(), // Crucial for tracking
           },
         },
