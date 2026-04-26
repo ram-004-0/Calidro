@@ -243,13 +243,15 @@ const UserBookingCard = ({ booking: initialBooking }) => {
           {booking.bookingStatus !== "completed" &&
           booking.bookingStatus !== "cancelled" ? (
             <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-              <button
-                onClick={handleUpdatePayment}
-                className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-600 hover:bg-green-200 transition-colors"
-              >
-                <Banknote size={16} />
-                Update Payment
-              </button>
+              {balance > 0 && (
+                <button
+                  onClick={handleUpdatePayment}
+                  className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-600 hover:bg-green-200 transition-colors"
+                >
+                  <Banknote size={16} />
+                  Update Payment
+                </button>
+              )}
               <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-blue-600">
                 <SquarePen size={16} />
                 Edit
