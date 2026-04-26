@@ -521,4 +521,17 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
   }
 });
 
+router.put("/edit/:id", async (req, res) => {
+  const { typeOfEvent, eventName, noOfGuests } = req.body;
+  try {
+    await db.query(
+      "UPDATE bookings SET typeOfEvent = ?, eventName = ?, noOfGuests = ? WHERE id = ?",
+      [typeOfEvent, eventName, noOfGuests, req.params.id],
+    );
+    res.json({ message: "Booking updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

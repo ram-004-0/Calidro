@@ -125,6 +125,26 @@ const UserBookingCard = ({ booking: initialBooking }) => {
     navigate("/booking", { state: { rescheduleData: booking } });
   };
 
+  // Edit Button
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    typeOfEvent: booking.typeOfEvent,
+    eventName: booking.eventName,
+    noOfGuests: booking.noOfGuests,
+  });
+  const handleSave = async () => {
+    try {
+      await axios.put(`${API_URL}/api/bookings/edit/${booking.id}`, editData);
+      // Update local state to reflect changes
+      setBooking((prev) => ({ ...prev, ...editData }));
+      setIsEditing(false);
+      alert("Booking updated successfully!");
+    } catch (err) {
+      console.error("Failed to update:", err);
+      alert("Error updating booking.");
+    }
+  };
+
   console.log("Current Status:", booking.bookingStatus);
   return (
     <div className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
@@ -197,18 +217,52 @@ const UserBookingCard = ({ booking: initialBooking }) => {
               <div className="flex items-center gap-2 border-b border-gray-200 pb-1 text-xs font-bold uppercase tracking-wider text-gray-400">
                 <Users size={14} /> Event Info
               </div>
-              <div className="space-y-1 text-sm text-gray-700">
+              <div className="space-y-2 text-sm text-gray-700">
                 <p>
                   <span className="font-semibold">Type:</span>{" "}
-                  {booking.typeOfEvent}
+                  {isEditing ? (
+                    <input
+                      className="border rounded px-1 w-full"
+                      value={editData.typeOfEvent}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          typeOfEvent: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    booking.typeOfEvent
+                  )}
                 </p>
                 <p>
-                  <span className="font-semibold">Duration:</span>{" "}
-                  {booking.duration}
+                  <span className="font-semibold">Event Name:</span>{" "}
+                  {isEditing ? (
+                    <input
+                      className="border rounded px-1 w-full"
+                      value={editData.eventName}
+                      onChange={(e) =>
+                        setEditData({ ...editData, eventName: e.target.value })
+                      }
+                    />
+                  ) : (
+                    booking.eventName
+                  )}
                 </p>
                 <p>
                   <span className="font-semibold">Guests:</span>{" "}
-                  {booking.noOfGuests} pax
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      className="border rounded px-1 w-full"
+                      value={editData.noOfGuests}
+                      onChange={(e) =>
+                        setEditData({ ...editData, noOfGuests: e.target.value })
+                      }
+                    />
+                  ) : (
+                    `${booking.noOfGuests} pax`
+                  )}
                 </p>
               </div>
             </div>
@@ -240,40 +294,64 @@ const UserBookingCard = ({ booking: initialBooking }) => {
           </div>
 
           {/* --- ACTION BUTTONS --- */}
+          {/* --- ACTION BUTTONS --- */}
           {booking.bookingStatus !== "completed" &&
           booking.bookingStatus !== "cancelled" ? (
             <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-              {balance > 0 && (
-                <button
-                  onClick={handleUpdatePayment}
-                  className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-600 hover:bg-green-200 transition-colors"
-                >
-                  <Banknote size={16} />
-                  Update Payment
-                </button>
+              {isEditing ? (
+                // EDIT MODE: Only show Save and Cancel
+                <>
+                  <button
+                    onClick={handleSave}
+                    className="flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-200 transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                // VIEW MODE: Show default actions
+                <>
+                  {balance > 0 && (
+                    <button
+                      onClick={handleUpdatePayment}
+                      className="flex items-center gap-2 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-semibold text-green-600 hover:bg-green-200 transition-colors"
+                    >
+                      <Banknote size={16} />
+                      Update Payment
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                  >
+                    <SquarePen size={16} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleReschedule}
+                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                  >
+                    <CalendarDays size={16} />
+                    Reschedule
+                  </button>
+                  <button
+                    disabled={isProcessing}
+                    onClick={handleCancel}
+                    className={`flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 ${
+                      isProcessing ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    <XCircle size={16} />
+                    {isProcessing ? "Cancelling..." : "Cancel Booking"}
+                  </button>
+                </>
               )}
-              <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                <SquarePen size={16} />
-                Edit
-              </button>
-              <button
-                onClick={handleReschedule}
-                className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-blue-600"
-              >
-                <CalendarDays size={16} />
-                Reschedule
-              </button>
-
-              <button
-                disabled={isProcessing}
-                onClick={handleCancel}
-                className={`flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 ${
-                  isProcessing ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <XCircle size={16} />
-                {isProcessing ? "Cancelling..." : "Cancel Booking"}
-              </button>
             </div>
           ) : null}
         </div>
