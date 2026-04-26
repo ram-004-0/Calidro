@@ -63,27 +63,38 @@ export default function BookingPage({ onNext }) {
 
   const durationOptions = useMemo(() => {
     const baseOptions = [4, 5, 6, 7, 8, 9, 10];
-    // If rescheduling, enforce the "No Decrease" rule
+
     if (isRescheduling) {
+      // Only allow durations equal to or greater than the original
       return baseOptions.filter((h) => h >= rescheduleData.duration);
     }
-    // If not rescheduling, check time slot remaining hours
+
     if (!selectedTime) return baseOptions;
     const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
     if (!selectedSlot) return baseOptions;
+
     const hoursRemaining = 24 - selectedSlot.hour24;
     return baseOptions.filter((h) => h <= hoursRemaining);
   }, [isRescheduling, rescheduleData, selectedTime, timeSlots]);
 
   // 1. Define ingressOptions
   const ingressOptions = useMemo(() => {
-    return [1, 2, 3, 4]; // Adjust these values as needed
-  }, []);
+    const baseOptions = [1, 2, 3, 4];
+    if (isRescheduling) {
+      return baseOptions.filter((h) => h >= rescheduleData.ingress_time);
+    }
+    return baseOptions;
+  }, [isRescheduling, rescheduleData]);
 
   // 2. Define egressOptions
   const egressOptions = useMemo(() => {
-    return [1, 2, 3, 4]; // Adjust these values as needed
-  }, []);
+    const baseOptions = [1, 2, 3, 4];
+    if (isRescheduling) {
+      return baseOptions.filter((h) => h >= rescheduleData.egress_time);
+    }
+    return baseOptions;
+  }, [isRescheduling, rescheduleData]);
+
   const [eventType, setEventType] = useState("");
   const [eventName, setEventName] = useState("");
   const [guestCount, setGuestCount] = useState("");
@@ -172,6 +183,11 @@ export default function BookingPage({ onNext }) {
   }, [selectedTime, selectedDate, timeSlots]);
 
   const handleNextClick = () => {
+    const isUpgraded =
+      parseInt(duration) > rescheduleData.duration ||
+      parseInt(ingress) > rescheduleData.ingress_time ||
+      parseInt(egress) > rescheduleData.egress_time;
+
     const bookingPayload = {
       username,
       email,
@@ -186,10 +202,14 @@ export default function BookingPage({ onNext }) {
       egress_time: parseInt(egress),
       guests: guestCount,
       isReschedule: isRescheduling,
+      isUpgrade: isRescheduling ? isUpgraded : false, // Tell backend if it needs to trigger payment
       originalBookingId: isRescheduling ? rescheduleData.id : null,
     };
-
-    onNext(bookingPayload);
+    if (isRescheduling && !isUpgraded) {
+      updateBookingOnly(bookingPayload);
+    } else {
+      onNext(bookingPayload);
+    }
 
     const convertTo24Hour = (timeStr) => {
       if (!timeStr) return "00:00:00";
