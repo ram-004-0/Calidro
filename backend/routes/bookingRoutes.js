@@ -536,7 +536,6 @@ router.put("/edit/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 router.put("/reschedule/:id", async (req, res) => {
   const { id } = req.params;
   const { date, time, duration, ingress_time, egress_time } = req.body;
@@ -548,23 +547,19 @@ router.put("/reschedule/:id", async (req, res) => {
 
     const old = rows[0];
 
-    // Ensure we are working with numbers
     const dur = parseInt(duration) || 0;
     const ing = parseInt(ingress_time) || 0;
     const eg = parseInt(egress_time) || 0;
 
-    const oldDur = parseInt(old.event_duration) || 0;
-    const oldIng = parseInt(old.ingress_time) || 0;
-    const oldEg = parseInt(old.egress_time) || 0;
-
-    // Strict Enforcement: Prevent decreasing hours
-    if (dur < oldDur || ing < oldIng || eg < oldEg) {
-      return res
-        .status(400)
-        .json({ error: "Cannot decrease duration or ingress/egress times." });
+    // Strict Enforcement
+    if (
+      dur < parseInt(old.event_duration) ||
+      ing < parseInt(old.ingress_time) ||
+      eg < parseInt(old.egress_time)
+    ) {
+      return res.status(400).json({ error: "Cannot decrease duration/time." });
     }
 
-    // YOUR CALCULATION LOGIC
     const BASE_PRICE = 25000;
     const newTotal =
       BASE_PRICE +
@@ -572,19 +567,33 @@ router.put("/reschedule/:id", async (req, res) => {
       Math.max(0, ing - 2) * 1000 +
       Math.max(0, eg - 1) * 1000;
 
+    // Correct Payment Status Calculation
+    const amountPaid = parseFloat(old.amount_paid) || 0;
+    let newStatus = "Pending";
+
+    if (amountPaid >= newTotal) {
+      newStatus = "Paid";
+    } else if (amountPaid > 0) {
+      newStatus = "Partial";
+    }
+
     await db.query(
       `UPDATE booking 
        SET event_date = ?, event_time = ?, event_duration = ?, 
-           ingress_time = ?, egress_time = ?, total_amount = ? 
+           ingress_time = ?, egress_time = ?, total_amount = ?, 
+           payment_status = ? 
        WHERE id = ?`,
-      [date, time, dur.toString(), ing, eg, newTotal, id],
+      [date, time, dur.toString(), ing, eg, newTotal, newStatus, id],
     );
 
-    res.json({ message: "Booking rescheduled successfully", newTotal });
+    res.json({
+      message: "Reschedule successful",
+      newTotal,
+      paymentStatus: newStatus,
+    });
   } catch (error) {
     console.error("Reschedule Error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 module.exports = router;

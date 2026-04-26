@@ -65,13 +65,12 @@ export default function BookingPage({ onNext }) {
   const durationOptions = useMemo(() => {
     const baseOptions = [4, 5, 6, 7, 8, 9, 10];
 
-    // If rescheduling, enforce that the user cannot choose less than the original duration
     if (isRescheduling && rescheduleData?.event_duration) {
-      const minDuration = parseInt(rescheduleData.event_duration);
+      // Ensure we treat the existing duration as the floor
+      const minDuration = parseInt(rescheduleData.event_duration) || 4;
       return baseOptions.filter((h) => h >= minDuration);
     }
 
-    // Default behavior for new bookings
     if (!selectedTime) return baseOptions;
     const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
     if (!selectedSlot) return baseOptions;
