@@ -97,20 +97,18 @@ export default function BookingPage({ onNext }) {
     return baseOptions;
   }, [isRescheduling, rescheduleData]);
 
+  // In BookingPage.js, update the updateBookingOnly function:
   const updateBookingOnly = async (payload) => {
     try {
-      // Log the full URL to your console to verify it's correct
+      // MATCH THE PATH EXACTLY AS THE SERVER EXPECTS
       const url = `${API_URL}/app/bookings/reschedule/${rescheduleData.id}`;
       console.log("Sending PUT to:", url);
 
       const response = await axios.put(url, payload);
       alert("Booking updated successfully!");
     } catch (err) {
-      // If this is still 404, the URL string above is wrong for your backend setup
       console.error("Update failed:", err.response?.data || err.message);
-      alert(
-        "Failed to update booking. Server responded with 404: Check if the route exists.",
-      );
+      // ...
     }
   };
 
