@@ -36,14 +36,15 @@ export default function BookingPage({ onNext }) {
   const [selectedTime, setSelectedTime] = useState(
     isRescheduling ? rescheduleData.time : "",
   );
+  // Ensure these keys match your database return object
   const [duration, setDuration] = useState(
-    isRescheduling ? rescheduleData.duration : 4,
+    isRescheduling ? parseInt(rescheduleData.event_duration) : 4,
   );
   const [ingress, setIngress] = useState(
-    isRescheduling ? rescheduleData.ingress_time : 2,
+    isRescheduling ? parseInt(rescheduleData.ingress_time) : 2,
   );
   const [egress, setEgress] = useState(
-    isRescheduling ? rescheduleData.egress_time : 1,
+    isRescheduling ? parseInt(rescheduleData.egress_time) : 1,
   );
 
   const timeSlots = useMemo(() => {
@@ -64,12 +65,13 @@ export default function BookingPage({ onNext }) {
   const durationOptions = useMemo(() => {
     const baseOptions = [4, 5, 6, 7, 8, 9, 10];
 
-    // Ensure rescheduleData exists and duration is a number
-    if (isRescheduling && rescheduleData?.duration) {
-      const minDuration = parseInt(rescheduleData.duration);
+    // If rescheduling, enforce that the user cannot choose less than the original duration
+    if (isRescheduling && rescheduleData?.event_duration) {
+      const minDuration = parseInt(rescheduleData.event_duration);
       return baseOptions.filter((h) => h >= minDuration);
     }
 
+    // Default behavior for new bookings
     if (!selectedTime) return baseOptions;
     const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
     if (!selectedSlot) return baseOptions;

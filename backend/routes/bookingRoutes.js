@@ -546,41 +546,44 @@ router.put("/reschedule/:id", async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
-    // FIX: Add explicit fallback to 0 if parsing fails
-    const durNum = parseInt(duration);
-    const ingNum = parseInt(ingress_time);
-    const egNum = parseInt(egress_time);
+    const old = rows[0];
 
-    // If any are NaN, replace with 0
-    const finalDuration = isNaN(durNum) ? 0 : durNum;
-    const finalIngress = isNaN(ingNum) ? 0 : ingNum;
-    const finalEgress = isNaN(egNum) ? 0 : egNum;
+    // Ensure we are working with numbers
+    const dur = parseInt(duration) || 0;
+    const ing = parseInt(ingress_time) || 0;
+    const eg = parseInt(egress_time) || 0;
 
-    const hourlyRate = 500;
-    const serviceFee = 200;
+    const oldDur = parseInt(old.event_duration) || 0;
+    const oldIng = parseInt(old.ingress_time) || 0;
+    const oldEg = parseInt(old.egress_time) || 0;
+
+    // Strict Enforcement: Prevent decreasing hours
+    if (dur < oldDur || ing < oldIng || eg < oldEg) {
+      return res
+        .status(400)
+        .json({ error: "Cannot decrease duration or ingress/egress times." });
+    }
+
+    // YOUR CALCULATION LOGIC
+    const BASE_PRICE = 25000;
     const newTotal =
-      finalDuration * hourlyRate + (finalIngress + finalEgress) * serviceFee;
+      BASE_PRICE +
+      (dur - 4) * 5000 +
+      Math.max(0, ing - 2) * 1000 +
+      Math.max(0, eg - 1) * 1000;
 
     await db.query(
       `UPDATE booking 
        SET event_date = ?, event_time = ?, event_duration = ?, 
            ingress_time = ?, egress_time = ?, total_amount = ? 
        WHERE id = ?`,
-      [
-        date,
-        time,
-        finalDuration.toString(), // event_duration is VARCHAR
-        finalIngress,
-        finalEgress,
-        newTotal,
-        id,
-      ],
+      [date, time, dur.toString(), ing, eg, newTotal, id],
     );
 
     res.json({ message: "Booking rescheduled successfully", newTotal });
   } catch (error) {
     console.error("Reschedule Error:", error);
-    res.status(500).json({ error: "Internal server error: " + error.message });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
