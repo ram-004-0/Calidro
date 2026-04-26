@@ -100,7 +100,7 @@ export default function BookingPage({ onNext }) {
   const updateBookingOnly = async (payload) => {
     try {
       // Log the full URL to your console to verify it's correct
-      const url = `${API_URL}/api/bookings/reschedule/${rescheduleData.id}`;
+      const url = `${API_URL}/reschedule/${rescheduleData.id}`;
       console.log("Sending PUT to:", url);
 
       const response = await axios.put(url, payload);
