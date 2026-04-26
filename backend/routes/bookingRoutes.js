@@ -503,18 +503,31 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
 
   try {
-    // We update both the amount_paid to total_amount and the payment_type to 'full'
-    // This ensures that even if they only paid the balance, the record is now 'full'
-    await db.query(
-      `UPDATE booking 
-       SET amount_paid = total_amount, 
-           payment_type = 'full', 
-           status = 'confirmed' 
-       WHERE id = ?`,
+    // 1. Fetch the booking first to compare values
+    const [rows] = await db.query(
+      "SELECT total_amount, amount_paid FROM booking WHERE id = ?",
       [bookingId],
     );
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Booking not found" });
 
-    res.json({ success: true, message: "Payment type updated to full." });
+    const { total_amount, amount_paid } = rows[0];
+
+    // 2. Logic: Only set to 'full' if the total is reached
+    const isFull = amount_paid >= total_amount;
+    const newPaymentType = isFull ? "full" : "partial";
+    const newStatus = isFull ? "confirmed" : "pending";
+
+    // 3. Update with dynamic values instead of hardcoding 'full'
+    await db.query(
+      `UPDATE booking 
+       SET payment_type = ?, 
+           status = ? 
+       WHERE id = ?`,
+      [newPaymentType, newStatus, bookingId],
+    );
+
+    res.json({ success: true, paymentType: newPaymentType });
   } catch (err) {
     console.error("Finalize Payment Error:", err);
     res.status(500).json({ error: "Could not update payment type." });
