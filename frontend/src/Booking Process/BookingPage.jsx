@@ -35,6 +35,8 @@ export default function BookingPage({ onNext }) {
   const [selectedTime, setSelectedTime] = useState(
     isRescheduling ? rescheduleData.time : "",
   );
+
+  // These were duplicated, now unified:
   const [duration, setDuration] = useState(
     isRescheduling ? rescheduleData.duration : 4,
   );
@@ -44,22 +46,11 @@ export default function BookingPage({ onNext }) {
   const [egress, setEgress] = useState(
     isRescheduling ? rescheduleData.egress_time : 1,
   );
-  const durationOptions = useMemo(() => {
-    const baseOptions = [4, 5, 6, 7, 8, 9, 10];
-    // If rescheduling, enforce the "No Decrease" rule
-    if (isRescheduling) {
-      return baseOptions.filter((h) => h >= rescheduleData.duration);
-    }
-    // If not rescheduling, check time slot remaining hours
-    if (!selectedTime) return baseOptions;
-    const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
-    if (!selectedSlot) return baseOptions;
-    const hoursRemaining = 24 - selectedSlot.hour24;
-    return baseOptions.filter((h) => h <= hoursRemaining);
-  }, [isRescheduling, rescheduleData, selectedTime, timeSlots]);
 
+  const [eventType, setEventType] = useState("");
+  const [eventName, setEventName] = useState("");
   const [guestCount, setGuestCount] = useState("");
-  const today = startOfToday();
+
   const [username, setUsername] = useState(user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phoneNumber, setPhoneNumber] = useState(user?.phone_number || "");
@@ -67,18 +58,37 @@ export default function BookingPage({ onNext }) {
   const [bookedDates, setBookedDates] = useState([]);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
+  const timeSlots = useMemo(() => {
+    if (!selectedDate) return [];
+    const slots = [];
+    const isSunday = getDay(selectedDate) === 0;
+    const startHour = isSunday ? 15 : 8;
+    const endHour = 20;
+    for (let i = startHour; i <= endHour; i++) {
+      let label = i < 12 ? `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`;
+      slots.push({ label: label, hour24: i });
+    }
+    return slots;
+  }, [selectedDate]);
+
+  // Unified durationOptions
+  const durationOptions = useMemo(() => {
+    const defaultDurations = [4, 5, 6, 7, 8, 9, 10];
+    if (!selectedTime) return defaultDurations;
+    const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
+    if (!selectedSlot) return defaultDurations;
+    const startHour = selectedSlot.hour24;
+    const hoursRemaining = 24 - startHour;
+    return defaultDurations.filter((h) => h <= hoursRemaining);
+  }, [selectedTime, timeSlots]);
+
   useEffect(() => {
-    //view from mobile
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
 
     const fetchBookings = async () => {
       try {
-        console.log("Fetching from:", `${API_URL}/api/bookings/all`); // Debug check
         const response = await axios.get(`${API_URL}/api/bookings/all`);
-
-        console.log("API Response:", response.data); // Debug check
-
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
@@ -87,132 +97,61 @@ export default function BookingPage({ onNext }) {
         console.error("Failed to fetch bookings:", err);
       }
     };
-
     fetchBookings();
-
     return () => window.removeEventListener("resize", handleResize);
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
   const unavailableDates = [...bookedDates];
-
-  // Captured states for the new pricing logic
-
-  const [eventType, setEventType] = useState("");
-  const [eventName, setEventName] = useState("");
-  const [duration, setDuration] = useState(4);
-  const [ingress, setIngress] = useState(2);
-  const [egress, setEgress] = useState(1);
-
-  const timeSlots = useMemo(() => {
-    if (!selectedDate) return [];
-
-    const slots = [];
-    const isSunday = getDay(selectedDate) === 0;
-    const startHour = isSunday ? 15 : 8;
-    const endHour = 20;
-
-    for (let i = startHour; i <= endHour; i++) {
-      let label = i < 12 ? `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`;
-
-      slots.push({ label: label, hour24: i });
-    }
-
-    return slots;
-  }, [selectedDate]);
-
-  const durationOptions = useMemo(() => {
-    const defaultDurations = [4, 5, 6, 7, 8, 9, 10];
-    if (!selectedTime) return defaultDurations;
-    const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
-    if (!selectedSlot) return defaultDurations;
-    const startHour = selectedSlot.hour24;
-    const hoursRemaining = 24 - startHour;
-
-    return defaultDurations.filter((h) => h <= hoursRemaining);
-  }, [selectedTime, timeSlots]);
-
   const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(monthStart);
-  const calendarStart = startOfWeek(monthStart);
-  const calendarEnd = endOfWeek(monthEnd);
   const days = eachDayOfInterval({
-    start: calendarStart,
-
-    end: calendarEnd,
+    start: startOfWeek(monthStart),
+    end: endOfWeek(endOfMonth(monthStart)),
   });
 
-  const isUnavailable = (date) => {
-    return unavailableDates.includes(format(date, "yyyy-MM-dd"));
-  };
+  const isUnavailable = (date) =>
+    unavailableDates.includes(format(date, "yyyy-MM-dd"));
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
     const isPastDate = isBefore(date, startOfToday());
     const isBooked = bookedDates.includes(dateStr);
-    const isUnavailableDate = isUnavailable(date);
-
-    // 1. Always check non-current month first
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
-
-    // 2. Check for unavailable/booked dates FIRST
-    // This ensures even past dates are marked as 'unavailable' or 'booked'
-    if (isUnavailableDate || isBooked) {
-      return "bg-red-300 cursor-not-allowed"; // Or your preferred "booked" color
-    }
-
-    // 3. Then check if it's a past date (that isn't booked)
-    if (isPastDate) {
-      return "bg-gray-100 text-gray-300 cursor-not-allowed";
-    }
-
-    // 4. Finally, check for the selected state
+    if (isUnavailable(date) || isBooked) return "bg-red-300 cursor-not-allowed";
+    if (isPastDate) return "bg-gray-100 text-gray-300 cursor-not-allowed";
     if (selectedDate && isSameDay(date, selectedDate)) return "bg-yellow-300";
-
-    // 5. Default: Available
     return "bg-green-200 hover:bg-green-300 cursor-pointer";
   };
 
   const handleGuestChange = (e) => {
     const value = e.target.value;
-
     if (value === "" || (parseInt(value) <= 200 && parseInt(value) >= 0)) {
       setGuestCount(value);
     }
   };
 
   const allowedIngressDurations = useMemo(() => {
-    // 1. Default options for any day that isn't a Sunday
-
     const defaultOptions = [1, 2, 3, 4];
-
     if (!selectedTime || !selectedDate) return defaultOptions;
-
     const isSunday = getDay(selectedDate) === 0;
-
-    // 2. If it's NOT a Sunday, return the full list
-
     if (!isSunday) return defaultOptions;
-
-    // 3. If it IS a Sunday, apply the "No ingress before 1 PM" constraint
-
     const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
-
     if (!selectedSlot) return defaultOptions;
-
-    // Sunday constraint: (Event Start - Ingress) must be >= 13 (1 PM)
-
-    // Max duration allowed = Event Start - 13
-
     const maxAllowedDuration = selectedSlot.hour24 - 13;
-
-    // Return only options that are <= maxAllowedDuration
-
-    // Ensure we don't return values <= 0
-
     return defaultOptions.filter((d) => d <= maxAllowedDuration && d > 0);
   }, [selectedTime, selectedDate, timeSlots]);
 
   const handleNextClick = () => {
+    const convertTo24Hour = (timeStr) => {
+      if (!timeStr) return "00:00:00";
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":");
+      if (!minutes) minutes = "00";
+      let hoursNum = parseInt(hours, 10);
+      if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
+      if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
+      return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
+    };
+
     const bookingPayload = {
       username,
       email,
@@ -221,7 +160,7 @@ export default function BookingPage({ onNext }) {
       eventName,
       eventType,
       date: format(selectedDate, "yyyy-MM-dd"),
-      time: selectedTime, // Ensure this format matches your backend
+      time: convertTo24Hour(selectedTime),
       duration: parseInt(duration),
       ingress_time: parseInt(ingress),
       egress_time: parseInt(egress),
@@ -229,52 +168,7 @@ export default function BookingPage({ onNext }) {
       isReschedule: isRescheduling,
       originalBookingId: isRescheduling ? rescheduleData.id : null,
     };
-
     onNext(bookingPayload);
-
-    const convertTo24Hour = (timeStr) => {
-      if (!timeStr) return "00:00:00";
-
-      const [time, modifier] = timeStr.split(" ");
-
-      let [hours, minutes] = time.split(":");
-
-      if (!minutes) minutes = "00";
-
-      let hoursNum = parseInt(hours, 10);
-
-      if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
-
-      if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
-
-      return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
-    };
-
-    onNext({
-      username,
-
-      email: email,
-
-      address: address,
-
-      phone_number: phoneNumber, // Use the state variable defined above
-
-      eventName,
-
-      eventType,
-
-      date: format(selectedDate, "yyyy-MM-dd"),
-
-      time: convertTo24Hour(selectedTime),
-
-      duration: parseInt(duration),
-
-      ingress_time: parseInt(ingress), // e.g., 2
-
-      egress_time: parseInt(egress), // e.g., 1
-
-      guests: guestCount,
-    });
   };
 
   return (
