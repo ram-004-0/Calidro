@@ -450,9 +450,9 @@ router.post("/checkout-balance", async (req, res) => {
               type: "balance_update",
             },
 
-            success_url: `${process.env.FRONTEND_URL}/ReviewDetails?bookingId=${bookingId}`,
+            success_url: `https://calidro.vercel.app/ReviewDetails?bookingId=${bookingId}`,
 
-            cancel_url: `${process.env.FRONTEND_URL}/userbook`,
+            cancel_url: `https://calidro.vercel.app/userbook`,
           },
         },
       },
