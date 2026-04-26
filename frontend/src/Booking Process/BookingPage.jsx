@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import {
@@ -24,8 +24,36 @@ const API_URL =
 export default function BookingPage({ onNext }) {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState("");
+
+  const [selectedDate, setSelectedDate] = useState(
+    isRescheduling ? parseISO(rescheduleData.date) : null,
+  );
+  const [selectedTime, setSelectedTime] = useState(
+    isRescheduling ? rescheduleData.time : "",
+  );
+  const [duration, setDuration] = useState(
+    isRescheduling ? rescheduleData.duration : 4,
+  );
+  const [ingress, setIngress] = useState(
+    isRescheduling ? rescheduleData.ingress_time : 2,
+  );
+  const [egress, setEgress] = useState(
+    isRescheduling ? rescheduleData.egress_time : 1,
+  );
+
+  const durationOptions = useMemo(() => {
+    const baseOptions = [4, 5, 6, 7, 8, 9, 10];
+    if (!isRescheduling) return baseOptions;
+    return baseOptions.filter((h) => h >= rescheduleData.duration);
+  }, [isRescheduling, rescheduleData]);
+
+  const ingressOptions = [1, 2, 3, 4].filter((h) =>
+    isRescheduling ? h >= rescheduleData.ingress_time : true,
+  );
+  const egressOptions = [1, 2, 3].filter((h) =>
+    isRescheduling ? h >= rescheduleData.egress_time : true,
+  );
+
   const [guestCount, setGuestCount] = useState("");
   const today = startOfToday();
   const [username, setUsername] = useState(user?.username || "");
@@ -181,7 +209,24 @@ export default function BookingPage({ onNext }) {
   }, [selectedTime, selectedDate, timeSlots]);
 
   const handleNextClick = () => {
-    // Helper to convert "3 PM" -> "15:00:00"
+    const bookingPayload = {
+      username,
+      email,
+      address,
+      phone_number: phoneNumber,
+      eventName,
+      eventType,
+      date: format(selectedDate, "yyyy-MM-dd"),
+      time: selectedTime, // Ensure this format matches your backend
+      duration: parseInt(duration),
+      ingress_time: parseInt(ingress),
+      egress_time: parseInt(egress),
+      guests: guestCount,
+      isReschedule: isRescheduling,
+      originalBookingId: isRescheduling ? rescheduleData.id : null,
+    };
+
+    onNext(bookingPayload);
 
     const convertTo24Hour = (timeStr) => {
       if (!timeStr) return "00:00:00";
@@ -232,7 +277,7 @@ export default function BookingPage({ onNext }) {
     <div className="bg-[#f1f1f1] w-full max-w-7xl rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-2">
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
-          Booking Details
+          {isRescheduling ? "Reschedule Booking" : "Booking Details"}
         </h1>
 
         <FormRow label="TYPE OF EVENT">
@@ -334,9 +379,9 @@ export default function BookingPage({ onNext }) {
 
           <FormRow label="DURATION">
             <select
-              className="input-style w-full"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
+              className="input-style w-full"
             >
               {durationOptions.map((h) => (
                 <option key={h} value={h}>
@@ -352,32 +397,38 @@ export default function BookingPage({ onNext }) {
         >
           <FormRow label="INGRESS">
             <select
-              className="input-style w-full"
               value={ingress}
               onChange={(e) => setIngress(e.target.value)}
+              className="input-style w-full"
             >
-              {allowedIngressDurations.map((h) => (
+              {ingressOptions.map((h) => (
                 <option key={h} value={h}>
                   {h} Hour{h > 1 ? "s" : ""}
                 </option>
               ))}
             </select>
           </FormRow>
-
           <FormRow label="EGRESS">
             <select
-              className="input-style w-full"
               value={egress}
               onChange={(e) => setEgress(e.target.value)}
+              className="input-style w-full"
             >
-              <option value="1">1 Hour</option>
-
-              <option value="2">2 Hours</option>
-
-              <option value="3">3 Hours</option>
+              {egressOptions.map((h) => (
+                <option key={h} value={h}>
+                  {h} Hour{h > 1 ? "s" : ""}
+                </option>
+              ))}
             </select>
           </FormRow>
         </div>
+
+        <button
+          onClick={handleNextClick}
+          className="bg-[#f4dfba] hover:bg-white transition px-10 py-3 rounded-full font-bold uppercase text-sm shadow-md"
+        >
+          {isRescheduling ? "Confirm Reschedule >" : "Next >"}
+        </button>
 
         <FormRow label="NO. OF GUESTS">
           <div className="flex-1 flex flex-col">

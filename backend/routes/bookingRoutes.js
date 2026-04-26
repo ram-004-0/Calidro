@@ -537,4 +537,31 @@ router.put("/edit/:id", async (req, res) => {
   }
 });
 
+// Example in Express.js
+app.put("/api/bookings/reschedule/:id", async (req, res) => {
+  const { id } = req.params;
+  const { date, time, duration, ingress_time, egress_time } = req.body;
+
+  // 1. Fetch current booking to get original details
+  const [booking] = await db.query("SELECT * FROM bookings WHERE id = ?", [id]);
+
+  // 2. Enforce "No Decrease" Rule
+  if (duration < booking.duration) {
+    return res.status(400).json({ error: "Cannot decrease duration." });
+  }
+
+  // 3. Recalculate Price
+  // Example: Basic logic (Adjust this to your actual formula)
+  const newTotal =
+    duration * hourlyRate + (ingress_time + egress_time) * serviceFee;
+
+  // 4. Update Database
+  await db.query(
+    "UPDATE bookings SET event_date = ?, time = ?, duration = ?, ingress_time = ?, egress_time = ?, total = ? WHERE id = ?",
+    [date, time, duration, ingress_time, egress_time, newTotal, id],
+  );
+
+  res.json({ message: "Booking rescheduled successfully", newTotal });
+});
+
 module.exports = router;
