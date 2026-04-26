@@ -26,10 +26,14 @@ const ReviewDetails = () => {
           if (!isMounted) return;
           setDetails(res.data);
 
-          // ✅ Check if status is pending AND we haven't already tried to update it
+          // 2. Trigger Status Update
           if (res.data.status === "pending" && !hasTriggeredUpdate) {
             hasTriggeredUpdate = true;
             updateBookingStatus(bookingId);
+          }
+          // 3. ADDED: Finalize Payment Type to 'full' if it's not already
+          if (res.data.payment_type !== "full") {
+            finalizePayment(bookingId);
           }
         })
         .catch((err) => {
@@ -42,6 +46,16 @@ const ReviewDetails = () => {
     };
   }, [bookingId]);
 
+  const finalizePayment = async (id) => {
+    try {
+      await axios.put(`${API_URL}/api/bookings/finalize-payment/${id}`);
+      console.log("Database updated: payment_type is now 'full'.");
+      // Refresh local state to reflect update
+      setDetails((prev) => ({ ...prev, payment_type: "full" }));
+    } catch (err) {
+      console.error("Failed to finalize payment type:", err);
+    }
+  };
   // ReviewDetails.jsx
   // ReviewDetails.jsx
   const updateBookingStatus = async (id) => {
@@ -54,7 +68,6 @@ const ReviewDetails = () => {
       await axios.put(`${API_URL}/api/bookings/update-status/${id}`, {
         status: "confirmed",
       });
-      // ... rest of your code
     } catch (err) {
       console.error("Failed to update status:", err);
     }

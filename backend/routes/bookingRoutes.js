@@ -352,28 +352,40 @@ router.get("/all", async (req, res) => {
 
 router.put("/:id/update-payment", async (req, res) => {
   const { id } = req.params;
+
   const { paymentAmount } = req.body;
 
   try {
     const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
+
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
     const newTotalPaid = rows[0].amount_paid + parseFloat(paymentAmount);
-    const newStatus =
-      newTotalPaid >= rows[0].total_amount ? "confirmed" : "partial";
 
-    // Logic: If they paid the full amount, the type is 'full'. Otherwise, it's 'partial'.
-    const newPaymentType =
-      newTotalPaid >= rows[0].total_amount ? "full" : "partial";
+    const remainingBalance = rows[0].total_amount - newTotalPaid;
+
+    const newStatus = remainingBalance <= 0 ? "confirmed" : "partial";
 
     await db.query(
-      "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE id = ?",
-      [newTotalPaid, newStatus, newPaymentType, id],
+      "UPDATE booking SET amount_paid = ?, status = ? WHERE id = ?",
+
+      [newTotalPaid, newStatus, id],
     );
 
-    // ... (rest of your confirmation email logic)
-    res.json({ success: true, newStatus, newPaymentType });
+    if (newStatus === "confirmed") {
+      const updatedBooking = {
+        ...rows[0],
+
+        amount_paid: newTotalPaid,
+
+        status: newStatus,
+      };
+
+      await sendBookingConfirmation(updatedBooking);
+    }
+
+    res.json({ success: true, remainingBalance });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -485,28 +497,28 @@ router.get("/test-cleanup-manual", async (req, res) => {
   }
 });
 
-// 8. PayMongo Webhook Listener
-router.post("/webhook/paymongo", async (req, res) => {
-  const event = req.body;
+// 8. Finalize Payment Type
+// Call this from your ReviewDetails.js after a successful PayMongo checkout
+router.put("/finalize-payment/:bookingId", async (req, res) => {
+  const { bookingId } = req.params;
 
-  // Verify the event type (e.g., payment.paid)
-  if (event.data.attributes.type === "payment.paid") {
-    const bookingId = event.data.attributes.data.metadata.bookingId;
+  try {
+    // We update both the amount_paid to total_amount and the payment_type to 'full'
+    // This ensures that even if they only paid the balance, the record is now 'full'
+    await db.query(
+      `UPDATE booking 
+       SET amount_paid = total_amount, 
+           payment_type = 'full', 
+           status = 'confirmed' 
+       WHERE id = ?`,
+      [bookingId],
+    );
 
-    try {
-      // Logic: Update database to 'confirmed' and 'full' payment
-      await db.query(
-        "UPDATE booking SET status = 'confirmed', payment_type = 'full', amount_paid = total_amount WHERE id = ?",
-        [bookingId],
-      );
-      console.log(`✅ Webhook: Booking ${bookingId} marked as fully paid.`);
-    } catch (err) {
-      console.error("Webhook DB Update Error:", err);
-    }
+    res.json({ success: true, message: "Payment type updated to full." });
+  } catch (err) {
+    console.error("Finalize Payment Error:", err);
+    res.status(500).json({ error: "Could not update payment type." });
   }
-
-  // Always return 200 to acknowledge receipt
-  res.status(200).send("Webhook received");
 });
 
 module.exports = router;
