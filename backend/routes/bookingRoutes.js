@@ -524,12 +524,15 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
 router.put("/edit/:id", async (req, res) => {
   const { typeOfEvent, eventName, noOfGuests } = req.body;
   try {
+    // 1. Changed table name from 'bookings' to 'booking'
+    // 2. Changed column names to match your database schema
     await db.query(
-      "UPDATE bookings SET typeOfEvent = ?, eventName = ?, noOfGuests = ? WHERE id = ?",
+      "UPDATE booking SET event_type = ?, event_name = ?, guests = ? WHERE id = ?",
       [typeOfEvent, eventName, noOfGuests, req.params.id],
     );
     res.json({ message: "Booking updated" });
   } catch (err) {
+    console.error("DEBUG: Update Error:", err); // Added console log for easier debugging
     res.status(500).json({ error: err.message });
   }
 });
