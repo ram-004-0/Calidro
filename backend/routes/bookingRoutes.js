@@ -542,7 +542,7 @@ router.put("/reschedule/:id", async (req, res) => {
   const { date, time, duration, ingress_time, egress_time } = req.body;
 
   try {
-    const [rows] = await db.query("SELECT * FROM bookings WHERE id = ?", [id]);
+    const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
@@ -560,7 +560,7 @@ router.put("/reschedule/:id", async (req, res) => {
       (parseInt(ingress_time) + parseInt(egress_time)) * serviceFee;
 
     await db.query(
-      "UPDATE bookings SET event_date = ?, time = ?, duration = ?, ingress_time = ?, egress_time = ?, total = ? WHERE id = ?",
+      "UPDATE booking SET event_date = ?, time = ?, duration = ?, ingress_time = ?, egress_time = ?, total_amount = ? WHERE id = ?",
       [
         date,
         time,
