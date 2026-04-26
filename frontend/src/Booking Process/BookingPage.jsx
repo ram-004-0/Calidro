@@ -255,7 +255,8 @@ export default function BookingPage({ onNext }) {
 
         <FormRow label="TYPE OF EVENT">
           <select
-            className="input-style flex-1"
+            disabled={isRescheduling}
+            className={`input-style flex-1 ${isRescheduling ? "opacity-50 cursor-not-allowed" : ""}`}
             value={eventType}
             onChange={(e) => setEventType(e.target.value)}
           >
@@ -402,11 +403,12 @@ export default function BookingPage({ onNext }) {
               type="number"
               value={guestCount}
               onChange={handleGuestChange}
+              disabled={isRescheduling} // <--- ADD THIS
               max="200"
               placeholder="Max 200 pax"
               className={`input-style w-full ${
                 parseInt(guestCount) === 200 ? "border-orange-400" : ""
-              }`}
+              } ${isRescheduling ? "opacity-50 cursor-not-allowed" : ""}`} // <--- ADD THIS VISUAL CUE
             />
 
             <span className="text-[10px] text-[#4a3733] mt-1 ml-2">
