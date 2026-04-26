@@ -546,18 +546,20 @@ router.put("/reschedule/:id", async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
-    const booking = rows[0];
+    // FIX: Add explicit fallback to 0 if parsing fails
+    const durNum = parseInt(duration);
+    const ingNum = parseInt(ingress_time);
+    const egNum = parseInt(egress_time);
 
-    // Validate Duration
-    if (parseInt(duration) < parseInt(booking.duration)) {
-      return res.status(400).json({ error: "Cannot decrease duration." });
-    }
+    // If any are NaN, replace with 0
+    const finalDuration = isNaN(durNum) ? 0 : durNum;
+    const finalIngress = isNaN(ingNum) ? 0 : ingNum;
+    const finalEgress = isNaN(egNum) ? 0 : egNum;
 
     const hourlyRate = 500;
     const serviceFee = 200;
     const newTotal =
-      parseInt(duration) * hourlyRate +
-      (parseInt(ingress_time) + parseInt(egress_time)) * serviceFee;
+      finalDuration * hourlyRate + (finalIngress + finalEgress) * serviceFee;
 
     await db.query(
       `UPDATE booking 
@@ -567,9 +569,9 @@ router.put("/reschedule/:id", async (req, res) => {
       [
         date,
         time,
-        parseInt(duration),
-        parseInt(ingress_time),
-        parseInt(egress_time),
+        finalDuration.toString(), // event_duration is VARCHAR
+        finalIngress,
+        finalEgress,
         newTotal,
         id,
       ],
