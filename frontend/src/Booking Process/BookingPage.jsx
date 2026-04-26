@@ -98,16 +98,18 @@ export default function BookingPage({ onNext }) {
 
   const updateBookingOnly = async (payload) => {
     try {
-      const response = await axios.put(
-        `${API_URL}/api/bookings/reschedule/${rescheduleData.id}`,
-        payload,
-      );
+      // Log the full URL to your console to verify it's correct
+      const url = `${API_URL}/api/bookings/reschedule/${rescheduleData.id}`;
+      console.log("Sending PUT to:", url);
+
+      const response = await axios.put(url, payload);
       alert("Booking updated successfully!");
-      // Navigate back to dashboard or home
-      // navigate("/dashboard");
     } catch (err) {
-      console.error("Update failed:", err);
-      alert("Failed to update booking. Please try again.");
+      // If this is still 404, the URL string above is wrong for your backend setup
+      console.error("Update failed:", err.response?.data || err.message);
+      alert(
+        "Failed to update booking. Server responded with 404: Check if the route exists.",
+      );
     }
   };
 
@@ -199,34 +201,6 @@ export default function BookingPage({ onNext }) {
   }, [selectedTime, selectedDate, timeSlots]);
 
   const handleNextClick = () => {
-    const isUpgraded =
-      parseInt(duration) > rescheduleData.duration ||
-      parseInt(ingress) > rescheduleData.ingress_time ||
-      parseInt(egress) > rescheduleData.egress_time;
-
-    const bookingPayload = {
-      username,
-      email,
-      address,
-      phone_number: phoneNumber,
-      eventName,
-      eventType,
-      date: format(selectedDate, "yyyy-MM-dd"),
-      time: selectedTime, // Ensure this format matches your backend
-      duration: parseInt(duration),
-      ingress_time: parseInt(ingress),
-      egress_time: parseInt(egress),
-      guests: guestCount,
-      isReschedule: isRescheduling,
-      isUpgrade: isRescheduling ? isUpgraded : false, // Tell backend if it needs to trigger payment
-      originalBookingId: isRescheduling ? rescheduleData.id : null,
-    };
-    if (isRescheduling && !isUpgraded) {
-      updateBookingOnly(bookingPayload);
-    } else {
-      onNext(bookingPayload);
-    }
-
     const convertTo24Hour = (timeStr) => {
       if (!timeStr) return "00:00:00";
       const [time, modifier] = timeStr.split(" ");
@@ -237,6 +211,37 @@ export default function BookingPage({ onNext }) {
       if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
       return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
     };
+
+    const isUpgraded =
+      parseInt(duration) > parseInt(rescheduleData.duration) ||
+      parseInt(ingress) > parseInt(rescheduleData.ingress_time) ||
+      parseInt(egress) > parseInt(rescheduleData.egress_time);
+
+    const bookingPayload = {
+      username,
+      email,
+      address,
+      phone_number: phoneNumber,
+      eventName,
+      eventType,
+      date: format(selectedDate, "yyyy-MM-dd"),
+      time: selectedTime,
+      duration: parseInt(duration),
+      ingress_time: parseInt(ingress),
+      egress_time: parseInt(egress),
+      guests: guestCount,
+      isReschedule: isRescheduling,
+      isUpgrade: isUpgraded,
+      originalBookingId: isRescheduling ? rescheduleData.id : null,
+    };
+
+    if (isRescheduling && !isUpgraded) {
+      // Only update existing booking
+      updateBookingOnly(bookingPayload);
+    } else {
+      // Send to payment or create new booking
+      onNext(bookingPayload);
+    }
 
     onNext({
       username,
@@ -320,8 +325,8 @@ export default function BookingPage({ onNext }) {
         <FormRow label="NAME OF EVENT:">
           <input
             type="text"
-            placeholder="Enter the name of your event"
-            className="input-style flex-1"
+            disabled={isRescheduling}
+            className={`input-style flex-1 ${isRescheduling ? "opacity-50 cursor-not-allowed" : ""}`}
             value={eventName}
             onChange={(e) => setEventName(e.target.value)}
           />
@@ -404,13 +409,6 @@ export default function BookingPage({ onNext }) {
           </FormRow>
         </div>
 
-        <button
-          onClick={handleNextClick}
-          className="bg-[#f4dfba] hover:bg-white transition px-10 py-3 rounded-full font-bold uppercase text-sm shadow-md"
-        >
-          {isRescheduling ? "Confirm Reschedule >" : "Next >"}
-        </button>
-
         <FormRow label="NO. OF GUESTS">
           <div className="flex-1 flex flex-col">
             <input
@@ -435,7 +433,7 @@ export default function BookingPage({ onNext }) {
             onClick={handleNextClick}
             className="bg-[#f4dfba] hover:bg-white transition px-10 py-3 rounded-full font-bold uppercase text-sm shadow-md"
           >
-            Next &gt;
+            {isRescheduling ? "Confirm Reschedule >" : "Next >"} &gt;
           </button>
         </div>
       </div>
