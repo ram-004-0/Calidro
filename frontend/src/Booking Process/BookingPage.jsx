@@ -59,6 +59,16 @@ export default function BookingPage({ onNext }) {
     return baseOptions.filter((h) => h <= hoursRemaining);
   }, [isRescheduling, rescheduleData, selectedTime, timeSlots]);
 
+  // 1. Define ingressOptions
+  const ingressOptions = useMemo(() => {
+    return [1, 2, 3, 4]; // Adjust these values as needed
+  }, []);
+
+  // 2. Define egressOptions
+  const egressOptions = useMemo(() => {
+    return [1, 2, 3, 4]; // Adjust these values as needed
+  }, []);
+
   const [guestCount, setGuestCount] = useState("");
   const today = startOfToday();
   const [username, setUsername] = useState(user?.username || "");
