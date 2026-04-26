@@ -537,31 +537,66 @@ router.put("/edit/:id", async (req, res) => {
   }
 });
 
-// Example in Express.js
-app.put("/api/bookings/reschedule/:id", async (req, res) => {
+router.put("/api/bookings/reschedule/:id", async (req, res) => {
   const { id } = req.params;
   const { date, time, duration, ingress_time, egress_time } = req.body;
 
-  // 1. Fetch current booking to get original details
-  const [booking] = await db.query("SELECT * FROM bookings WHERE id = ?", [id]);
+  try {
+    // 1. Fetch current booking to get original details
+    const [rows] = await db.query("SELECT * FROM bookings WHERE id = ?", [id]);
 
-  // 2. Enforce "No Decrease" Rule
-  if (duration < booking.duration) {
-    return res.status(400).json({ error: "Cannot decrease duration." });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    const booking = rows[0];
+
+    // 2. Enforce "No Decrease" Rule
+    // We parse to int to ensure we are comparing numbers
+    if (parseInt(duration) < parseInt(booking.duration)) {
+      return res.status(400).json({ error: "Cannot decrease duration." });
+    }
+
+    // 3. Recalculate Price
+    // Note: Ensure your hourlyRate and serviceFee are defined or fetched from your config
+    const hourlyRate = 500; // Replace with your actual value
+    const serviceFee = 200; // Replace with your actual value
+
+    const newTotal =
+      parseInt(duration) * hourlyRate +
+      (parseInt(ingress_time) + parseInt(egress_time)) * serviceFee;
+
+    // 4. Update Database
+    await db.query(
+      "UPDATE bookings SET event_date = ?, time = ?, duration = ?, ingress_time = ?, egress_time = ?, total = ? WHERE id = ?",
+      [
+        date,
+        time,
+        parseInt(duration),
+        parseInt(ingress_time),
+        parseInt(egress_time),
+        newTotal,
+        id,
+      ],
+    );
+
+    res.json({
+      message: "Booking rescheduled successfully",
+      newTotal,
+      updatedBooking: {
+        date,
+        time,
+        duration,
+        ingress_time,
+        egress_time,
+      },
+    });
+  } catch (error) {
+    console.error("Reschedule Error:", error);
+    res
+      .status(500)
+      .json({ error: "Internal server error during rescheduling" });
   }
-
-  // 3. Recalculate Price
-  // Example: Basic logic (Adjust this to your actual formula)
-  const newTotal =
-    duration * hourlyRate + (ingress_time + egress_time) * serviceFee;
-
-  // 4. Update Database
-  await db.query(
-    "UPDATE bookings SET event_date = ?, time = ?, duration = ?, ingress_time = ?, egress_time = ?, total = ? WHERE id = ?",
-    [date, time, duration, ingress_time, egress_time, newTotal, id],
-  );
-
-  res.json({ message: "Booking rescheduled successfully", newTotal });
 });
 
 module.exports = router;
