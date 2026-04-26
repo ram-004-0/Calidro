@@ -581,7 +581,7 @@ router.put("/reschedule/:id", async (req, res) => {
       `UPDATE booking 
        SET event_date = ?, event_time = ?, event_duration = ?, 
            ingress_time = ?, egress_time = ?, total_amount = ?, 
-           payment_status = ? 
+           payment_type = ? 
        WHERE id = ?`,
       [date, time, dur.toString(), ing, eg, newTotal, newStatus, id],
     );
