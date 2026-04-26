@@ -474,4 +474,27 @@ router.post("/checkout-balance", async (req, res) => {
   }
 });
 
+router.get("/test-cleanup-manual", async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+
+    // This is the exact query that will run in the cron job
+    const sql = `
+      UPDATE booking 
+      SET status = 'completed' 
+      WHERE event_date < ? 
+      AND status IN ('pending', 'confirmed')
+    `;
+
+    const [result] = await db.query(sql, [today]);
+
+    res.json({
+      message: "Cleanup triggered successfully",
+      rowsUpdated: result.affectedRows,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

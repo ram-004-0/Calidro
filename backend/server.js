@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const cron = require("node-cron");
 const db = require("./config/db");
 const app = express();
 const bookingRoutes = require("./routes/bookingRoutes");
@@ -114,6 +115,30 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
+});
+
+cron.schedule("0 0 * * *", async () => {
+  console.log("🕒 Running daily booking cleanup task...");
+
+  try {
+    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
+    // Update status to 'completed' if the event date has passed
+    const sql = `
+      UPDATE booking 
+      SET status = 'completed' 
+      WHERE event_date < ? 
+      AND status IN ('pending', 'confirmed')
+    `;
+
+    const [result] = await db.query(sql, [today]);
+
+    console.log(
+      `✅ Automated cleanup: ${result.affectedRows} bookings marked as completed.`,
+    );
+  } catch (err) {
+    console.error("❌ Cron job failed:", err);
+  }
 });
 
 const PORT = process.env.PORT || 5000;
