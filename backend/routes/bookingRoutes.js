@@ -348,44 +348,41 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// 6. Manual Payment Update (Admin)
-
+// 6. Update Payment (Works for both manual admin updates and PayMongo balance updates)
 router.put("/:id/update-payment", async (req, res) => {
   const { id } = req.params;
-
-  const { paymentAmount } = req.body;
+  const { paymentAmount } = req.body; // The additional amount being paid
 
   try {
+    // 1. Fetch current booking
     const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
-
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
-    const newTotalPaid = rows[0].amount_paid + parseFloat(paymentAmount);
+    const booking = rows[0];
+    const newTotalPaid =
+      parseFloat(booking.amount_paid) + parseFloat(paymentAmount);
+    const remainingBalance = booking.total_amount - newTotalPaid;
 
-    const remainingBalance = rows[0].total_amount - newTotalPaid;
-
+    // 2. Logic: Status is 'confirmed' ONLY if fully paid, else 'partial'
     const newStatus = remainingBalance <= 0 ? "confirmed" : "partial";
+    const newPaymentType = remainingBalance <= 0 ? "full" : "partial";
 
     await db.query(
-      "UPDATE booking SET amount_paid = ?, status = ? WHERE id = ?",
-
-      [newTotalPaid, newStatus, id],
+      "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE id = ?",
+      [newTotalPaid, newStatus, newPaymentType, id],
     );
 
-    if (newStatus === "confirmed") {
-      const updatedBooking = {
-        ...rows[0],
-
+    // 3. Send email only if it just became fully paid
+    if (newStatus === "confirmed" && booking.status !== "confirmed") {
+      await sendBookingConfirmation({
+        ...booking,
         amount_paid: newTotalPaid,
-
         status: newStatus,
-      };
-
-      await sendBookingConfirmation(updatedBooking);
+      });
     }
 
-    res.json({ success: true, remainingBalance });
+    res.json({ success: true, remainingBalance, newStatus });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

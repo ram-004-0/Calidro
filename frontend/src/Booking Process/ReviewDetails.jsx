@@ -21,29 +21,16 @@ const ReviewDetails = () => {
         .then((res) => {
           setDetails(res.data);
 
-          // Only update status if it is truly pending in the DB
           if (res.data.status === "pending") {
             updateBookingStatus(bookingId);
           }
-          // REMOVED: The call to finalizePayment(bookingId)
-          // It was overwriting your data incorrectly.
         })
         .catch((err) => console.error("Fetch failed:", err));
     }
   }, [bookingId]);
 
-  const finalizePayment = async (id) => {
-    try {
-      await axios.put(`${API_URL}/api/bookings/finalize-payment/${id}`);
-      console.log("Database updated: payment_type is now 'full'.");
-      // Refresh local state to reflect update
-      setDetails((prev) => ({ ...prev, payment_type: "full" }));
-    } catch (err) {
-      console.error("Failed to finalize payment type:", err);
-    }
-  };
   // ReviewDetails.jsx
-  // ReviewDetails.jsx
+
   const updateBookingStatus = async (id) => {
     if (!id) {
       console.error("No ID provided to updateBookingStatus!");
