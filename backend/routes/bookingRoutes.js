@@ -560,7 +560,10 @@ router.put("/reschedule/:id", async (req, res) => {
       (parseInt(ingress_time) + parseInt(egress_time)) * serviceFee;
 
     await db.query(
-      "UPDATE booking SET event_date = ?, time = ?, duration = ?, ingress_time = ?, egress_time = ?, total_amount = ? WHERE id = ?",
+      `UPDATE booking 
+       SET event_date = ?, event_time = ?, event_duration = ?, 
+           ingress_time = ?, egress_time = ?, total_amount = ? 
+       WHERE id = ?`,
       [
         date,
         time,
