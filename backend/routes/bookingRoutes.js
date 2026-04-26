@@ -599,4 +599,44 @@ router.put("/bookings/reschedule/:id", async (req, res) => {
   }
 });
 
+router.put("/reschedule/:id", async (req, res) => {
+  const { id } = req.params;
+  const { date, time, duration, ingress_time, egress_time } = req.body;
+
+  try {
+    const [rows] = await db.query("SELECT * FROM bookings WHERE id = ?", [id]);
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Booking not found" });
+
+    const booking = rows[0];
+    if (parseInt(duration) < parseInt(booking.duration)) {
+      return res.status(400).json({ error: "Cannot decrease duration." });
+    }
+
+    const hourlyRate = 500;
+    const serviceFee = 200;
+    const newTotal =
+      parseInt(duration) * hourlyRate +
+      (parseInt(ingress_time) + parseInt(egress_time)) * serviceFee;
+
+    await db.query(
+      "UPDATE bookings SET event_date = ?, time = ?, duration = ?, ingress_time = ?, egress_time = ?, total = ? WHERE id = ?",
+      [
+        date,
+        time,
+        parseInt(duration),
+        parseInt(ingress_time),
+        parseInt(egress_time),
+        newTotal,
+        id,
+      ],
+    );
+
+    res.json({ message: "Booking rescheduled successfully", newTotal });
+  } catch (error) {
+    console.error("Reschedule Error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;

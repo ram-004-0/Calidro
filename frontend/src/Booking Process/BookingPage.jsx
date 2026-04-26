@@ -213,9 +213,10 @@ export default function BookingPage({ onNext }) {
     };
 
     const isUpgraded =
-      parseInt(duration) > parseInt(rescheduleData.duration) ||
-      parseInt(ingress) > parseInt(rescheduleData.ingress_time) ||
-      parseInt(egress) > parseInt(rescheduleData.egress_time);
+      isRescheduling &&
+      (parseInt(duration) > parseInt(rescheduleData.duration) ||
+        parseInt(ingress) > parseInt(rescheduleData.ingress_time) ||
+        parseInt(egress) > parseInt(rescheduleData.egress_time));
 
     const bookingPayload = {
       username,
@@ -225,7 +226,7 @@ export default function BookingPage({ onNext }) {
       eventName,
       eventType,
       date: format(selectedDate, "yyyy-MM-dd"),
-      time: selectedTime,
+      time: convertTo24Hour(selectedTime), // Use this unified time format
       duration: parseInt(duration),
       ingress_time: parseInt(ingress),
       egress_time: parseInt(egress),
@@ -235,28 +236,14 @@ export default function BookingPage({ onNext }) {
       originalBookingId: isRescheduling ? rescheduleData.id : null,
     };
 
+    // LOGIC FIX:
+    // If we are just updating a date (no upgrade), call the API directly.
+    // Otherwise, pass everything to onNext to handle the payment flow.
     if (isRescheduling && !isUpgraded) {
-      // Only update existing booking
       updateBookingOnly(bookingPayload);
     } else {
-      // Send to payment or create new booking
       onNext(bookingPayload);
     }
-
-    onNext({
-      username,
-      email: email,
-      address: address,
-      phone_number: phoneNumber, // Use the state variable defined above
-      eventName,
-      eventType,
-      date: format(selectedDate, "yyyy-MM-dd"),
-      time: convertTo24Hour(selectedTime),
-      duration: parseInt(duration),
-      ingress_time: parseInt(ingress), // e.g., 2
-      egress_time: parseInt(egress), // e.g., 1
-      guests: guestCount,
-    });
   };
 
   return (
