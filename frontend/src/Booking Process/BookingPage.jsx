@@ -115,20 +115,28 @@ export default function BookingPage({ onNext }) {
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const isBooked = bookedDates.includes(dateStr); //dagdag
     const isPastDate = isBefore(date, startOfToday());
+    const isBooked = bookedDates.includes(dateStr);
+    const isUnavailableDate = isUnavailable(date);
 
+    // 1. Always check non-current month first
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
 
-    if (isPastDate) return "bg-gray-100 text-gray-300 cursor-not-allowed";
+    // 2. Check for unavailable/booked dates FIRST
+    // This ensures even past dates are marked as 'unavailable' or 'booked'
+    if (isUnavailableDate || isBooked) {
+      return "bg-red-300 cursor-not-allowed"; // Or your preferred "booked" color
+    }
 
-    if (isUnavailable(date)) return "bg-red-300 cursor-not-allowed";
+    // 3. Then check if it's a past date (that isn't booked)
+    if (isPastDate) {
+      return "bg-gray-100 text-gray-300 cursor-not-allowed";
+    }
 
-    if (bookedDates.includes(dateStr))
-      return "bg-gray-200 text-gray-400 cursor-not-allowed";
-
+    // 4. Finally, check for the selected state
     if (selectedDate && isSameDay(date, selectedDate)) return "bg-yellow-300";
 
+    // 5. Default: Available
     return "bg-green-200 hover:bg-green-300 cursor-pointer";
   };
 
