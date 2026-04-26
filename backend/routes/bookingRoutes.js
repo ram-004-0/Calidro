@@ -541,25 +541,28 @@ router.put("/reschedule/:id", async (req, res) => {
   const { date, time, duration, ingress_time, egress_time } = req.body;
 
   try {
+    // 1. Fetch current booking
     const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
     const old = rows[0];
-
     const dur = parseInt(duration) || 0;
     const ing = parseInt(ingress_time) || 0;
     const eg = parseInt(egress_time) || 0;
 
-    // Strict Enforcement
+    // 2. Strict Enforcement: Prevent decreasing original values
     if (
       dur < parseInt(old.event_duration) ||
       ing < parseInt(old.ingress_time) ||
       eg < parseInt(old.egress_time)
     ) {
-      return res.status(400).json({ error: "Cannot decrease duration/time." });
+      return res
+        .status(400)
+        .json({ error: "Cannot decrease duration or logistics time." });
     }
 
+    // 3. Recalculate Total
     const BASE_PRICE = 25000;
     const newTotal =
       BASE_PRICE +
@@ -567,29 +570,27 @@ router.put("/reschedule/:id", async (req, res) => {
       Math.max(0, ing - 2) * 1000 +
       Math.max(0, eg - 1) * 1000;
 
-    // Correct Payment Status Calculation
+    // 4. Determine Payment Type (Map to ENUM 'partial' or 'full')
     const amountPaid = parseFloat(old.amount_paid) || 0;
-    let newStatus = "Pending";
-
+    let newPaymentType = "partial";
     if (amountPaid >= newTotal) {
-      newStatus = "Paid";
-    } else if (amountPaid > 0) {
-      newStatus = "Partial";
+      newPaymentType = "full";
     }
 
+    // 5. Update Database
     await db.query(
       `UPDATE booking 
        SET event_date = ?, event_time = ?, event_duration = ?, 
            ingress_time = ?, egress_time = ?, total_amount = ?, 
            payment_type = ? 
        WHERE id = ?`,
-      [date, time, dur.toString(), ing, eg, newTotal, newStatus, id],
+      [date, time, dur.toString(), ing, eg, newTotal, newPaymentType, id],
     );
 
     res.json({
       message: "Reschedule successful",
       newTotal,
-      paymentStatus: newStatus,
+      paymentType: newPaymentType,
     });
   } catch (error) {
     console.error("Reschedule Error:", error);
