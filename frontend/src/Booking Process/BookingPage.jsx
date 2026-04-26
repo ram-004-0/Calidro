@@ -23,8 +23,12 @@ const API_URL =
   "https://calidro-production.up.railway.app" || "http://localhost:5000";
 export default function BookingPage({ onNext }) {
   const { user } = useAuth();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const location = useLocation();
+  const rescheduleData = location.state?.rescheduleData;
+  const isRescheduling = !!rescheduleData;
 
+  // 1. Unified State Declarations
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(
     isRescheduling ? parseISO(rescheduleData.date) : null,
   );
@@ -40,19 +44,19 @@ export default function BookingPage({ onNext }) {
   const [egress, setEgress] = useState(
     isRescheduling ? rescheduleData.egress_time : 1,
   );
-
   const durationOptions = useMemo(() => {
     const baseOptions = [4, 5, 6, 7, 8, 9, 10];
-    if (!isRescheduling) return baseOptions;
-    return baseOptions.filter((h) => h >= rescheduleData.duration);
-  }, [isRescheduling, rescheduleData]);
-
-  const ingressOptions = [1, 2, 3, 4].filter((h) =>
-    isRescheduling ? h >= rescheduleData.ingress_time : true,
-  );
-  const egressOptions = [1, 2, 3].filter((h) =>
-    isRescheduling ? h >= rescheduleData.egress_time : true,
-  );
+    // If rescheduling, enforce the "No Decrease" rule
+    if (isRescheduling) {
+      return baseOptions.filter((h) => h >= rescheduleData.duration);
+    }
+    // If not rescheduling, check time slot remaining hours
+    if (!selectedTime) return baseOptions;
+    const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
+    if (!selectedSlot) return baseOptions;
+    const hoursRemaining = 24 - selectedSlot.hour24;
+    return baseOptions.filter((h) => h <= hoursRemaining);
+  }, [isRescheduling, rescheduleData, selectedTime, timeSlots]);
 
   const [guestCount, setGuestCount] = useState("");
   const today = startOfToday();
