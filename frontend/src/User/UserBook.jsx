@@ -33,9 +33,6 @@ const UserBook = () => {
     fetchBookings();
   }, []);
 
-  if (loading)
-    return <div className="text-white p-10">Loading bookings...</div>;
-
   const sortedBookings = [...bookings].sort(
     (a, b) => new Date(b.date) - new Date(a.date),
   );
