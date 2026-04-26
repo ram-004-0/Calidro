@@ -16,6 +16,7 @@ import {
   getDay,
   isBefore,
   startOfToday,
+  parseISO,
 } from "date-fns";
 
 import { useAuth } from "../context/AuthContext";
@@ -35,8 +36,6 @@ export default function BookingPage({ onNext }) {
   const [selectedTime, setSelectedTime] = useState(
     isRescheduling ? rescheduleData.time : "",
   );
-
-  // These were duplicated, now unified:
   const [duration, setDuration] = useState(
     isRescheduling ? rescheduleData.duration : 4,
   );
@@ -46,11 +45,22 @@ export default function BookingPage({ onNext }) {
   const [egress, setEgress] = useState(
     isRescheduling ? rescheduleData.egress_time : 1,
   );
+  const durationOptions = useMemo(() => {
+    const baseOptions = [4, 5, 6, 7, 8, 9, 10];
+    // If rescheduling, enforce the "No Decrease" rule
+    if (isRescheduling) {
+      return baseOptions.filter((h) => h >= rescheduleData.duration);
+    }
+    // If not rescheduling, check time slot remaining hours
+    if (!selectedTime) return baseOptions;
+    const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
+    if (!selectedSlot) return baseOptions;
+    const hoursRemaining = 24 - selectedSlot.hour24;
+    return baseOptions.filter((h) => h <= hoursRemaining);
+  }, [isRescheduling, rescheduleData, selectedTime, timeSlots]);
 
-  const [eventType, setEventType] = useState("");
-  const [eventName, setEventName] = useState("");
   const [guestCount, setGuestCount] = useState("");
-
+  const today = startOfToday();
   const [username, setUsername] = useState(user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phoneNumber, setPhoneNumber] = useState(user?.phone_number || "");
@@ -58,37 +68,18 @@ export default function BookingPage({ onNext }) {
   const [bookedDates, setBookedDates] = useState([]);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
-  const timeSlots = useMemo(() => {
-    if (!selectedDate) return [];
-    const slots = [];
-    const isSunday = getDay(selectedDate) === 0;
-    const startHour = isSunday ? 15 : 8;
-    const endHour = 20;
-    for (let i = startHour; i <= endHour; i++) {
-      let label = i < 12 ? `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`;
-      slots.push({ label: label, hour24: i });
-    }
-    return slots;
-  }, [selectedDate]);
-
-  // Unified durationOptions
-  const durationOptions = useMemo(() => {
-    const defaultDurations = [4, 5, 6, 7, 8, 9, 10];
-    if (!selectedTime) return defaultDurations;
-    const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
-    if (!selectedSlot) return defaultDurations;
-    const startHour = selectedSlot.hour24;
-    const hoursRemaining = 24 - startHour;
-    return defaultDurations.filter((h) => h <= hoursRemaining);
-  }, [selectedTime, timeSlots]);
-
   useEffect(() => {
+    //view from mobile
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
 
     const fetchBookings = async () => {
       try {
+        console.log("Fetching from:", `${API_URL}/api/bookings/all`); // Debug check
         const response = await axios.get(`${API_URL}/api/bookings/all`);
+
+        console.log("API Response:", response.data); // Debug check
+
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
@@ -97,27 +88,56 @@ export default function BookingPage({ onNext }) {
         console.error("Failed to fetch bookings:", err);
       }
     };
+
     fetchBookings();
+
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount
 
   const unavailableDates = [...bookedDates];
+
+  const timeSlots = useMemo(() => {
+    if (!selectedDate) return [];
+    const slots = [];
+    const isSunday = getDay(selectedDate) === 0;
+    const startHour = isSunday ? 15 : 8;
+    const endHour = 20;
+
+    for (let i = startHour; i <= endHour; i++) {
+      let label = i < 12 ? `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`;
+      slots.push({ label: label, hour24: i });
+    }
+
+    return slots;
+  }, [selectedDate]);
+
   const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(monthStart);
+  const calendarStart = startOfWeek(monthStart);
+  const calendarEnd = endOfWeek(monthEnd);
   const days = eachDayOfInterval({
-    start: startOfWeek(monthStart),
-    end: endOfWeek(endOfMonth(monthStart)),
+    start: calendarStart,
+
+    end: calendarEnd,
   });
 
-  const isUnavailable = (date) =>
-    unavailableDates.includes(format(date, "yyyy-MM-dd"));
+  const isUnavailable = (date) => {
+    return unavailableDates.includes(format(date, "yyyy-MM-dd"));
+  };
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
     const isPastDate = isBefore(date, startOfToday());
     const isBooked = bookedDates.includes(dateStr);
+    const isUnavailableDate = isUnavailable(date);
+
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
-    if (isUnavailable(date) || isBooked) return "bg-red-300 cursor-not-allowed";
-    if (isPastDate) return "bg-gray-100 text-gray-300 cursor-not-allowed";
+    if (isUnavailableDate || isBooked) {
+      return "bg-red-300 cursor-not-allowed";
+    }
+    if (isPastDate) {
+      return "bg-gray-100 text-gray-300 cursor-not-allowed";
+    }
     if (selectedDate && isSameDay(date, selectedDate)) return "bg-yellow-300";
     return "bg-green-200 hover:bg-green-300 cursor-pointer";
   };
@@ -141,6 +161,25 @@ export default function BookingPage({ onNext }) {
   }, [selectedTime, selectedDate, timeSlots]);
 
   const handleNextClick = () => {
+    const bookingPayload = {
+      username,
+      email,
+      address,
+      phone_number: phoneNumber,
+      eventName,
+      eventType,
+      date: format(selectedDate, "yyyy-MM-dd"),
+      time: selectedTime, // Ensure this format matches your backend
+      duration: parseInt(duration),
+      ingress_time: parseInt(ingress),
+      egress_time: parseInt(egress),
+      guests: guestCount,
+      isReschedule: isRescheduling,
+      originalBookingId: isRescheduling ? rescheduleData.id : null,
+    };
+
+    onNext(bookingPayload);
+
     const convertTo24Hour = (timeStr) => {
       if (!timeStr) return "00:00:00";
       const [time, modifier] = timeStr.split(" ");
@@ -152,23 +191,20 @@ export default function BookingPage({ onNext }) {
       return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
     };
 
-    const bookingPayload = {
+    onNext({
       username,
-      email,
-      address,
-      phone_number: phoneNumber,
+      email: email,
+      address: address,
+      phone_number: phoneNumber, // Use the state variable defined above
       eventName,
       eventType,
       date: format(selectedDate, "yyyy-MM-dd"),
       time: convertTo24Hour(selectedTime),
       duration: parseInt(duration),
-      ingress_time: parseInt(ingress),
-      egress_time: parseInt(egress),
+      ingress_time: parseInt(ingress), // e.g., 2
+      egress_time: parseInt(egress), // e.g., 1
       guests: guestCount,
-      isReschedule: isRescheduling,
-      originalBookingId: isRescheduling ? rescheduleData.id : null,
-    };
-    onNext(bookingPayload);
+    });
   };
 
   return (
