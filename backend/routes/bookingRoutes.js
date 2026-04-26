@@ -537,7 +537,7 @@ router.put("/edit/:id", async (req, res) => {
   }
 });
 
-router.put("/api/bookings/reschedule/:id", async (req, res) => {
+router.put("/bookings/reschedule/:id", async (req, res) => {
   const { id } = req.params;
   const { date, time, duration, ingress_time, egress_time } = req.body;
 
