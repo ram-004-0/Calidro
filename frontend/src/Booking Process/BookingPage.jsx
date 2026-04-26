@@ -68,7 +68,8 @@ export default function BookingPage({ onNext }) {
   const egressOptions = useMemo(() => {
     return [1, 2, 3, 4]; // Adjust these values as needed
   }, []);
-
+  const [eventType, setEventType] = useState("");
+  const [eventName, setEventName] = useState("");
   const [guestCount, setGuestCount] = useState("");
   const today = startOfToday();
   const [username, setUsername] = useState(user?.username || "");
