@@ -221,7 +221,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                 <p>
                   <span className="font-semibold">Type:</span>{" "}
                   {isEditing ? (
-                    <input
+                    <select
                       className="border rounded px-1 w-full"
                       value={editData.typeOfEvent}
                       onChange={(e) =>
@@ -230,7 +230,50 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                           typeOfEvent: e.target.value,
                         })
                       }
-                    />
+                    >
+                      <optgroup label="Social Events">
+                        <option value="Birthday Party">Birthday Party</option>
+                        <option value="Debut">Debut (18th Birthday)</option>
+                        <option value="Wedding Ceremony">
+                          Wedding Ceremony
+                        </option>
+                        <option value="Wedding Reception">
+                          Wedding Reception
+                        </option>
+                        <option value="Anniversary">
+                          Anniversary Celebration
+                        </option>
+                      </optgroup>
+                      <optgroup label="Family Milestones">
+                        <option value="Baby Shower">Baby Shower</option>
+                        <option value="Gender Reveal">Gender Reveal</option>
+                        <option value="Baptism">Baptism / Christening</option>
+                        <option value="Graduation Party">
+                          Graduation Party
+                        </option>
+                      </optgroup>
+                      <optgroup label="Corporate Events">
+                        <option value="Corporate Meeting">
+                          Corporate Meeting
+                        </option>
+                        <option value="Seminar">Seminar / Workshop</option>
+                        <option value="Conference">Conference</option>
+                        <option value="Team Building">
+                          Team Building Event
+                        </option>
+                        <option value="Company Party">Company Party</option>
+                      </optgroup>
+                      <optgroup label="Creative / Others">
+                        <option value="Exhibit">Exhibit / Art Showcase</option>
+                        <option value="Pop-up Market">
+                          Pop-up Market / Bazaar
+                        </option>
+                        <option value="Photoshoot">
+                          Photoshoot / Studio Rental
+                        </option>
+                        <option value="Other">Other</option>
+                      </optgroup>
+                    </select>
                   ) : (
                     booking.typeOfEvent
                   )}
@@ -294,7 +337,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
           </div>
 
           {/* --- ACTION BUTTONS --- */}
-          {/* --- ACTION BUTTONS --- */}
+
           {booking.bookingStatus !== "completed" &&
           booking.bookingStatus !== "cancelled" ? (
             <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
