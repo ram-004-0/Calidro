@@ -498,39 +498,35 @@ router.get("/test-cleanup-manual", async (req, res) => {
 });
 
 // 8. Finalize Payment Type
-// Call this from your ReviewDetails.js after a successful PayMongo checkout
 router.put("/finalize-payment/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
 
   try {
-    // 1. Fetch the booking first to compare values
+    // Fetch the current booking to check real math
     const [rows] = await db.query(
       "SELECT total_amount, amount_paid FROM booking WHERE id = ?",
       [bookingId],
     );
+
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
     const { total_amount, amount_paid } = rows[0];
 
-    // 2. Logic: Only set to 'full' if the total is reached
-    const isFull = amount_paid >= total_amount;
-    const newPaymentType = isFull ? "full" : "partial";
-    const newStatus = isFull ? "confirmed" : "pending";
+    // Only set to 'full' if the amount paid covers the total
+    const isFullyPaid = amount_paid >= total_amount;
+    const newStatus = isFullyPaid ? "confirmed" : "pending";
+    const newPaymentType = isFullyPaid ? "full" : "partial";
 
-    // 3. Update with dynamic values instead of hardcoding 'full'
     await db.query(
-      `UPDATE booking 
-       SET payment_type = ?, 
-           status = ? 
-       WHERE id = ?`,
-      [newPaymentType, newStatus, bookingId],
+      `UPDATE booking SET status = ?, payment_type = ? WHERE id = ?`,
+      [newStatus, newPaymentType, bookingId],
     );
 
-    res.json({ success: true, paymentType: newPaymentType });
+    res.json({ success: true, paymentType: newPaymentType, status: newStatus });
   } catch (err) {
     console.error("Finalize Payment Error:", err);
-    res.status(500).json({ error: "Could not update payment type." });
+    res.status(500).json({ error: "Could not update." });
   }
 });
 

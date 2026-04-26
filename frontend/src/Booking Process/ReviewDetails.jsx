@@ -13,37 +13,23 @@ const ReviewDetails = () => {
 
   const [details, setDetails] = useState(null);
 
+  // Inside ReviewDetails.jsx
   useEffect(() => {
-    let isMounted = true;
-    // Use a ref or a local variable to ensure we don't trigger the update twice
-    // if the component re-renders for other reasons.
-    let hasTriggeredUpdate = false;
-
     if (bookingId) {
       axios
         .get(`${API_URL}/api/bookings/details/${bookingId}`)
         .then((res) => {
-          if (!isMounted) return;
           setDetails(res.data);
 
-          // 2. Trigger Status Update
-          if (res.data.status === "pending" && !hasTriggeredUpdate) {
-            hasTriggeredUpdate = true;
+          // Only update status if it is truly pending in the DB
+          if (res.data.status === "pending") {
             updateBookingStatus(bookingId);
           }
-          // 3. ADDED: Finalize Payment Type to 'full' if it's not already
-          if (res.data.payment_type !== "full") {
-            finalizePayment(bookingId);
-          }
+          // REMOVED: The call to finalizePayment(bookingId)
+          // It was overwriting your data incorrectly.
         })
-        .catch((err) => {
-          if (isMounted) console.error("Initial fetch failed:", err);
-        });
+        .catch((err) => console.error("Fetch failed:", err));
     }
-
-    return () => {
-      isMounted = false;
-    };
   }, [bookingId]);
 
   const finalizePayment = async (id) => {
