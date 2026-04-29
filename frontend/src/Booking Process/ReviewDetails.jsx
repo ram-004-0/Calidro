@@ -75,12 +75,11 @@ const ReviewDetails = () => {
       </div>
     );
   }
+  const total = parseFloat(details.total_amount) || 0;
+  const paid = parseFloat(details.amount_paid) || 0; // This will now be 25000
 
-  const displayAmountPaid = parseFloat(details.amount_paid) || 0;
-  const displayBalance = Math.max(
-    0,
-    parseFloat(details.total_amount) - displayAmountPaid,
-  );
+  const displayAmountPaid = paid;
+  const displayBalance = Math.max(0, total - paid); // This will now be 0
 
   return (
     <div className="flex flex-col items-center w-full px-4">
