@@ -635,30 +635,46 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
-  // Acknowledge immediately to prevent PayMongo from retrying
   res.status(200).send("ok");
 
   try {
-    const event = req.body;
-    const data = event.data?.attributes || event.attributes;
-    if (!data) return;
+    const payload = req.body;
 
-    // Deep search for metadata (PayMongo can nest this in multiple places)
-    const metadata =
-      data.metadata || data.payment_intent?.attributes?.metadata || {};
-    const bookingId = metadata.bookingId;
+    // PayMongo webhooks wrap the object in 'data'
+    // We need to look inside data.attributes
+    const attributes = payload.data?.attributes;
 
-    if (!bookingId) {
-      console.error("❌ WEBHOOK ERROR: No bookingId found.");
+    if (!attributes) {
+      console.error("❌ WEBHOOK ERROR: No attributes found in payload.");
       return;
     }
 
-    // Convert amount from cents to pesos
+    // Extraction Strategy: Check top-level metadata, then payment_intent metadata
+    const metadata =
+      attributes.metadata ||
+      attributes.payment_intent?.attributes?.metadata ||
+      {};
+
+    const bookingId = metadata.bookingId;
+
+    if (!bookingId) {
+      console.error(
+        "❌ WEBHOOK ERROR: bookingId missing. Received metadata:",
+        metadata,
+      );
+      return;
+    }
+
+    // Convert amount: PayMongo sends cents (e.g., 2000000)
     const amountInCents =
-      data.amount || data.payment_intent?.attributes?.amount || 0;
+      attributes.amount || attributes.payment_intent?.attributes?.amount || 0;
     const paymentAmount = amountInCents / 100;
 
-    // Fetch current database values
+    console.log(
+      `🔍 Processing: Booking ${bookingId} | Payment: ₱${paymentAmount}`,
+    );
+
+    // Fetch and Update
     const [rows] = await db.query(
       "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
       [bookingId],
@@ -669,20 +685,19 @@ router.post("/webhook/paymongo", async (req, res) => {
       const totalAmount = parseFloat(rows[0].total_amount);
       const newTotalPaid = currentPaid + paymentAmount;
 
-      // We use 'confirmed' because your ENUM doesn't have 'partial'
-      const finalStatus = "confirmed";
-
-      console.log(`Updating Booking ${bookingId}: Total Paid ₱${newTotalPaid}`);
-
       await db.query(
-        "UPDATE booking SET amount_paid = ?, status = ? WHERE booking_id = ?",
-        [newTotalPaid, finalStatus, bookingId],
+        "UPDATE booking SET amount_paid = ?, status = 'confirmed' WHERE booking_id = ?",
+        [newTotalPaid, bookingId],
       );
 
-      console.log(`✅ DATABASE UPDATED: amount_paid is now ₱${newTotalPaid}`);
+      console.log(
+        `✅ DB UPDATED: Booking ${bookingId} total is now ₱${newTotalPaid}`,
+      );
+    } else {
+      console.error(`❌ DB ERROR: Booking ID ${bookingId} not found in table.`);
     }
   } catch (err) {
-    console.error("🔥 WEBHOOK ERROR:", err.message);
+    console.error("🔥 WEBHOOK SYSTEM ERROR:", err.message);
   }
 });
 module.exports = router;
