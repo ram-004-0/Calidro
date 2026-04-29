@@ -76,10 +76,11 @@ const ReviewDetails = () => {
     );
   }
 
-  // Calculations (Calculated only after we are sure 'details' exists)
-  const displayAmountPaid =
-    details.payment_type === "full" ? details.total_amount : 5000;
-  const displayBalance = details.total_amount - displayAmountPaid;
+  const displayAmountPaid = parseFloat(details.amount_paid) || 0;
+  const displayBalance = Math.max(
+    0,
+    parseFloat(details.total_amount) - displayAmountPaid,
+  );
 
   return (
     <div className="flex flex-col items-center w-full px-4">
