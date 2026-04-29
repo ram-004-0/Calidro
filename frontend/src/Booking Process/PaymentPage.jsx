@@ -89,8 +89,8 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
           eventDate: bookingData?.date,
           time: bookingData?.time,
           duration: bookingData?.duration,
-          ingress: bookingData?.ingress || 2,
-          egress: bookingData?.egress || 1,
+          ingress: bookingData?.ingress_time || 2,
+          egress: bookingData?.egress_time || 1,
           guests: bookingData?.guests,
           totalAmount: totalAmount,
           amount_paid: numericAmount,
@@ -121,7 +121,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   };
 
   const handleUpdateBalance = async (methods) => {
-    if (!user?.id) return alert("Please log in.");
+    if (!user?.user_id) return alert("Please log in.");
     setLoading(true);
     try {
       const payload = {
