@@ -6,7 +6,7 @@ import axios from "axios";
 
 const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const { state } = useLocation();
-  const [searchParams] = useSearchParams(); // Added to read URL params
+  const [searchParams] = useSearchParams();
 
   const bookingData = propBookingData || state?.bookingData || {};
   const isRestricted = state?.paymentTypeRestriction === "Full";
@@ -90,7 +90,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   // Ensure this function exists in your component to handle partial payments
   const handlePaymentMethodClick = async (methods) => {
     if (!user?.user_id) return alert("Please log in.");
-
+    const numericAmount = parseFloat(amountInput) || 0;
     setLoading(true);
 
     try {
