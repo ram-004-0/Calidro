@@ -102,33 +102,33 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     }
   };
 
-  const handleUpdateBalance = async (methods) => {
-    // 1. Define the payload properly
-    const payload = {
-      bookingId: state.bookingId,
-      payment_methods: methods,
-    };
+  // const handleUpdateBalance = async (methods) => {
+  //   // 1. Define the payload properly
+  //   const payload = {
+  //     bookingId: state.booking_Id,
+  //     payment_methods: methods,
+  //   };
 
-    try {
-      // 2. Use HTTPS and NO trailing slash
-      const url =
-        "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
+  //   try {
+  //     // 2. Use HTTPS and NO trailing slash
+  //     const url =
+  //       "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
 
-      console.log("Sending POST to:", url, "with payload:", payload);
+  //     console.log("Sending POST to:", url, "with payload:", payload);
 
-      const response = await axios.post(url, payload);
+  //     const response = await axios.post(url, payload);
 
-      if (response.data.checkout_url) {
-        window.location.href = response.data.checkout_url;
-      }
-    } catch (err) {
-      // If you see 'Method Not Allowed' here, the redirect is still happening
-      console.error("Payment Error:", err.response?.data || err.message);
-      alert(
-        "Error: " + (err.response?.data?.details || "Could not start payment"),
-      );
-    }
-  };
+  //     if (response.data.checkout_url) {
+  //       window.location.href = response.data.checkout_url;
+  //     }
+  //   } catch (err) {
+  //     // If you see 'Method Not Allowed' here, the redirect is still happening
+  //     console.error("Payment Error:", err.response?.data || err.message);
+  //     alert(
+  //       "Error: " + (err.response?.data?.details || "Could not start payment"),
+  //     );
+  //   }
+  // };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 p-8">
