@@ -60,24 +60,21 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
   const handlePaymentMethodClick = async (methods) => {
     if (!user?.user_id) return alert("Please log in.");
-
     setLoading(true);
 
     try {
       let response;
 
       if (isRestricted) {
-        // SCENARIO A: Updating balance for an EXISTING booking
         const payload = {
           bookingId: state.bookingId,
           amount_paid: numericAmount,
           payment_methods: methods,
           isBalanceUpdate: true,
         };
-
+        // FIX: Changed from /bookings/checkout-balance to /checkout-balance
         response = await API.post("/checkout-balance", payload);
       } else {
-        // SCENARIO B: Creating a BRAND NEW booking
         const payload = {
           userId: user.user_id,
           username: user.username || "Guest",
@@ -98,19 +95,14 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
           payment_methods: methods,
         };
 
-        // We use the 'response' variable defined at the top of the try block
-        response = await API.post(
-          "/bookings/create-booking-and-checkout",
-          payload,
-        );
-        console.log("Backend Response:", response.data);
+        // FIX: Ensure this matches the route in bookingRoutes.js
+        response = await API.post("/create-booking-and-checkout", payload);
       }
 
-      // Handle redirection for either scenario
-      if (response.data && response.data.checkout_url) {
+      if (response.data?.checkout_url) {
         window.location.href = response.data.checkout_url;
       } else {
-        throw new Error("Checkout URL missing in server response.");
+        throw new Error("Checkout URL missing.");
       }
     } catch (err) {
       console.error("PAYMENT ERROR:", err);
@@ -130,6 +122,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         payment_methods: methods,
         isBalanceUpdate: true,
       };
+      // FIX: Match the prefixing logic used above
       const response = await API.post("/checkout-balance", payload);
 
       if (response.data?.checkout_url) {
