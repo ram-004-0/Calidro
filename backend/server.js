@@ -7,6 +7,7 @@ const cron = require("node-cron");
 const db = require("./config/db");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
 
@@ -38,7 +39,7 @@ app.get("/", (req, res) => {
 
 // --- 3. ROUTES REGISTRATION ---
 app.use("/api/auth", authRoutes);
-app.use("/api/bookings", require("./routes/bookingRoutes"));
+app.use("/api/bookings", bookingRoutes);
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
 
@@ -54,16 +55,6 @@ app.use((req, res, next) => {
 // --- 5. TEST ENDPOINTS ---
 app.get("/api/test-direct", (req, res) => {
   res.status(200).json({ message: "Backend is alive and reaching server.js" });
-});
-
-// Fallback for 404s - If no route matches, this will catch it
-app.use((req, res) => {
-  console.log(
-    `[404 ERROR] No route found for: ${req.method} ${req.originalUrl}`,
-  );
-  res.status(404).json({
-    error: `Route ${req.method} ${req.url} not found on this server.`,
-  });
 });
 
 // --- 6. SERVER SETUP ---
@@ -143,4 +134,14 @@ cron.schedule("0 0 * * *", async () => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
+});
+
+const bookingRoutes = require("./routes/bookingRoutes"); // Load the file
+app.use("/api/bookings", bookingRoutes); // Use it with the prefix
+
+app.use((req, res) => {
+  console.log(`[404 ERROR] Path not found: ${req.method} ${req.originalUrl}`);
+  res
+    .status(404)
+    .json({ error: `Route ${req.method} ${req.originalUrl} not found.` });
 });
