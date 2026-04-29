@@ -2,6 +2,9 @@ const db = require("../config/db");
 
 // Get User Profile
 exports.getProfile = async (req, res) => {
+  console.log("DEBUG: Request received for Profile");
+  console.log("DEBUG: req.user content:", req.user);
+
   try {
     const [rows] = await db.execute(
       "SELECT username, email, phone_number, address FROM user WHERE user_id = ?",
