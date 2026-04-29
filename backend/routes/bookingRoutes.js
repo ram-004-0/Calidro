@@ -632,23 +632,33 @@ router.put("/reschedule/:id", async (req, res) => {
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
   const event = req.body;
-  console.log("DEBUG PAYLOAD: ", JSON.stringify(req.body, null, 2));
 
-  const metadata =
-    event.data?.attributes?.metadata ||
-    event.data?.attributes?.data?.attributes?.metadata;
+  // 1. DUMP EVERYTHING to the logs. If you don't see this line, PayMongo isn't reaching you.
+  console.log(
+    "🔍 WEBHOOK DEBUG - FULL PAYLOAD:",
+    JSON.stringify(event, null, 2),
+  );
 
+  // 2. Define the potential paths for data based on PayMongo's event types
+  const attr = event.data?.attributes;
+
+  // This covers the two most common nesting structures
+  const metadata = attr?.metadata || attr?.data?.attributes?.metadata;
   const amount =
-    event.data?.attributes?.amount ||
-    event.data?.attributes?.data?.attributes?.amount;
+    attr?.amount_paid ||
+    attr?.amount ||
+    attr?.data?.attributes?.amount_paid ||
+    attr?.data?.attributes?.amount;
 
   if (!metadata || !metadata.bookingId) {
-    console.error("❌ WEBHOOK ERROR: Metadata or bookingId missing.");
+    console.error(
+      "❌ WEBHOOK ERROR: Metadata or bookingId not found in the payload.",
+    );
     return res.status(400).send("No metadata found");
   }
 
   const bookingId = metadata.bookingId;
-  const amountPaid = amount / 100;
+  const amountPaid = amount / 100; // PayMongo uses cents
 
   try {
     const [rows] = await db.query(
@@ -656,10 +666,16 @@ router.post("/webhook/paymongo", async (req, res) => {
       [bookingId],
     );
 
-    if (rows.length === 0) return res.status(404).send("Booking not found");
+    if (rows.length === 0) {
+      console.error(
+        `❌ WEBHOOK ERROR: No record found for booking_id: ${bookingId}`,
+      );
+      return res.status(404).send("Booking not found");
+    }
 
-    const newPaid = parseFloat(rows[0].amount_paid) + amountPaid;
+    const currentPaid = parseFloat(rows[0].amount_paid) || 0;
     const totalAmount = parseFloat(rows[0].total_amount);
+    const newPaid = currentPaid + amountPaid;
     const newStatus = newPaid >= totalAmount ? "confirmed" : "partial";
 
     await db.query(
@@ -667,6 +683,9 @@ router.post("/webhook/paymongo", async (req, res) => {
       [newPaid, newStatus, bookingId],
     );
 
+    console.log(
+      `✅ WEBHOOK SUCCESS: Booking ${bookingId} updated. New Total Paid: ${newPaid}`,
+    );
     res.status(200).send("Webhook Received");
   } catch (err) {
     console.error("❌ WEBHOOK DB ERROR:", err);
