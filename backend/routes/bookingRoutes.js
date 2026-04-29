@@ -405,15 +405,22 @@ router.post("/checkout-balance", async (req, res) => {
   const { bookingId, payment_methods } = req.body;
   console.log("📍 DEBUG: Received POST for checkout-balance, ID:", bookingId);
 
+  // 1. Basic validation
+  if (!bookingId) {
+    return res.status(400).json({ error: "Booking ID is required." });
+  }
+
   try {
-    // 1. Database Query
+    // 2. Database Query
     const [rows] = await db.query(
       "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE booking_id = ?",
       [bookingId],
     );
 
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Booking not found" });
+    // 3. CRITICAL: Check if record exists before accessing properties
+    if (!rows || rows.length === 0) {
+      console.log("❌ ERROR: Booking not found for ID:", bookingId);
+      return res.status(404).json({ error: "Booking not found in database." });
     }
 
     const booking = rows[0];
@@ -425,7 +432,7 @@ router.post("/checkout-balance", async (req, res) => {
         .json({ details: "This booking is already fully paid." });
     }
 
-    // 2. PayMongo Integration
+    // 4. PayMongo Integration
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
@@ -438,7 +445,7 @@ router.post("/checkout-balance", async (req, res) => {
             line_items: [
               {
                 name: `Balance: ${booking.event_name}`,
-                amount: Math.round(actualBalance * 100),
+                amount: Math.round(actualBalance * 100), // PayMongo expects centavos
                 currency: "PHP",
                 quantity: 1,
               },
@@ -461,14 +468,17 @@ router.post("/checkout-balance", async (req, res) => {
       },
     );
 
-    // 3. Final Success Response
+    // 5. Success Response
     res.json({ checkout_url: response.data.data.attributes.checkout_url });
   } catch (err) {
     console.error(
       "❌ PayMongo Balance Error:",
       err.response?.data || err.message,
     );
-    res.status(500).json({ details: err.message });
+    res.status(500).json({
+      error: "Payment initiation failed",
+      details: err.response?.data?.errors?.[0]?.detail || err.message,
+    });
   }
 });
 
