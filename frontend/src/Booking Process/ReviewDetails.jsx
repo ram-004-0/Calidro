@@ -16,13 +16,15 @@ const ReviewDetails = () => {
   // Inside ReviewDetails.jsx
   useEffect(() => {
     if (bookingId) {
+      // Strip everything after the colon if it exists
+      const cleanId = bookingId.split(":")[0];
+
       axios
-        .get(`${API_URL}/api/bookings/details/${bookingId}`)
+        .get(`${API_URL}/api/bookings/details/${cleanId}`)
         .then((res) => {
           setDetails(res.data);
-
           if (res.data.status === "pending") {
-            updateBookingStatus(bookingId);
+            updateBookingStatus(cleanId);
           }
         })
         .catch((err) => console.error("Fetch failed:", err));
