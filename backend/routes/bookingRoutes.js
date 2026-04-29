@@ -402,7 +402,7 @@ router.put("/:id/update-payment", async (req, res) => {
 });
 
 // --- 1. THE ACTUAL POST HANDLER ---
-router.post("/checkout-balance/?", async (req, res) => {
+router.post("/checkout-balance", async (req, res) => {
   const { bookingId, payment_methods } = req.body;
   console.log("📍 [POST] Received bookingId:", bookingId);
 

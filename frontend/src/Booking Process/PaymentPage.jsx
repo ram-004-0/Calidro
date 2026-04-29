@@ -113,10 +113,18 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   };
 
   const handleUpdateBalance = async (methods) => {
+    // 1. Define the payload properly
+    const payload = {
+      bookingId: state.bookingId,
+      payment_methods: methods,
+    };
+
     try {
-      // Use the EXACT URL. If the server logs show a slash at the end, add it here.
+      // 2. Use HTTPS and NO trailing slash
       const url =
         "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
+
+      console.log("Sending POST to:", url, "with payload:", payload);
 
       const response = await axios.post(url, payload);
 
@@ -124,6 +132,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
+      // If you see 'Method Not Allowed' here, the redirect is still happening
       console.error("Payment Error:", err.response?.data || err.message);
       alert(
         "Error: " + (err.response?.data?.details || "Could not start payment"),
