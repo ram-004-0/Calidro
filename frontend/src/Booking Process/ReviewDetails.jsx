@@ -1,28 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-const API_URL =
-  "https://calidro-production.up.railway.app" || "http://localhost:5000";
+
+const API_URL = "https://calidro-production.up.railway.app";
 
 const ReviewDetails = () => {
   const [searchParams] = useSearchParams();
-
   const navigate = useNavigate();
-
   const bookingId = searchParams.get("bookingId");
 
+  // State Management
   const [details, setDetails] = useState(null);
+  const [isMounted, setIsMounted] = useState(false); // Flag to prevent hydration mismatch
 
-  // Inside ReviewDetails.jsx
   useEffect(() => {
+    // This only runs on the client side after the first render
+    setIsMounted(true);
+
     if (bookingId) {
-      // Strip everything after the colon if it exists
+      // Strip everything after the colon if it exists (e.g., "9:abc" -> "9")
       const cleanId = bookingId.split(":")[0];
 
       axios
         .get(`${API_URL}/api/bookings/details/${cleanId}`)
         .then((res) => {
           setDetails(res.data);
+          // Auto-confirm if it's still marked as pending when arriving here
           if (res.data.status === "pending") {
             updateBookingStatus(cleanId);
           }
@@ -31,14 +34,8 @@ const ReviewDetails = () => {
     }
   }, [bookingId]);
 
-  // ReviewDetails.jsx
-
   const updateBookingStatus = async (id) => {
-    if (!id) {
-      console.error("No ID provided to updateBookingStatus!");
-      return;
-    }
-
+    if (!id) return;
     try {
       await axios.put(`${API_URL}/api/bookings/update-status/${id}`, {
         status: "confirmed",
@@ -48,60 +45,52 @@ const ReviewDetails = () => {
     }
   };
 
-  if (!details) {
+  // Helper: Format Date consistently
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("en-PH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  // Helper: Format Time consistently
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    let [hours, minutes] = timeString.split(":");
+    let hoursNum = parseInt(hours, 10);
+    const modifier = hoursNum >= 12 ? "PM" : "AM";
+    hoursNum = hoursNum % 12 || 12;
+    return `${hoursNum}:${minutes} ${modifier}`;
+  };
+
+  // --- CRITICAL FIX FOR ERROR #418 ---
+  // If we aren't mounted yet, OR we don't have details, show a simple loading state.
+  // This ensures the Server HTML and Client HTML match perfectly on the first load.
+  if (!isMounted || !details) {
     return (
-      <div className="flex justify-center p-20 font-medium text-gray-500">
+      <div className="flex justify-center items-center min-h-screen p-20 font-medium text-gray-500">
         Loading receipt details...
       </div>
     );
   }
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-PH", {
-      year: "numeric",
-
-      month: "long",
-
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
-
-    // Split the time string (e.g., "15:00:00")
-
-    let [hours, minutes] = timeString.split(":");
-
-    let hoursNum = parseInt(hours, 10);
-
-    // Determine AM/PM
-
-    const modifier = hoursNum >= 12 ? "PM" : "AM";
-
-    // Convert 24h to 12h
-
-    hoursNum = hoursNum % 12 || 12;
-
-    return `${hoursNum}:${minutes} ${modifier}`;
-  };
-
+  // Calculations (Calculated only after we are sure 'details' exists)
   const displayAmountPaid =
     details.payment_type === "full" ? details.total_amount : 5000;
-
   const displayBalance = details.total_amount - displayAmountPaid;
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <h2 className="text-2xl font-bold text-[#4a3733] mb-4 mt-10 md:mt-30">
-        REVIEW DETAILS
+    <div className="flex flex-col items-center w-full px-4">
+      <h2 className="text-2xl font-bold text-[#4a3733] mb-4 mt-10 md:mt-32 uppercase">
+        Review Details
       </h2>
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl justify-center">
-        {/* Booking Details */}
-
+        {/* Booking Details Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex-1">
-          <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-tighter border-b pb-2">
+          <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest border-b pb-2">
             Booking Info
           </h3>
 
@@ -109,49 +98,33 @@ const ReviewDetails = () => {
             <p>
               <strong>Event:</strong> {details.event_name}
             </p>
-
             <p>
               <strong>Type:</strong> {details.event_type}
             </p>
-
             <p>
               <strong>Date:</strong> {formatDate(details.event_date)}
             </p>
-
             <p>
               <strong>Time:</strong> {formatTime(details.event_time)}
             </p>
-
             <p>
               <strong>Duration:</strong> {details.event_duration}
             </p>
-
-            {/* Inside ReviewDetails.jsx */}
-
             <p>
-              <strong>Ingress (Setup):</strong>{" "}
+              <strong>Setup Time:</strong>{" "}
               {details.ingress_time
-                ? `${parseInt(details.ingress_time.split(":")[0])} Hour${parseInt(details.ingress_time) > 1 ? "s" : ""}`
+                ? `${parseInt(details.ingress_time)} Hour(s)`
                 : "0 Hours"}
             </p>
-
-            <p>
-              <strong>Egress (Cleanup):</strong>{" "}
-              {details.egress_time
-                ? `${parseInt(details.egress_time.split(":")[0])} Hour${parseInt(details.egress_time) > 1 ? "s" : ""}`
-                : "0 Hours"}
-            </p>
-
             <p>
               <strong>Guests:</strong> {details.guests}
             </p>
           </div>
         </div>
 
-        {/* Payment Details */}
-
+        {/* Payment Summary Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex-1">
-          <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-tighter border-b pb-2">
+          <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest border-b pb-2">
             Payment Summary
           </h3>
 
@@ -164,19 +137,17 @@ const ReviewDetails = () => {
             <p>
               <strong>Status:</strong>{" "}
               <span
-                className={`font-bold uppercase text-xs ${
+                className={`font-bold uppercase text-xs px-2 py-1 rounded-md ${
                   details.status === "confirmed"
-                    ? "text-green-600"
-                    : "text-orange-500"
+                    ? "bg-green-100 text-green-600"
+                    : "bg-orange-100 text-orange-500"
                 }`}
               >
-                {details.status === "confirmed"
-                  ? " Confirmed"
-                  : " Processing..."}
+                {details.status === "confirmed" ? "Confirmed" : "Processing..."}
               </span>
             </p>
 
-            <p className="pt-4 border-t text-lg">
+            <p className="pt-4 border-t text-lg font-semibold">
               <strong>Amount Paid:</strong> ₱
               {Number(displayAmountPaid).toLocaleString()}
             </p>
@@ -191,9 +162,9 @@ const ReviewDetails = () => {
         </div>
       </div>
 
-      <div className="flex gap-4 pt-10">
+      <div className="flex gap-4 pt-10 pb-20">
         <button
-          className="bg-gray-200 hover:bg-gray-300 transition px-10 py-3 rounded-full font-bold uppercase text-sm"
+          className="bg-gray-800 text-white hover:bg-black transition px-12 py-3 rounded-full font-bold uppercase text-xs tracking-widest shadow-lg"
           onClick={() => navigate("/userbook")}
         >
           Close
