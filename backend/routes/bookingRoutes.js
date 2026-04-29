@@ -478,16 +478,6 @@ router.post("/checkout-balance", async (req, res) => {
   }
 });
 
-// --- 2. THE "CATCHER" FOR REDIRECT ERRORS ---
-// If you see this message in your browser, your frontend is sending a GET (redirect issue)
-router.get("/checkout-balance", (req, res) => {
-  res.status(405).json({
-    error: "Method Not Allowed",
-    message:
-      "The server received a GET request, but this endpoint requires a POST. This usually happens due to a URL redirect (trailing slash issue).",
-  });
-});
-
 router.get("/test-cleanup-manual", async (req, res) => {
   try {
     const today = new Date().toISOString().split("T")[0];
