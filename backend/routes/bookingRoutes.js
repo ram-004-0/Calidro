@@ -321,8 +321,8 @@ router.put("/update-status/:id", async (req, res) => {
 
 router.get("/details/:id", async (req, res) => {
   const { id } = req.params;
-
   try {
+    // CHANGE user_id TO id
     const [results] = await db.query("SELECT * FROM booking WHERE id = ?", [
       id,
     ]);
