@@ -43,36 +43,45 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const formatNumber = (val) => Number(val).toLocaleString("en-PH");
 
   const handleUpdateBalance = async (methods) => {
-    // Robust extraction: Check URL param first, then state
-    const bId =
-      searchParams.get("bookingId") ||
-      state?.bookingId ||
-      state?.id ||
-      state?.booking_id;
+    // 1. Robust ID extraction: Ensure we get the actual value, not a string "undefined"
+    const urlId = searchParams.get("bookingId");
+    const stateId =
+      state?.bookingData?.booking_id || state?.bookingId || state?.id;
+    const bId = urlId || stateId;
 
-    if (!bId) {
+    console.log("DEBUG: Final Payload sent to Server:", {
+      bookingId: bId,
+      payment_methods: methods,
+    });
+
+    if (!bId || bId === "undefined") {
       alert(
-        "CRITICAL ERROR: No Booking ID found. Please go back and try again.",
+        "CRITICAL ERROR: No valid Booking ID found. Please refresh the page.",
       );
       return;
     }
 
     setLoading(true);
-    const payload = { bookingId: bId, payment_methods: methods };
-    console.log("DEBUG: Final Payload sent to Server:", payload);
+
     try {
       const url =
         "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
+      const payload = {
+        bookingId: bId,
+        payment_methods: methods,
+      };
+
       const response = await axios.post(url, payload);
 
       if (response.data.checkout_url) {
+        // Redirect to PayMongo
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
       const serverMessage =
         err.response?.data?.details || err.response?.data?.error || err.message;
-      console.error("❌ Payment Error:", serverMessage);
-      alert("Payment Error: " + serverMessage);
+      console.error("❌ Payment Initiation Error:", serverMessage);
+      alert("Payment initiation failed: " + serverMessage);
     } finally {
       setLoading(false);
     }

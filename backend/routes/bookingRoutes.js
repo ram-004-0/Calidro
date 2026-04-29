@@ -645,7 +645,7 @@ router.post("/webhook/paymongo", async (req, res) => {
 
   // 2. Fetch booking to get fresh totals
   const [rows] = await db.query(
-    "SELECT total_amount, amount_paid FROM booking WHERE id = ?",
+    "SELECT total_amount, amount_paid FROM booking WHERE booking_id = ?",
     [bookingId],
   );
   if (rows.length === 0) return res.status(404).send("Not found");

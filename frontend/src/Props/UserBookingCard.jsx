@@ -55,8 +55,6 @@ const formatDate = (dateString) => {
 };
 
 const UserBookingCard = ({ booking: initialBooking }) => {
-  console.log("Full Booking Object Keys:", Object.keys(initialBooking));
-  console.log("Full Booking Object:", initialBooking);
   const [isExpanded, setIsExpanded] = useState(false);
   const [booking, setBooking] = useState(initialBooking);
   const [isProcessing, setIsProcessing] = useState(false);
