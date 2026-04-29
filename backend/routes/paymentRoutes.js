@@ -64,7 +64,7 @@ router.post("/webhook", (req, res) => {
     const bookingId = event.data.attributes.data.attributes.metadata.booking_id;
 
     db.query(
-      "UPDATE booking SET status = 'paid' WHERE id = ?",
+      "UPDATE booking SET status = 'paid' WHERE booking_id = ?",
       [bookingId],
       (err) => {
         if (err) return res.status(500).send("DB Error");
