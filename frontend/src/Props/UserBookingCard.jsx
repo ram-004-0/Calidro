@@ -68,11 +68,13 @@ const UserBookingCard = ({ booking: initialBooking }) => {
 
   // Use the correct primary key: booking_id
   const handleUpdatePayment = () => {
-    const bId = booking.booking_id;
+    // Use the ID property that actually exists based on your logs
+    const bId = booking.booking_id || booking.id;
 
     if (!bId) {
-      console.error("CRITICAL: Booking ID is missing from object:", booking);
-      alert("Error: Cannot identify this booking.");
+      alert(
+        "Error: Cannot identify this booking. Please check console for data structure.",
+      );
       return;
     }
 
