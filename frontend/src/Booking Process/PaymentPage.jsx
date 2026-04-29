@@ -59,7 +59,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
     setLoading(true);
     const payload = { bookingId: bId, payment_methods: methods };
-
+    console.log("DEBUG: Final Payload sent to Server:", payload);
     try {
       const url =
         "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
