@@ -113,28 +113,24 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   };
 
   const handleUpdateBalance = async (methods) => {
-    setLoading(true);
     try {
-      const payload = {
+      // Use the EXACT URL. If the server logs show a slash at the end, add it here.
+      const url =
+        "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
+
+      const response = await axios.post(url, {
         bookingId: state.bookingId,
-        amount_paid: numericAmount,
         payment_methods: methods,
-      };
+      });
 
-      const response = await axios.post(
-        "https://calidro-production.up.railway.app/api/bookings/checkout-balance",
-        payload,
-        { headers: { "Content-Type": "application/json" } },
-      );
-
-      if (response.data?.checkout_url) {
+      if (response.data.checkout_url) {
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
-      console.error("DEBUG ERROR:", err.response || err);
-      alert("Check console for error details.");
-    } finally {
-      setLoading(false);
+      console.error("Payment Error:", err.response?.data || err.message);
+      alert(
+        "Error: " + (err.response?.data?.details || "Could not start payment"),
+      );
     }
   };
 
