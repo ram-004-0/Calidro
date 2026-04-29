@@ -295,7 +295,10 @@ router.put("/update-status/:id", async (req, res) => {
     const booking = rows[0];
 
     // 3. Update the status
-    await db.query("UPDATE booking SET status = ? WHERE id = ?", [status, id]);
+    await db.query("UPDATE booking SET status = ? WHERE booking_id = ?", [
+      status,
+      id,
+    ]);
 
     // 4. Email Logic (Wrapped in its own try/catch so it doesn't crash the 200 response)
     if (booking.status !== "confirmed" && status === "confirmed") {
@@ -327,9 +330,10 @@ router.get("/details/:id", async (req, res) => {
 
   try {
     // Ensure this uses 'id', NOT 'user_id'
-    const [results] = await db.query("SELECT * FROM booking WHERE id = ?", [
-      id,
-    ]);
+    const [results] = await db.query(
+      "SELECT * FROM booking WHERE booking_id = ?",
+      [id],
+    );
 
     if (results.length === 0) {
       return res.status(404).json({ error: "Booking not found" });
@@ -363,9 +367,10 @@ router.put("/:id/update-payment", async (req, res) => {
 
   try {
     // 1. Fetch current booking
-    const [rows] = await db.query("SELECT * FROM booking WHERE user_id = ?", [
-      id,
-    ]);
+    const [rows] = await db.query(
+      "SELECT * FROM booking WHERE booking_id = ?",
+      [id],
+    );
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
