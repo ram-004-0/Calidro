@@ -401,7 +401,9 @@ router.put("/:id/update-payment", async (req, res) => {
   }
 });
 
-// 7. Settle Existing Balance via PayMongo
+router.get("/test", (req, res) => {
+  res.json({ message: "Bookings route is working!" });
+});
 
 router.post("/checkout-balance", async (req, res) => {
   const { bookingId, payment_methods } = req.body;
