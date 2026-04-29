@@ -323,10 +323,9 @@ router.get("/details/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [results] = await db.query(
-      "SELECT * FROM booking WHERE user_id = ?",
-      [id],
-    );
+    const [results] = await db.query("SELECT * FROM booking WHERE id = ?", [
+      id,
+    ]);
 
     if (results.length === 0)
       return res.status(404).json({ error: "Booking not found" });
