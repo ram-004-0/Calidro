@@ -97,11 +97,6 @@ const Login = () => {
             />
           </div>
 
-          {/* To maintain design precisely, we wrap the hidden GoogleLogin 
-             around your custom button or use the standard button.
-             Standard Google button is required by Google for brand guidelines, 
-             but here is the custom integration:
-          */}
           <div className="flex justify-center">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}

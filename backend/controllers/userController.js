@@ -19,12 +19,19 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   const { username, email, phone_number, address } = req.body;
   try {
-    await db.execute(
+    // FIXED: Changed req.user.id to req.user.user_id
+    const [result] = await db.execute(
       "UPDATE user SET username = ?, email = ?, phone_number = ?, address = ? WHERE user_id = ?",
-      [username, email, phone_number, address, req.user.id],
+      [username, email, phone_number, address, req.user.user_id],
     );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     res.json({ message: "Profile updated successfully" });
   } catch (error) {
+    console.error("Update Profile Error:", error);
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
