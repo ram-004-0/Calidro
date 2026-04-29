@@ -25,7 +25,7 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { user_id: user.user_id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -33,7 +33,7 @@ exports.login = async (req, res) => {
     res.json({
       token,
       user: {
-        id: user.id,
+        user_id: user.user_id,
         username: user.username,
         email: user.email,
         role: user.role,
@@ -47,9 +47,7 @@ exports.login = async (req, res) => {
   }
 };
 
-/**
- * Handle Google OAuth Login
- */
+/*** Handle Google OAuth Login*/
 exports.googleLogin = async (req, res) => {
   const { idToken } = req.body;
 
@@ -77,7 +75,7 @@ exports.googleLogin = async (req, res) => {
 
       // Fetch the newly created user to get the full profile
       user = {
-        id: result.insertId,
+        user_id: result.insertId,
         username: name,
         email: email,
         role: "user",
@@ -87,7 +85,7 @@ exports.googleLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { user_id: user.user_id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -95,7 +93,7 @@ exports.googleLogin = async (req, res) => {
     res.json({
       token,
       user: {
-        id: user.id,
+        user_id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,

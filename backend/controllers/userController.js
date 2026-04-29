@@ -5,7 +5,7 @@ exports.getProfile = async (req, res) => {
   try {
     const [rows] = await db.execute(
       "SELECT username, email, phone_number, address FROM user WHERE user_id = ?",
-      [req.user.id],
+      [req.user.user_id],
     );
     if (rows.length === 0)
       return res.status(404).json({ message: "User not found" });
