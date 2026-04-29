@@ -404,28 +404,37 @@ router.put("/:id/update-payment", async (req, res) => {
 // --- 1. THE ACTUAL POST HANDLER ---
 router.post("/checkout-balance", async (req, res) => {
   const { bookingId, payment_methods } = req.body;
-  console.log("📍 [POST] Received bookingId:", bookingId);
 
-  if (!bookingId) {
-    return res
-      .status(400)
-      .json({ error: "Missing bookingId in request body." });
+  console.log("📍 [POST] Received bookingId:", bookingId);
+  console.log("📍 [POST] Received payment_methods:", payment_methods);
+
+  // 1. Validation: Stop early if data is missing
+  if (!bookingId || bookingId === "undefined") {
+    console.error("❌ REJECTED: bookingId is missing or undefined.");
+    return res.status(400).json({
+      error: "Missing bookingId",
+      details:
+        "The server received an undefined ID. Check your frontend payload.",
+    });
   }
 
   try {
-    // Querying using your primary key: booking_id
+    // 2. Database Query using booking_id
     const [rows] = await db.query(
       "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE booking_id = ?",
       [bookingId],
     );
 
     if (!rows || rows.length === 0) {
-      console.log("❌ No booking found in DB for ID:", bookingId);
-      return res.status(404).json({ error: "Booking not found." });
+      console.log(`❌ NOT FOUND: No record for booking_id: ${bookingId}`);
+      return res
+        .status(404)
+        .json({ error: "Booking record not found in database." });
     }
 
     const booking = rows[0];
-    const actualBalance = booking.total_amount - booking.amount_paid;
+    const actualBalance =
+      parseFloat(booking.total_amount) - parseFloat(booking.amount_paid);
 
     if (actualBalance <= 0) {
       return res
@@ -433,6 +442,7 @@ router.post("/checkout-balance", async (req, res) => {
         .json({ details: "This booking is already fully paid." });
     }
 
+    // 3. PayMongo Configuration
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
@@ -445,7 +455,7 @@ router.post("/checkout-balance", async (req, res) => {
             line_items: [
               {
                 name: `Balance: ${booking.event_name}`,
-                amount: Math.round(actualBalance * 100),
+                amount: Math.round(actualBalance * 100), // Amount in cents
                 currency: "PHP",
                 quantity: 1,
               },
@@ -468,6 +478,7 @@ router.post("/checkout-balance", async (req, res) => {
       },
     );
 
+    console.log("✅ PayMongo Session Created:", response.data.data.id);
     res.json({ checkout_url: response.data.data.attributes.checkout_url });
   } catch (err) {
     console.error("❌ PayMongo Error:", err.response?.data || err.message);
@@ -476,6 +487,15 @@ router.post("/checkout-balance", async (req, res) => {
       details: err.response?.data?.errors?.[0]?.detail || err.message,
     });
   }
+});
+
+router.get("/checkout-balance", (req, res) => {
+  console.warn("⚠️ WARNING: Received a GET request on a POST endpoint.");
+  res.status(405).json({
+    error: "Method Not Allowed",
+    message:
+      "A GET request was detected. This usually means a redirect occurred or the frontend sent the wrong method.",
+  });
 });
 
 router.get("/test-cleanup-manual", async (req, res) => {

@@ -59,56 +59,37 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       ? totalAmount
       : Number(amountInput.replace(/,/g, ""));
 
-  const handlePaymentMethodClick = async (methods) => {
-    if (!user?.user_id) return alert("Please log in.");
-    setLoading(true);
+  const handleUpdateBalance = async (methods) => {
+    // 1. VITAL: Check if the ID even exists before sending
+    if (!state?.bookingId) {
+      console.error("❌ No bookingId found in state!");
+      alert("Error: Booking ID is missing. Please refresh the page.");
+      return;
+    }
+
+    // 2. Build the payload explicitly
+    const payload = {
+      bookingId: state.bookingId,
+      payment_methods: methods,
+    };
+
+    console.log("🚀 Sending Payload:", payload);
 
     try {
-      let response;
+      // 3. Use the absolute HTTPS URL with NO trailing slash
+      const url =
+        "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
 
-      if (isRestricted) {
-        const payload = {
-          bookingId: state.bookingId,
-          amount_paid: numericAmount,
-          payment_methods: methods,
-          isBalanceUpdate: true,
-        };
-        response = await API.post("/bookings/checkout-balance", payload);
-      } else {
-        const payload = {
-          userId: user.user_id,
-          username: user.username || "Guest",
-          email: user.email || "",
-          phone_number: phone,
-          address: addr,
-          eventName: bookingData?.eventName || "Untitled",
-          eventType: bookingData?.eventType,
-          eventDate: bookingData?.date,
-          time: bookingData?.time,
-          duration: bookingData?.duration,
-          ingress: bookingData?.ingress_time || 2,
-          egress: bookingData?.egress_time || 1,
-          guests: bookingData?.guests,
-          totalAmount: totalAmount,
-          amount_paid: numericAmount,
-          paymentType: paymentType,
-          payment_methods: methods,
-        };
+      const response = await axios.post(url, payload);
 
-        // FIX: Ensure this matches the route in bookingRoutes.js
-        response = await API.post("/create-booking-and-checkout", payload);
-      }
-
-      if (response.data?.checkout_url) {
+      if (response.data.checkout_url) {
         window.location.href = response.data.checkout_url;
-      } else {
-        throw new Error("Checkout URL missing.");
       }
     } catch (err) {
-      console.error("PAYMENT ERROR:", err);
-      alert("Payment failed: " + (err.response?.data?.details || err.message));
-    } finally {
-      setLoading(false);
+      console.error("❌ Payment Error:", err.response?.data || err.message);
+      alert(
+        "Error: " + (err.response?.data?.details || "Could not start payment"),
+      );
     }
   };
 
