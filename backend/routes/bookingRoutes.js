@@ -228,7 +228,7 @@ router.get("/all-bookings", async (req, res) => {
       "SELECT * FROM booking ORDER BY event_date DESC",
     );
     const formatted = rows.map((b) => ({
-      id: b.id,
+      booking_id: b.booking_id,
 
       eventName: b.event_name,
 
@@ -542,7 +542,7 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
     const newPaymentType = isFullyPaid ? "full" : "partial";
 
     await db.query(
-      `UPDATE booking SET status = ?, payment_type = ? WHERE id = ?`,
+      `UPDATE booking SET status = ?, payment_type = ? WHERE booking_id = ?`,
       [newStatus, newPaymentType, bookingId],
     );
 
@@ -655,7 +655,7 @@ router.post("/webhook/paymongo", async (req, res) => {
 
   // 3. Update
   await db.query(
-    "UPDATE booking SET amount_paid = ?, status = ? WHERE id = ?",
+    "UPDATE booking SET amount_paid = ?, status = ? WHERE booking_id = ?",
     [newPaid, newStatus, bookingId],
   );
 
