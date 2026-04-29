@@ -411,7 +411,7 @@ router.post("/checkout-balance", async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE user_id = ?",
+      "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE booking_id = ?",
 
       [bookingId],
     );
