@@ -321,18 +321,24 @@ router.put("/update-status/:id", async (req, res) => {
 
 router.get("/details/:id", async (req, res) => {
   const { id } = req.params;
+
+  // Log what ID the server actually received
+  console.log("DEBUG: Fetching details for ID:", id);
+
   try {
-    // CHANGE user_id TO id
+    // Ensure this uses 'id', NOT 'user_id'
     const [results] = await db.query("SELECT * FROM booking WHERE id = ?", [
       id,
     ]);
 
-    if (results.length === 0)
+    if (results.length === 0) {
       return res.status(404).json({ error: "Booking not found" });
+    }
 
     res.status(200).json(results[0]);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("DEBUG: Database Query Error:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 
