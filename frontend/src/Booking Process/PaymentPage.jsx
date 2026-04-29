@@ -59,7 +59,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       : Number(amountInput.replace(/,/g, ""));
 
   const handlePaymentMethodClick = async (methods) => {
-    if (!user?.id) return alert("Please log in.");
+    if (!user?.user_id) return alert("Please log in.");
 
     setLoading(true);
 
@@ -79,7 +79,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       } else {
         // SCENARIO B: Creating a BRAND NEW booking
         const payload = {
-          userId: user.id,
+          userId: user.user_id,
           username: user.username || "Guest",
           email: user.email || "",
           phone_number: phone,
