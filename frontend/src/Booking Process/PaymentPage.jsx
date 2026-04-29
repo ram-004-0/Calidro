@@ -130,7 +130,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         payment_methods: methods,
         isBalanceUpdate: true,
       };
-      const response = await API.post("/checkout-balance", payload);
+      const response = await API.post("/bookings/checkout-balance", payload);
 
       if (response.data?.checkout_url) {
         window.location.href = response.data.checkout_url;
