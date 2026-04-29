@@ -72,8 +72,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
           payment_methods: methods,
           isBalanceUpdate: true,
         };
-        // FIX: Changed from /bookings/checkout-balance to /checkout-balance
-        response = await API.post("/checkout-balance", payload);
+        response = await API.post("/bookings/checkout-balance", payload);
       } else {
         const payload = {
           userId: user.user_id,

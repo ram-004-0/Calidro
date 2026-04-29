@@ -6,7 +6,6 @@ const cors = require("cors");
 const cron = require("node-cron");
 const db = require("./config/db");
 const app = express();
-const bookingRoutes = require("./routes/bookingRoutes");
 const authRoutes = require("./routes/authRoutes");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
