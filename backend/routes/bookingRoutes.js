@@ -284,9 +284,10 @@ router.put("/update-status/:id", async (req, res) => {
 
   try {
     // 2. Get the current booking
-    const [rows] = await db.query("SELECT * FROM booking WHERE user_id = ?", [
-      id,
-    ]);
+    const [rows] = await db.query(
+      "SELECT * FROM booking WHERE booking_id = ?",
+      [id],
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Booking not found in DB" });
