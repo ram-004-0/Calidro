@@ -75,7 +75,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
           isBalanceUpdate: true,
         };
 
-        response = await API.post("/checkout-balance", payload);
+        response = await API.post("/bookings/checkout-balance", payload);
       } else {
         // SCENARIO B: Creating a BRAND NEW booking
         const payload = {
