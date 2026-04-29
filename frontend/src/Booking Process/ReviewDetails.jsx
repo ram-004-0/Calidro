@@ -11,10 +11,9 @@ const ReviewDetails = () => {
 
   // State Management
   const [details, setDetails] = useState(null);
-  const [isMounted, setIsMounted] = useState(false); // Flag to prevent hydration mismatch
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // This only runs on the client side after the first render
     setIsMounted(true);
 
     if (bookingId) {
@@ -25,7 +24,9 @@ const ReviewDetails = () => {
         .get(`${API_URL}/api/bookings/details/${cleanId}`)
         .then((res) => {
           setDetails(res.data);
-          // Auto-confirm if it's still marked as pending when arriving here
+
+          // --- AUTO-CONFIRM LOGIC ---
+          // If the booking is still 'pending' (first-time booking), confirm it now.
           if (res.data.status === "pending") {
             updateBookingStatus(cleanId);
           }
@@ -45,7 +46,7 @@ const ReviewDetails = () => {
     }
   };
 
-  // Helper: Format Date consistently
+  // Helper: Format Date
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("en-PH", {
@@ -55,7 +56,7 @@ const ReviewDetails = () => {
     });
   };
 
-  // Helper: Format Time consistently
+  // Helper: Format Time
   const formatTime = (timeString) => {
     if (!timeString) return "";
     let [hours, minutes] = timeString.split(":");
@@ -65,9 +66,7 @@ const ReviewDetails = () => {
     return `${hoursNum}:${minutes} ${modifier}`;
   };
 
-  // --- CRITICAL FIX FOR ERROR #418 ---
-  // If we aren't mounted yet, OR we don't have details, show a simple loading state.
-  // This ensures the Server HTML and Client HTML match perfectly on the first load.
+  // --- HYDRATION SHIELD ---
   if (!isMounted || !details) {
     return (
       <div className="flex justify-center items-center min-h-screen p-20 font-medium text-gray-500">
@@ -75,11 +74,13 @@ const ReviewDetails = () => {
       </div>
     );
   }
-  const total = parseFloat(details.total_amount) || 0;
-  const paid = parseFloat(details.amount_paid) || 0; // This will now be 25000
 
-  const displayAmountPaid = paid;
-  const displayBalance = Math.max(0, total - paid); // This will now be 0
+  // --- DYNAMIC CALCULATIONS ---
+  // This ensures that even if total_amount changes per booking,
+  // the paid and balance amounts are always accurate.
+  const total = parseFloat(details.total_amount) || 0;
+  const paid = parseFloat(details.amount_paid) || 0;
+  const displayBalance = Math.max(0, total - paid);
 
   return (
     <div className="flex flex-col items-center w-full px-4">
@@ -88,7 +89,7 @@ const ReviewDetails = () => {
       </h2>
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl justify-center">
-        {/* Booking Details Section */}
+        {/* Booking Info Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex-1">
           <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest border-b pb-2">
             Booking Info
@@ -135,7 +136,7 @@ const ReviewDetails = () => {
             </p>
 
             <p>
-              <strong>Status:</strong>{" "}
+              <strong>Booking Status:</strong>{" "}
               <span
                 className={`font-bold uppercase text-xs px-2 py-1 rounded-md ${
                   details.status === "confirmed"
@@ -148,15 +149,16 @@ const ReviewDetails = () => {
             </p>
 
             <p className="pt-4 border-t text-lg font-semibold">
-              <strong>Amount Paid:</strong> ₱
-              {Number(displayAmountPaid).toLocaleString()}
+              <strong>Amount Paid:</strong> ₱{paid.toLocaleString()}
             </p>
 
-            {displayBalance > 0 && (
+            {displayBalance > 0 ? (
               <p className="text-red-500 font-medium">
                 <strong>Remaining Balance:</strong> ₱
-                {Number(displayBalance).toLocaleString()}
+                {displayBalance.toLocaleString()}
               </p>
+            ) : (
+              <p className="text-green-600 font-bold">🎉 Fully Paid</p>
             )}
           </div>
         </div>

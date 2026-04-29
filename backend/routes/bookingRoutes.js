@@ -635,6 +635,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
+  // Acknowledge immediately to prevent PayMongo from retrying
   res.status(200).send("ok");
 
   try {
@@ -642,6 +643,7 @@ router.post("/webhook/paymongo", async (req, res) => {
     const data = event.data?.attributes || event.attributes;
     if (!data) return;
 
+    // Deep search for metadata (PayMongo can nest this in multiple places)
     const metadata =
       data.metadata || data.payment_intent?.attributes?.metadata || {};
     const bookingId = metadata.bookingId;
@@ -651,12 +653,12 @@ router.post("/webhook/paymongo", async (req, res) => {
       return;
     }
 
-    // Convert Cents to Pesos
+    // Convert amount from cents to pesos
     const amountInCents =
       data.amount || data.payment_intent?.attributes?.amount || 0;
     const paymentAmount = amountInCents / 100;
 
-    // Fetch current totals
+    // Fetch current database values
     const [rows] = await db.query(
       "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
       [bookingId],
@@ -667,13 +669,10 @@ router.post("/webhook/paymongo", async (req, res) => {
       const totalAmount = parseFloat(rows[0].total_amount);
       const newTotalPaid = currentPaid + paymentAmount;
 
-      // 1. We ONLY use 'confirmed' because 'partial' isn't in your Booking Status ENUM
-      // 2. We update the amount_paid to the new total (e.g., 5000 + 20000 = 25000)
+      // We use 'confirmed' because your ENUM doesn't have 'partial'
       const finalStatus = "confirmed";
 
-      console.log(
-        `Updating DB: ID ${bookingId} | New Paid: ${newTotalPaid} | Status: ${finalStatus}`,
-      );
+      console.log(`Updating Booking ${bookingId}: Total Paid ₱${newTotalPaid}`);
 
       await db.query(
         "UPDATE booking SET amount_paid = ?, status = ? WHERE booking_id = ?",
