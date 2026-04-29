@@ -635,42 +635,38 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
-  // 1. ACKNOWLEDGE IMMEDIATELY (Prevents PayMongo retries/errors)
   res.status(200).send("Webhook received");
 
   try {
     const event = req.body;
 
-    const resource = event.data ? event.data : event;
-    const attributes = resource.attributes;
+    const attributes = resource?.attributes;
+    const metadata = attributes?.metadata;
+    const bookingId = metadata?.bookingId;
 
-    const metadata =
-      attributes?.metadata ||
-      attributes?.payment_intent?.attributes?.metadata ||
-      attributes?.data?.attributes?.metadata;
-
-    if (!metadata || !metadata.bookingId) {
-      console.error(
-        "❌ WEBHOOK ERROR: No metadata.bookingId found in payload.",
-      );
-      console.dir(event, { depth: null });
+    if (!bookingId) {
+      console.error("❌ WEBHOOK ERROR: No bookingId found in metadata.");
+      console.log("Full Payload received:", JSON.stringify(event));
       return;
     }
 
-    const bookingId = metadata.bookingId;
+    const status = attributes?.status;
+    const piStatus = attributes?.payment_intent?.attributes?.status;
+    console.log(
+      `ℹ️ Received event for Booking ${bookingId}. Status: ${status}, PI Status: ${piStatus}`,
+    );
 
     const amountInCents =
-      attributes?.amount ||
-      attributes?.payments?.[0]?.attributes?.amount ||
-      attributes?.amount_paid;
+      attributes?.payment_intent?.attributes?.amount || attributes?.amount || 0;
 
-    if (!amountInCents) {
-      console.error("❌ WEBHOOK ERROR: No amount found in payload.");
+    if (amountInCents === 0) {
+      console.error("❌ WEBHOOK ERROR: Amount is 0 or missing.");
       return;
     }
 
     const newPaymentAmount = amountInCents / 100;
 
+    // 6. DATABASE UPDATE (INCREMENTAL)
     const [rows] = await db.query(
       "SELECT total_amount, amount_paid FROM booking WHERE booking_id = ?",
       [bookingId],
@@ -694,7 +690,7 @@ router.post("/webhook/paymongo", async (req, res) => {
     );
 
     console.log(
-      `✅ WEBHOOK SUCCESS: Booking ${bookingId} | Added: ₱${newPaymentAmount} | Total Paid: ₱${updatedTotalPaid} | Status: ${newStatus}`,
+      `✅ WEBHOOK SUCCESS: Booking ${bookingId} | Added: ₱${newPaymentAmount} | New Total: ₱${updatedTotalPaid} | Status: ${newStatus}`,
     );
   } catch (err) {
     console.error("❌ WEBHOOK SYSTEM ERROR:", err.message);
