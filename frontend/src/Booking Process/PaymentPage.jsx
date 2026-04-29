@@ -121,13 +121,14 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         payment_methods: methods,
         isBalanceUpdate: true,
       };
-      // FIX: Match the prefixing logic used above
-      const response = await API.post("/checkout-balance", payload);
+
+      const response = await API.post("/bookings/checkout-balance", payload);
 
       if (response.data?.checkout_url) {
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
+      console.error(err);
       alert(
         "Balance update failed: " +
           (err.response?.data?.details || err.message),
