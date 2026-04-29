@@ -64,9 +64,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
     return (booking.total || 0) - (booking.paid || 0);
   }, [booking.total, booking.paid]);
 
-  // Use the correct primary key: booking_id
   const handleUpdatePayment = () => {
-    // Use the ID property that actually exists based on your logs
     const bId = booking.booking_id || booking.id;
 
     if (!bId) {
