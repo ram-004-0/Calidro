@@ -88,9 +88,48 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   };
 
   // Ensure this function exists in your component to handle partial payments
-  const handlePaymentMethodClick = (methods) => {
-    console.log("Partial payment flow triggered:", methods);
-    // Add your logic here
+  const handlePaymentMethodClick = async (methods) => {
+    const amountToPay = parseFloat(amountInput);
+
+    // Validation: Ensure the user entered a valid amount
+    if (isNaN(amountToPay) || amountToPay <= 0) {
+      alert("Please enter a valid amount to pay.");
+      return;
+    }
+
+    // Prevent overpayment
+    if (amountToPay > totalAmount) {
+      alert("Payment amount cannot exceed the total balance.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const bId =
+        searchParams.get("bookingId") ||
+        state?.bookingData?.booking_id ||
+        state?.bookingId;
+
+      const payload = {
+        bookingId: bId,
+        payment_methods: methods,
+        amount: amountToPay, // Send the partial amount
+      };
+
+      const response = await axios.post(
+        "https://calidro-production.up.railway.app/api/bookings/checkout-partial",
+        payload,
+      );
+
+      if (response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+      }
+    } catch (err) {
+      console.error("Partial Payment Error:", err);
+      alert("Failed to initiate partial payment.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
