@@ -10,7 +10,11 @@ const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
-
+// Place this ABOVE your route definitions
+app.all("/api/bookings/webhook/paymongo", (req, res, next) => {
+  console.log(`🔍 DEBUG: Webhook hit with method: ${req.method}`);
+  next();
+});
 // --- 1. CORS CONFIG (MUST BE AT THE TOP) ---
 app.use(
   cors({
