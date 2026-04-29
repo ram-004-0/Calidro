@@ -15,25 +15,20 @@ import {
   Banknote,
 } from "lucide-react";
 import axios from "axios";
+
 const API_URL =
   "https://calidro-production.up.railway.app" || "http://localhost:5000";
+
 const formatTime = (timeString) => {
   if (!timeString) return "N/A";
-
-  // If the string already contains AM/PM, it's likely already formatted
   if (timeString.includes("AM") || timeString.includes("PM")) return timeString;
-
   try {
-    // Splits "14:30" or "14:30:00"
     const parts = timeString.split(":");
     const hours = parseInt(parts[0], 10);
     const minutes = parseInt(parts[1], 10);
-
     if (isNaN(hours) || isNaN(minutes)) return timeString;
-
     const date = new Date();
     date.setHours(hours, minutes, 0);
-
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -49,14 +44,13 @@ const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   try {
     const date = new Date(dateString);
-    // This will format it to something like "April 21, 2026"
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
   } catch (e) {
-    return dateString; // Fallback to raw string if it fails
+    return dateString;
   }
 };
 
@@ -64,11 +58,79 @@ const UserBookingCard = ({ booking: initialBooking }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [booking, setBooking] = useState(initialBooking);
   const [isProcessing, setIsProcessing] = useState(false);
-  const navigate = useNavigate(); // Initialize the navigate function
+  const navigate = useNavigate();
 
   const balance = useMemo(() => {
     return (booking.total || 0) - (booking.paid || 0);
   }, [booking.total, booking.paid]);
+
+  // Use the correct primary key: booking_id
+  const handleUpdatePayment = () => {
+    const bId = booking.booking_id;
+
+    if (!bId) {
+      console.error("CRITICAL: Booking ID is missing from object:", booking);
+      alert("Error: Cannot identify this booking.");
+      return;
+    }
+
+    navigate(`/payment?bookingId=${bId}`, {
+      state: {
+        bookingData: booking,
+        amountToPay: balance,
+        paymentTypeRestriction: "Full",
+      },
+    });
+  };
+
+  const handleCancel = async () => {
+    const confirmCancel = window.confirm(
+      `Are you sure you want to cancel "${booking.eventName}"?`,
+    );
+    if (!confirmCancel) return;
+    setIsProcessing(true);
+    try {
+      await axios.put(
+        `${API_URL}/api/bookings/update-status/${booking.booking_id}`,
+        {
+          status: "cancelled",
+        },
+      );
+      setBooking((prev) => ({ ...prev, bookingStatus: "cancelled" }));
+      alert("Booking cancelled successfully.");
+    } catch (err) {
+      console.error("Failed to cancel:", err);
+      alert("Could not cancel booking.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReschedule = () => {
+    navigate("/booking", { state: { rescheduleData: booking } });
+  };
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    typeOfEvent: booking.typeOfEvent,
+    eventName: booking.eventName,
+    noOfGuests: booking.noOfGuests,
+  });
+
+  const handleSave = async () => {
+    try {
+      await axios.put(
+        `${API_URL}/api/bookings/edit/${booking.booking_id}`,
+        editData,
+      );
+      setBooking((prev) => ({ ...prev, ...editData }));
+      setIsEditing(false);
+      alert("Booking updated successfully!");
+    } catch (err) {
+      console.error("Failed to update:", err);
+      alert("Error updating booking.");
+    }
+  };
 
   const getStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
@@ -84,68 +146,6 @@ const UserBookingCard = ({ booking: initialBooking }) => {
         return "bg-gray-200 text-gray-700";
     }
   };
-
-  const handleUpdatePayment = () => {
-    navigate(`/payment?bookingId=${booking.booking_id}`, {
-      state: {
-        bookingData: booking,
-        amountToPay: balance,
-        paymentTypeRestriction: "Full",
-      },
-    });
-  };
-
-  const handleCancel = async () => {
-    const confirmCancel = window.confirm(
-      `Are you sure you want to cancel "${booking.eventName}"?`,
-    );
-    if (!confirmCancel) return;
-
-    setIsProcessing(true);
-    try {
-      // Use dynamic API_URL
-      await axios.put(`${API_URL}/api/bookings/update-status/${booking.id}`, {
-        status: "cancelled",
-      });
-
-      // This state update forces React to re-render and remove the buttons
-      setBooking((prev) => ({ ...prev, bookingStatus: "cancelled" }));
-      alert("Booking cancelled successfully.");
-    } catch (err) {
-      console.error("Failed to cancel:", err);
-      alert("Could not cancel booking. Check console for details.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleReschedule = () => {
-    // You can optionally pass the existing booking data via state
-    // if you want the booking form to be pre-filled
-    navigate("/booking", { state: { rescheduleData: booking } });
-  };
-
-  // Edit Button
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({
-    typeOfEvent: booking.typeOfEvent,
-    eventName: booking.eventName,
-    noOfGuests: booking.noOfGuests,
-  });
-  const handleSave = async () => {
-    try {
-      await axios.put(`${API_URL}/api/bookings/edit/${booking.id}`, editData);
-      // Update local state to reflect changes
-      setBooking((prev) => ({ ...prev, ...editData }));
-      setIsEditing(false);
-      alert("Booking updated successfully!");
-    } catch (err) {
-      console.error("Failed to update:", err);
-      alert("Error updating booking.");
-    }
-  };
-
-  console.log("Current Status:", booking.bookingStatus);
   return (
     <div className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
       {/* --- CARD HEADER --- */}
