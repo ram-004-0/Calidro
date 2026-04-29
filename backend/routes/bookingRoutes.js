@@ -175,15 +175,14 @@ router.post("/create-booking-and-checkout", async (req, res) => {
 
 router.get("/my-bookings/:userId", async (req, res) => {
   const { userId } = req.params;
-
   try {
     const [rows] = await db.query(
-      "SELECT * FROM booking WHERE user_id = ? ORDER BY event_date DESC",
+      "SELECT booking_id, event_name, username, email, phone_number, address, event_type, event_duration, ingress_time, egress_time, guests, total_amount, amount_paid, payment_type, status, event_date, event_time FROM booking WHERE user_id = ? ORDER BY event_date DESC",
       [userId],
     );
 
     const formatted = rows.map((b) => ({
-      id: b.id,
+      booking_id: b.booking_id,
 
       eventName: b.event_name,
 
