@@ -67,7 +67,10 @@ const Login = () => {
     >
       <div className="w-full max-w-lg bg-white/70 backdrop-blur-md shadow-xl p-8 rounded-2xl lg:ml-30 mx-auto">
         <div className="flex justify-between mb-8">
-          <button className="text-lg font-semibold border-b-2 border-black pb-2">
+          <button
+            onClick={handleLogin}
+            className="text-lg font-semibold border-b-2 border-black pb-2"
+          >
             LOGIN
           </button>
         </div>

@@ -14,14 +14,18 @@ const UserBook = () => {
 
   useEffect(() => {
     const fetchBookings = async () => {
-      //added
       const storedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("token"); // added
       const user = storedUser ? JSON.parse(storedUser) : null;
 
       try {
-        //changed
         const response = await axios.get(
           `${API_URL}/api/bookings/my-bookings/${user.user_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // <--- ADD THIS LINE
+            },
+          },
         );
         setBookings(response.data);
       } catch (err) {
