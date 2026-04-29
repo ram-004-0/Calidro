@@ -5,6 +5,7 @@ import API from "../services/api"; // Make sure this path is correct
 import { useAuth } from "../context/AuthContext";
 
 import { useLocation } from "react-router-dom";
+import axios from "axios";
 
 const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const { state } = useLocation();
@@ -112,27 +113,26 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   };
 
   const handleUpdateBalance = async (methods) => {
-    if (!user?.user_id) return alert("Please log in.");
     setLoading(true);
     try {
       const payload = {
         bookingId: state.bookingId,
         amount_paid: numericAmount,
         payment_methods: methods,
-        isBalanceUpdate: true,
       };
 
-      const response = await API.post("/bookings/checkout-balance", payload);
+      const response = await axios.post(
+        "https://calidro-production.up.railway.app/api/bookings/checkout-balance",
+        payload,
+        { headers: { "Content-Type": "application/json" } },
+      );
 
       if (response.data?.checkout_url) {
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
-      console.error(err);
-      alert(
-        "Balance update failed: " +
-          (err.response?.data?.details || err.message),
-      );
+      console.error("DEBUG ERROR:", err.response || err);
+      alert("Check console for error details.");
     } finally {
       setLoading(false);
     }
