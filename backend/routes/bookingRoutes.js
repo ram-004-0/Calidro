@@ -603,4 +603,34 @@ router.put("/reschedule/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// 9. PayMongo Webhook (Finalizes the DB update)
+router.post("/webhook/paymongo", async (req, res) => {
+  const event = req.body;
+  // 1. Ensure you have the bookingId
+  const metadata = event.data.attributes.data.attributes.metadata;
+  if (!metadata || !metadata.bookingId)
+    return res.status(400).send("No metadata");
+
+  const bookingId = metadata.bookingId;
+  const amountPaid = event.data.attributes.data.attributes.amount / 100;
+
+  // 2. Fetch booking to get fresh totals
+  const [rows] = await db.query(
+    "SELECT total_amount, amount_paid FROM booking WHERE id = ?",
+    [bookingId],
+  );
+  if (rows.length === 0) return res.status(404).send("Not found");
+
+  const newPaid = parseFloat(rows[0].amount_paid) + amountPaid;
+  const newStatus = newPaid >= rows[0].total_amount ? "confirmed" : "partial";
+
+  // 3. Update
+  await db.query(
+    "UPDATE booking SET amount_paid = ?, status = ? WHERE id = ?",
+    [newPaid, newStatus, bookingId],
+  );
+
+  res.status(200).send("Webhook Received");
+});
 module.exports = router;

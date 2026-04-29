@@ -82,11 +82,8 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
           userId: user.id,
           username: user.username || "Guest",
           email: user.email || "",
-
-          // ✅ FIX: These keys MUST match the destructuring in your backend
           phone_number: phone,
           address: addr,
-
           eventName: bookingData?.eventName || "Untitled",
           eventType: bookingData?.eventType,
           eventDate: bookingData?.date,
@@ -118,6 +115,31 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     } catch (err) {
       console.error("PAYMENT ERROR:", err);
       alert("Payment failed: " + (err.response?.data?.details || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateBalance = async (methods) => {
+    if (!user?.id) return alert("Please log in.");
+    setLoading(true);
+    try {
+      const payload = {
+        bookingId: state.bookingId,
+        amount_paid: numericAmount,
+        payment_methods: methods,
+        isBalanceUpdate: true,
+      };
+      const response = await API.post("/bookings/checkout-balance", payload);
+
+      if (response.data?.checkout_url) {
+        window.location.href = response.data.checkout_url;
+      }
+    } catch (err) {
+      alert(
+        "Balance update failed: " +
+          (err.response?.data?.details || err.message),
+      );
     } finally {
       setLoading(false);
     }
@@ -209,24 +231,33 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         <div className="space-y-4">
           <PaymentOption
             title="Credit / Debit Card"
-            onClick={() => handlePaymentMethodClick(["card"])}
+            onClick={() =>
+              isRestricted
+                ? handleUpdateBalance(["card"])
+                : handlePaymentMethodClick(["card"])
+            }
           />
 
           <PaymentOption
             title="E-Wallets"
             subtitle="GCash, Maya"
-            onClick={() => handlePaymentMethodClick(["gcash", "paymaya"])}
+            onClick={() =>
+              isRestricted
+                ? handleUpdateBalance(["gcash", "paymaya"])
+                : handlePaymentMethodClick(["gcash", "paymaya"])
+            }
           />
 
           <PaymentOption
             title="Online Banking"
             subtitle="Landbank, Metrobank"
             onClick={() =>
-              handlePaymentMethodClick([
-                "brankas_landbank",
-
-                "brankas_metrobank",
-              ])
+              isRestricted
+                ? handleUpdateBalance(["brankas_landbank", "brankas_metrobank"])
+                : handlePaymentMethodClick([
+                    "brankas_landbank",
+                    "brankas_metrobank",
+                  ])
             }
           />
         </div>
