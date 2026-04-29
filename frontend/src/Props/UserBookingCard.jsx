@@ -88,7 +88,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
   const handleUpdatePayment = () => {
     navigate("/payment", {
       state: {
-        bookingId: booking.id,
+        bookingId: booking.booking_id,
         bookingData: booking,
         amountToPay: balance,
         paymentTypeRestriction: "Full",

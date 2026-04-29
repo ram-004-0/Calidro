@@ -60,25 +60,33 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       : Number(amountInput.replace(/,/g, ""));
 
   const handleUpdateBalance = async (methods) => {
-    // 1. VITAL: Check if the ID even exists before sending
-    if (!state?.bookingId) {
-      console.error("❌ No bookingId found in state!");
-      alert("Error: Booking ID is missing. Please refresh the page.");
+    // --- DEBUGGING BLOCK ---
+    console.log("Full State Object:", state);
+
+    // Try to find the ID even if it's named 'id' or 'booking_id' in your state
+    const bId = state?.bookingId || state?.id || state?.booking_id;
+
+    console.log("Extracted ID to send:", bId);
+
+    if (!bId) {
+      alert(
+        "CRITICAL ERROR: No Booking ID found in page state. Please go back and try again.",
+      );
       return;
     }
+    // --- END DEBUGGING ---
 
-    // 2. Build the payload explicitly
     const payload = {
-      bookingId: state.bookingId,
+      bookingId: bId,
       payment_methods: methods,
     };
 
-    console.log("🚀 Sending Payload:", payload);
-
     try {
-      // 3. Use the absolute HTTPS URL with NO trailing slash
       const url =
         "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
+
+      // Explicitly logging the exact JSON being sent
+      console.log("🚀 Sending JSON:", JSON.stringify(payload));
 
       const response = await axios.post(url, payload);
 
@@ -86,10 +94,11 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
-      console.error("❌ Payment Error:", err.response?.data || err.message);
-      alert(
-        "Error: " + (err.response?.data?.details || "Could not start payment"),
-      );
+      // This will now show the actual error message from your backend
+      const serverMessage =
+        err.response?.data?.details || err.response?.data?.error || err.message;
+      console.error("❌ Payment Error:", serverMessage);
+      alert("Payment Error: " + serverMessage);
     }
   };
 
