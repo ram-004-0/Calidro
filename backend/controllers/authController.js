@@ -8,7 +8,6 @@ exports.login = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Explicitly select phone_number and address
     const [rows] = await db.execute(
       "SELECT user_id, username, email, password, role, phone_number, address FROM user WHERE username = ?",
       [username],
@@ -24,6 +23,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    console.log("DEBUG: Signing token for user:", user);
     const token = jwt.sign(
       { user_id: user.user_id, role: user.role },
       process.env.JWT_SECRET,
