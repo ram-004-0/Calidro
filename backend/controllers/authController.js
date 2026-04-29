@@ -10,7 +10,7 @@ exports.login = async (req, res) => {
   try {
     // Explicitly select phone_number and address
     const [rows] = await db.execute(
-      "SELECT id, username, email, password, role, phone_number, address FROM user WHERE username = ?",
+      "SELECT user_id, username, email, password, role, phone_number, address FROM user WHERE username = ?",
       [username],
     );
 
@@ -63,7 +63,7 @@ exports.googleLogin = async (req, res) => {
 
     // Select existing user data
     let [users] = await db.execute(
-      "SELECT id, username, email, role, phone_number, address FROM user WHERE email = ?",
+      "SELECT user_id, username, email, role, phone_number, address FROM user WHERE email = ?",
       [email],
     );
     let user = users[0];
