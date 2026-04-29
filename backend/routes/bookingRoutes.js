@@ -404,87 +404,91 @@ router.put("/:id/update-payment", async (req, res) => {
 router.get("/test", (req, res) => {
   res.json({ message: "Bookings route is working!" });
 });
-
-router.post("/checkout-balance", async (req, res) => {
-  const { bookingId, payment_methods } = req.body;
-
-  try {
-    const [rows] = await db.query(
-      "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE booking_id = ?",
-
-      [bookingId],
-    );
-
-    if (rows.length === 0)
-      return res.status(404).json({ error: "Booking not found" });
-
-    const booking = rows[0];
-
-    const actualBalance = booking.total_amount - booking.amount_paid;
-
-    if (actualBalance <= 0) {
-      return res
-
-        .status(400)
-
-        .json({ details: "This booking is already fully paid." });
-    }
-
-    const secretKey = process.env.PAYMONGO_SECRET_KEY;
-
-    const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
-
-    const response = await axios.post(
-      "https://api.paymongo.com/v1/checkout_sessions",
-
-      {
-        data: {
-          attributes: {
-            billing: { email: booking.email },
-
-            line_items: [
-              {
-                name: `Balance: ${booking.event_name}`,
-
-                amount: Math.round(actualBalance * 100),
-
-                currency: "PHP",
-
-                quantity: 1,
-              },
-            ],
-
-            payment_method_types: payment_methods,
-
-            metadata: {
-              bookingId: bookingId.toString(),
-
-              type: "balance_update",
-            },
-
-            success_url: `https://calidro.vercel.app/ReviewDetails?bookingId=${bookingId}`,
-
-            cancel_url: `https://calidro.vercel.app/userbook`,
-          },
-        },
-      },
-
-      {
-        headers: {
-          Authorization: authHeader,
-
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    res.json({ checkout_url: response.data.data.attributes.checkout_url });
-  } catch (err) {
-    console.error("PayMongo Balance Error:", err.response?.data || err.message);
-
-    res.status(500).json({ details: err.message });
-  }
+router.get("/checkout-balance", (req, res) => {
+  console.log("❌ CAUGHT A GET REQUEST ON /checkout-balance");
+  res.status(405).json({ error: "Use POST, not GET. Did a redirect occur?" });
 });
+
+// router.post("/checkout-balance", async (req, res) => {
+//   const { bookingId, payment_methods } = req.body;
+
+//   try {
+//     const [rows] = await db.query(
+//       "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE booking_id = ?",
+
+//       [bookingId],
+//     );
+
+//     if (rows.length === 0)
+//       return res.status(404).json({ error: "Booking not found" });
+
+//     const booking = rows[0];
+
+//     const actualBalance = booking.total_amount - booking.amount_paid;
+
+//     if (actualBalance <= 0) {
+//       return res
+
+//         .status(400)
+
+//         .json({ details: "This booking is already fully paid." });
+//     }
+
+//     const secretKey = process.env.PAYMONGO_SECRET_KEY;
+
+//     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
+
+//     const response = await axios.post(
+//       "https://api.paymongo.com/v1/checkout_sessions",
+
+//       {
+//         data: {
+//           attributes: {
+//             billing: { email: booking.email },
+
+//             line_items: [
+//               {
+//                 name: `Balance: ${booking.event_name}`,
+
+//                 amount: Math.round(actualBalance * 100),
+
+//                 currency: "PHP",
+
+//                 quantity: 1,
+//               },
+//             ],
+
+//             payment_method_types: payment_methods,
+
+//             metadata: {
+//               bookingId: bookingId.toString(),
+
+//               type: "balance_update",
+//             },
+
+//             success_url: `https://calidro.vercel.app/ReviewDetails?bookingId=${bookingId}`,
+
+//             cancel_url: `https://calidro.vercel.app/userbook`,
+//           },
+//         },
+//       },
+
+//       {
+//         headers: {
+//           Authorization: authHeader,
+
+//           "Content-Type": "application/json",
+//         },
+//       },
+//     );
+
+//     res.json({ checkout_url: response.data.data.attributes.checkout_url });
+//   } catch (err) {
+//     console.error("PayMongo Balance Error:", err.response?.data || err.message);
+
+//     res.status(500).json({ details: err.message });
+//   }
+// });
 
 router.get("/test-cleanup-manual", async (req, res) => {
   try {
