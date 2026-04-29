@@ -136,9 +136,6 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
-const bookingRoutes = require("./routes/bookingRoutes"); // Load the file
-app.use("/api/bookings", bookingRoutes); // Use it with the prefix
-
 app.use((req, res) => {
   console.log(`[404 ERROR] Path not found: ${req.method} ${req.originalUrl}`);
   res
