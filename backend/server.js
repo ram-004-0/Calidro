@@ -131,6 +131,11 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
+app.post("/api/bookings/checkout-balance", async (req, res) => {
+  console.log("🔥 HIT HARDCODED ROUTE");
+  res.json({ message: "Hardcoded route is working!" });
+});
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
