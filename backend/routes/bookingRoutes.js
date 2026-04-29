@@ -1,8 +1,9 @@
-console.log("🔥 FILE LOADED: bookingRoutes.js");
-
 const express = require("express");
-
 const router = express.Router();
+const axios = require("axios");
+const db = require("../config/db");
+
+console.log("🔥 FILE LOADED: bookingRoutes.js");
 
 router.use((req, res, next) => {
   // This version tells us EXACTLY what the URL looks like inside this router
@@ -11,10 +12,6 @@ router.use((req, res, next) => {
 
   next();
 });
-
-const axios = require("axios");
-
-const db = require("../config/db");
 
 const { sendBookingConfirmation } = require("../services/emailService");
 
@@ -405,11 +402,7 @@ router.put("/:id/update-payment", async (req, res) => {
 });
 
 // 7. Settle Existing Balance via PayMongo
-router.get("/checkout-balance", (req, res) => {
-  res.send(
-    "If you see this, your GET request is working, but your POST is not.",
-  );
-});
+
 router.post("/checkout-balance", async (req, res) => {
   const { bookingId, payment_methods } = req.body;
 
