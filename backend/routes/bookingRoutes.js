@@ -635,41 +635,50 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
-  // 1. Tell PayMongo we got it immediately
+  // 1. ACKNOWLEDGE IMMEDIATELY
   res.status(200).send("Webhook received");
 
   try {
     const event = req.body;
-    console.log(
-      "🔔 WEBHOOK EVENT RECEIVED:",
-      event.type || "checkout_session.updated",
-    );
 
-    // 2. Safe Extraction (Fixes the 'resource not defined' error)
-    const data = event.data?.attributes || event.attributes;
+    // 2. LOG THE INCOMING TYPE
+    console.log("🔔 WEBHOOK RECEIVED:", event.type);
 
-    if (!data) {
-      console.error(
-        "❌ WEBHOOK ERROR: No data/attributes found in request body.",
-      );
-      return;
-    }
+    // 3. DEEP EXTRACTION
+    // We check the 'data' wrapper first, then fallback to root attributes
+    const resource = event.data || event;
+    const attrs = resource.attributes || {};
 
-    // 3. Extract Metadata & Amount
-    const metadata = data.metadata || data.payment_intent?.attributes?.metadata;
-    const bookingId = metadata?.bookingId;
-    const amountInCents =
-      data.amount || data.payment_intent?.attributes?.amount || 0;
+    // PayMongo metadata can be at the resource level OR nested in the payment_intent
+    const metadata =
+      attrs.metadata ||
+      attrs.payment_intent?.attributes?.metadata ||
+      attrs.data?.attributes?.metadata ||
+      {};
+
+    const bookingId = metadata.bookingId;
 
     if (!bookingId) {
-      console.error("❌ WEBHOOK ERROR: No bookingId found in metadata.");
+      console.error(
+        "❌ WEBHOOK ERROR: bookingId still missing after deep search.",
+      );
+      // Log exactly what we received to find the new path
+      console.log("RECV PAYLOAD:", JSON.stringify(event));
       return;
     }
 
-    const paymentAmount = amountInCents / 100;
-    console.log(`💰 Processing ₱${paymentAmount} for Booking ${bookingId}`);
+    // 4. AMOUNT EXTRACTION
+    // Checks multiple common PayMongo amount locations
+    const amountInCents =
+      attrs.amount ||
+      attrs.payment_intent?.attributes?.amount ||
+      (attrs.payments && attrs.payments[0]?.attributes?.amount) ||
+      0;
 
-    // 4. Database Update
+    const paymentAmount = amountInCents / 100;
+    console.log(`💰 Booking ${bookingId}: Detected ₱${paymentAmount}`);
+
+    // 5. DATABASE UPDATE
     const [rows] = await db.query(
       "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
       [bookingId],
@@ -680,7 +689,6 @@ router.post("/webhook/paymongo", async (req, res) => {
       const totalAmount = parseFloat(rows[0].total_amount);
       const updatedPaid = currentPaid + paymentAmount;
 
-      // Confirm if fully paid
       const newStatus = updatedPaid >= totalAmount ? "confirmed" : "partial";
 
       await db.query(
@@ -689,7 +697,7 @@ router.post("/webhook/paymongo", async (req, res) => {
       );
 
       console.log(
-        `✅ SUCCESS: Booking ${bookingId} updated to ${newStatus}. Total: ₱${updatedPaid}`,
+        `✅ SUCCESS: Booking ${bookingId} now has ₱${updatedPaid} paid.`,
       );
     } else {
       console.error(`❌ DB ERROR: Booking ${bookingId} not found.`);
