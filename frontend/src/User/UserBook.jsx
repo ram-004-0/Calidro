@@ -21,7 +21,7 @@ const UserBook = () => {
       try {
         //changed
         const response = await axios.get(
-          `${API_URL}/api/bookings/my-bookings/${user.id}`,
+          `${API_URL}/api/bookings/my-bookings/${user.user_id}`,
         );
         setBookings(response.data);
       } catch (err) {
