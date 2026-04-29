@@ -559,7 +559,7 @@ router.put("/edit/:id", async (req, res) => {
     // 1. Changed table name from 'bookings' to 'booking'
     // 2. Changed column names to match your database schema
     await db.query(
-      "UPDATE booking SET event_type = ?, event_name = ?, guests = ? WHERE id = ?",
+      "UPDATE booking SET event_type = ?, event_name = ?, guests = ? WHERE booking_id = ?",
       [typeOfEvent, eventName, noOfGuests, req.params.id],
     );
     res.json({ message: "Booking updated" });
