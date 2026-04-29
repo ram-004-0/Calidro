@@ -89,44 +89,63 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
   // Ensure this function exists in your component to handle partial payments
   const handlePaymentMethodClick = async (methods) => {
-    const amountToPay = parseFloat(amountInput);
-
-    // Validation: Ensure the user entered a valid amount
-    if (isNaN(amountToPay) || amountToPay <= 0) {
-      alert("Please enter a valid amount to pay.");
-      return;
-    }
-
-    // Prevent overpayment
-    if (amountToPay > totalAmount) {
-      alert("Payment amount cannot exceed the total balance.");
-      return;
-    }
+    if (!user?.user_id) return alert("Please log in.");
 
     setLoading(true);
+
     try {
-      const bId =
-        searchParams.get("bookingId") ||
-        state?.bookingData?.booking_id ||
-        state?.bookingId;
+      let response;
 
-      const payload = {
-        bookingId: bId,
-        payment_methods: methods,
-        amount: amountToPay, // Send the partial amount
-      };
+      if (isRestricted) {
+        // SCENARIO A: Updating balance for an EXISTING booking
+        const payload = {
+          bookingId: state.bookingId,
+          amount_paid: numericAmount,
+          payment_methods: methods,
+          isBalanceUpdate: true,
+        };
 
-      const response = await axios.post(
-        "https://calidro-production.up.railway.app/api/bookings/checkout-partial",
-        payload,
-      );
+        response = await API.post("/bookings/checkout-balance", payload);
+      } else {
+        // SCENARIO B: Creating a BRAND NEW booking
+        const payload = {
+          bookingId: bookingData?.booking_id,
+          userId: user.user_id,
+          username: user.username || "Guest",
+          email: user.email || "",
+          phone_number: phone,
+          address: addr,
+          eventName: bookingData?.eventName || "Untitled",
+          eventType: bookingData?.eventType,
+          eventDate: bookingData?.date,
+          time: bookingData?.time,
+          duration: bookingData?.duration,
+          ingress: bookingData?.ingress || 2,
+          egress: bookingData?.egress || 1,
+          guests: bookingData?.guests,
+          totalAmount: totalAmount,
+          amount_paid: numericAmount,
+          paymentType: paymentType,
+          payment_methods: methods,
+        };
 
-      if (response.data.checkout_url) {
+        // We use the 'response' variable defined at the top of the try block
+        response = await API.post(
+          "/bookings/create-booking-and-checkout",
+          payload,
+        );
+        console.log("Backend Response:", response.data);
+      }
+
+      // Handle redirection for either scenario
+      if (response.data && response.data.checkout_url) {
         window.location.href = response.data.checkout_url;
+      } else {
+        throw new Error("Checkout URL missing in server response.");
       }
     } catch (err) {
-      console.error("Partial Payment Error:", err);
-      alert("Failed to initiate partial payment.");
+      console.error("PAYMENT ERROR:", err);
+      alert("Payment failed: " + (err.response?.data?.details || err.message));
     } finally {
       setLoading(false);
     }
