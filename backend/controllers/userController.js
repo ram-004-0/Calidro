@@ -4,7 +4,7 @@ const db = require("../config/db");
 exports.getProfile = async (req, res) => {
   try {
     const [rows] = await db.execute(
-      "SELECT username, email, phone_number, address FROM user WHERE id = ?",
+      "SELECT username, email, phone_number, address FROM user WHERE user_id = ?",
       [req.user.id],
     );
     if (rows.length === 0)
@@ -20,7 +20,7 @@ exports.updateProfile = async (req, res) => {
   const { username, email, phone_number, address } = req.body;
   try {
     await db.execute(
-      "UPDATE user SET username = ?, email = ?, phone_number = ?, address = ? WHERE id = ?",
+      "UPDATE user SET username = ?, email = ?, phone_number = ?, address = ? WHERE user_id = ?",
       [username, email, phone_number, address, req.user.id],
     );
     res.json({ message: "Profile updated successfully" });
