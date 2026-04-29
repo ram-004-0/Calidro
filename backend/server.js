@@ -37,6 +37,15 @@ app.get("/", (req, res) => {
   res.status(200).send("Calidro Backend is running!");
 });
 
+// In server.js, add this before your routes
+app.use((req, res, next) => {
+  if (req.path.endsWith("/") && req.path.length > 1) {
+    const query = req.url.slice(req.path.length);
+    res.redirect(301, req.path.slice(0, -1) + query);
+  } else {
+    next();
+  }
+});
 // --- 3. ROUTES REGISTRATION ---
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", require("./routes/bookingRoutes"));
