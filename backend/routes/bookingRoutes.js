@@ -89,7 +89,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
     // --- STEP 1: Fetch User Details from the 'user' table ---
     // We do this to ensure we have the correct phone, address, and email
     const [userData] = await query(
-      "SELECT username, email, phone_number, address FROM user WHERE id = ?",
+      "SELECT username, email, phone_number, address FROM user WHERE user_id = ?",
       [userId],
     );
 
@@ -284,7 +284,9 @@ router.put("/update-status/:id", async (req, res) => {
 
   try {
     // 2. Get the current booking
-    const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
+    const [rows] = await db.query("SELECT * FROM booking WHERE user_id = ?", [
+      id,
+    ]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Booking not found in DB" });
@@ -321,9 +323,10 @@ router.get("/details/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [results] = await db.query("SELECT * FROM booking WHERE id = ?", [
-      id,
-    ]);
+    const [results] = await db.query(
+      "SELECT * FROM booking WHERE user_id = ?",
+      [id],
+    );
 
     if (results.length === 0)
       return res.status(404).json({ error: "Booking not found" });
@@ -355,7 +358,9 @@ router.put("/:id/update-payment", async (req, res) => {
 
   try {
     // 1. Fetch current booking
-    const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
+    const [rows] = await db.query("SELECT * FROM booking WHERE user_id = ?", [
+      id,
+    ]);
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
@@ -395,7 +400,7 @@ router.post("/checkout-balance", async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE id = ?",
+      "SELECT event_name, total_amount, amount_paid, email FROM booking WHERE user_id = ?",
 
       [bookingId],
     );
@@ -501,7 +506,7 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
   try {
     // Fetch the current booking to check real math
     const [rows] = await db.query(
-      "SELECT total_amount, amount_paid FROM booking WHERE id = ?",
+      "SELECT total_amount, amount_paid FROM booking WHERE user_id = ?",
       [bookingId],
     );
 
@@ -548,7 +553,9 @@ router.put("/reschedule/:id", async (req, res) => {
 
   try {
     // 1. Fetch current booking
-    const [rows] = await db.query("SELECT * FROM booking WHERE id = ?", [id]);
+    const [rows] = await db.query("SELECT * FROM booking WHERE user_id = ?", [
+      id,
+    ]);
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
@@ -617,7 +624,7 @@ router.post("/webhook/paymongo", async (req, res) => {
 
   // 2. Fetch booking to get fresh totals
   const [rows] = await db.query(
-    "SELECT total_amount, amount_paid FROM booking WHERE id = ?",
+    "SELECT total_amount, amount_paid FROM booking WHERE user_id = ?",
     [bookingId],
   );
   if (rows.length === 0) return res.status(404).send("Not found");
