@@ -118,10 +118,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       const url =
         "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
 
-      const response = await axios.post(url, {
-        bookingId: state.bookingId,
-        payment_methods: methods,
-      });
+      const response = await axios.post(url, payload);
 
       if (response.data.checkout_url) {
         window.location.href = response.data.checkout_url;
