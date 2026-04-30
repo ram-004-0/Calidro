@@ -1,23 +1,47 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import img from "../assets/VTBg.jpg";
+import img from "../assets/VTBg.jpg"; // Local fallback
+
+const API_URL = "https://calidro-production.up.railway.app";
 
 function Home() {
+  const [tourImage, setTourImage] = useState(null);
+
+  // Fetch the virtual tour asset on mount
+  useEffect(() => {
+    const fetchTourAsset = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/settings/virtual-tour`);
+        if (!response.ok) throw new Error("Failed to fetch");
+
+        const data = await response.json();
+        if (data.imageUrl) {
+          setTourImage(data.imageUrl);
+        }
+      } catch (err) {
+        console.error("Error fetching virtual tour background:", err);
+      }
+    };
+
+    fetchTourAsset();
+  }, []);
+
   return (
-    <div className="flex flex-col  text-[#4a3733] min-h-screen">
+    <div className="flex flex-col text-[#4a3733] min-h-screen">
       <section className="relative h-130 overflow-hidden justify-center">
         <div className="relative w-full h-full">
           <Link
             to="/login"
             className="absolute bottom-8 left-1/2 -translate-x-1/2
                        z-10 bg-white/80 text-black px-6 py-3 rounded-lg 
-                       hover:bg-white transition font-medium uppercase"
+                       hover:bg-white transition font-medium uppercase shadow-lg"
           >
             LAUNCH VIRTUAL TOUR
           </Link>
 
           <img
-            src={img}
-            alt="Event Hall"
+            src={tourImage || img} // Uses DB image if available, otherwise local file
+            alt="Event Hall Virtual Tour"
             className="w-full h-full object-cover"
           />
         </div>
