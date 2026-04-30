@@ -1,13 +1,69 @@
 import { useState } from "react";
 import { Ellipsis, Minus } from "lucide-react";
 
-const OverviewEventCard = ({ onDelete, isEditing, setEditingCard }) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const [localEditing, setLocalEditing] = useState(false);
-  const [image, setImage] = useState();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [showUploadModal, setShowUploadModal] = useState(false);
+const OverviewEventCard = ({
+  cardData,
+  onDelete,
+  onRefresh,
+  isEditing,
+  setEditingCard,
+}) => {
+  // Use props to initialize state
+  const [title, setTitle] = useState(cardData.title || "");
+  const [description, setDescription] = useState(cardData.description || "");
+  const [image, setImage] = useState(cardData.image_url || null);
+  const [selectedFile, setSelectedFile] = useState(null); // The actual file for Cloudinary
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = (file) => {
+    setSelectedFile(file); // Keep the file object
+    setImage(URL.createObjectURL(file)); // Keep the preview URL
+    setShowUploadModal(false);
+  };
+
+  const saveEdit = async () => {
+    setUploading(true);
+    let finalUrl = image;
+
+    try {
+      // 1. Upload image if it's new
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("image", selectedFile);
+        const res = await fetch(
+          `${API_URL}/api/images/upload?category=events`,
+          {
+            method: "POST",
+            body: formData,
+          },
+        );
+        const data = await res.json();
+        finalUrl = data.imageUrl;
+      }
+
+      // 2. Save to MySQL
+      const res = await fetch(`${API_URL}/api/settings/event-cards`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: cardData.events_overview_id, // Pass existing ID or null
+          title,
+          description,
+          imageUrl: finalUrl,
+          userId: 1,
+        }),
+      });
+
+      if (res.ok) {
+        setEditingCard(false);
+        onRefresh(); // Reload the list from DB to get the new ID
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleFile = (file) => {
     const preview = URL.createObjectURL(file);

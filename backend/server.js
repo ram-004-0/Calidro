@@ -150,6 +150,40 @@ app.post("/api/images/upload", upload.single("image"), async (req, res) => {
   }
 });
 
+// GET all event cards
+app.get("/api/settings/event-cards", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM events_overview_card ORDER BY created_at DESC",
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST: Save or Update an event card
+app.post("/api/settings/event-cards", async (req, res) => {
+  const { id, title, description, imageUrl, userId } = req.body;
+  try {
+    if (id) {
+      // Update existing
+      await db.query(
+        "UPDATE events_overview_card SET title = ?, description = ?, image_url = ? WHERE events_overview_id = ?",
+        [title, description, imageUrl, id],
+      );
+    } else {
+      // Insert new
+      await db.query(
+        "INSERT INTO events_overview_card (user_id, title, description, image_url) VALUES (?, ?, ?, ?)",
+        [userId || 1, title, description, imageUrl],
+      );
+    }
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // Check if this file exists in /routes/
 // --- 5. TEST ENDPOINTS ---
 app.get("/api/test-direct", (req, res) => {
