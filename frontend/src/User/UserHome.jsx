@@ -1,71 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UserHeader from "../Components/UserHeader";
 import Sample from "../Props/sample.jsx";
 import UserRatingCard from "../Props/UserRatingCard.jsx";
 
-const UserHome = () => {
-  const staticReviews = [
-    {
-      id: 1,
-      user_name: "Rochi",
-      rating: 5,
-      comment:
-        "The venue is absolutely stunning. Perfect for our wedding! The staff was very helpful.",
-      created_at: "2 weeks ago",
-      review_images: [],
-    },
-    {
-      id: 2,
-      user_name: "Ella",
-      rating: 4,
-      comment:
-        "Great place, but the parking was a bit tight. Overall 10/10 service and beautiful lights.",
-      created_at: "1 month ago",
-      review_images: [],
-    },
-    {
-      id: 3,
-      user_name: "Bautista",
-      rating: 3,
-      comment:
-        "The place is okay, but it was a bit hot inside during the afternoon.",
-      created_at: "2 months ago",
-      review_images: [],
-    },
-    {
-      id: 4,
-      user_name: "Mark",
-      rating: 5,
-      comment:
-        "Amazing experience! The virtual tour was exactly like the real thing.",
-      created_at: "3 days ago",
-      review_images: [],
-    },
-  ];
+const API_URL = "https://calidro-production.up.railway.app";
 
-  // 2. STATE FOR FILTERING
+const UserHome = () => {
+  // 1. STATE MANAGEMENT
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
 
-  // 3. FILTERING LOGIC
+  // 2. FETCH REVIEWS FROM DATABASE
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        // Using your existing home-cards or a specific review endpoint if you have one
+        // For now, I'll assume you want to fetch the feedback/reviews
+        const response = await fetch(`${API_URL}/api/settings/home-cards`);
+        const data = await response.json();
+        setReviews(data);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReviews();
+  }, []);
+
+  // 3. DYNAMIC CALCULATION LOGIC
+  // Calculate average rating
+  const totalReviews = reviews.length;
+  const averageRating =
+    totalReviews > 0
+      ? (
+          reviews.reduce((acc, curr) => acc + (curr.rating || 5), 0) /
+          totalReviews
+        ).toFixed(1)
+      : "0.0";
+
+  // Generate dynamic stats for the bar chart
+  const ratingStats = [5, 4, 3, 2, 1].map((star) => {
+    const count = reviews.filter((r) => r.rating === star).length;
+    const percent =
+      totalReviews > 0 ? `${(count / totalReviews) * 100}%` : "0%";
+    return { label: `${star} star`, count, percent };
+  });
+
+  // 4. FILTERING LOGIC
   const filteredReviews =
     activeFilter === "All"
-      ? staticReviews
-      : staticReviews.filter((rev) => rev.rating === parseInt(activeFilter));
-
-  // 4. CHART DATA (Static for now)
-  const ratingStats = [
-    { label: "5 star", count: 44, percent: "85%" },
-    { label: "4 star", count: 12, percent: "15%" },
-    { label: "3 star", count: 7, percent: "8%" },
-    { label: "2 star", count: 3, percent: "3%" },
-    { label: "1 star", count: 1, percent: "1%" },
-  ];
+      ? reviews
+      : reviews.filter((rev) => rev.rating === parseInt(activeFilter));
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col">
       <UserHeader />
       <Sample />
 
+      {/* --- About Us Section --- */}
       <section className="py-10 bg-[#f1f1f1]">
         <div className="max-w-5xl mx-auto px-6">
           <h2 className="text-2xl font-bold text-center mb-8 tracking-wide">
@@ -98,20 +92,26 @@ const UserHome = () => {
         </div>
       </section>
 
+      {/* --- Ratings Section --- */}
       <section className="relative py-20 w-full bg-[#f1f1f1]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-white rounded-3xl shadow-xl p-8 md:p-14">
             <h1 className="text-2xl font-bold text-[#4a3733] mb-10 uppercase tracking-widest">
-              Ratings
+              Ratings & Feedback
             </h1>
 
-            {/* --- User Ratings after the event --- */}
+            {/* --- Dynamic Overview --- */}
             <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-16 mb-12 pb-12 border-b border-gray-100">
               <div className="flex flex-col items-center justify-center border-r border-gray-100 pr-8">
-                <span className="text-8xl font-bold text-[#4a3733]">5.0</span>
-                <div className="text-yellow-500 text-2xl my-3">★★★★★</div>
+                <span className="text-8xl font-bold text-[#4a3733]">
+                  {averageRating}
+                </span>
+                <div className="text-yellow-500 text-2xl my-3">
+                  {"★".repeat(Math.round(averageRating))}
+                  {"☆".repeat(5 - Math.round(averageRating))}
+                </div>
                 <p className="text-gray-400 text-sm font-semibold uppercase">
-                  67 Ratings
+                  {totalReviews} Total Ratings
                 </p>
               </div>
 
@@ -123,7 +123,7 @@ const UserHome = () => {
                     </span>
                     <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#4a3733]"
+                        className="h-full bg-[#4a3733] transition-all duration-1000"
                         style={{ width: stat.percent }}
                       ></div>
                     </div>
@@ -152,22 +152,30 @@ const UserHome = () => {
               ))}
             </div>
 
-            {/* --- Filtered Review Cards --- */}
+            {/* --- Display List --- */}
             <div className="space-y-8">
-              {filteredReviews.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-10 italic text-gray-400">
+                  Loading feedback...
+                </div>
+              ) : filteredReviews.length > 0 ? (
                 filteredReviews.map((rev) => (
                   <UserRatingCard
-                    key={rev.id}
-                    name={rev.user_name}
-                    date={rev.created_at}
-                    rating={rev.rating}
-                    comment={rev.comment}
-                    images={rev.review_images}
+                    key={rev.home_id || rev.id}
+                    name={rev.user_name || "Calidro Guest"}
+                    date={
+                      rev.created_at
+                        ? new Date(rev.created_at).toLocaleDateString()
+                        : "Recent"
+                    }
+                    rating={rev.rating || 5}
+                    comment={rev.description || rev.comment}
+                    images={rev.image_url ? [rev.image_url] : []}
                   />
                 ))
               ) : (
                 <div className="py-20 text-center text-gray-400 italic text-lg">
-                  No {activeFilter} star ratings found for Calidro.
+                  No {activeFilter} star ratings found.
                 </div>
               )}
             </div>
