@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Ellipsis, X } from "lucide-react";
 import image1 from "../assets/Images/savt.JPG";
 
-const API_URL =
-  "https://calidro-production.up.railway.app" || "http://localhost:5000";
+const API_URL = "https://calidro-production.up.railway.app";
 
 const OverviewVirtualTour = () => {
   const [showMenu, setShowMenu] = useState(false);
@@ -22,10 +21,10 @@ const OverviewVirtualTour = () => {
     const fetchAvailableImage = async () => {
       try {
         const response = await fetch(`${API_URL}/api/settings/virtual-tour`);
+        if (!response.ok) throw new Error("Server Error");
         const data = await response.json();
 
         if (data.imageUrl) {
-          // This sets the image to whatever was found in MySQL
           setUploadedImage(data.imageUrl);
         }
       } catch (err) {
@@ -40,14 +39,12 @@ const OverviewVirtualTour = () => {
   const handleFileChange = (file) => {
     if (!file) return;
 
-    // Validate File Type
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       alert("Invalid file type. Please upload a JPG, PNG, or WEBP image.");
       return;
     }
 
-    // Validate File Size (10MB limit)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       alert("The image is too large. Please select a file smaller than 10MB.");
@@ -56,7 +53,6 @@ const OverviewVirtualTour = () => {
 
     setSelectedFile(file);
 
-    // Cleanup previous preview memory
     if (preview) {
       URL.revokeObjectURL(preview);
     }
@@ -72,7 +68,6 @@ const OverviewVirtualTour = () => {
   const getOptimizedUrl = (url) => {
     if (!url || url.includes("blob:") || !url.includes("cloudinary"))
       return url;
-    // Cloudinary dynamic optimization
     return url.replace("/upload/", "/upload/w_1000,c_limit,q_auto,f_auto/");
   };
 
@@ -87,7 +82,6 @@ const OverviewVirtualTour = () => {
     setProgress(0);
 
     const xhr = new XMLHttpRequest();
-    // Step A: Upload to Cloudinary via your Backend
     xhr.open("POST", `${API_URL}/api/images/upload?category=${category}`);
 
     xhr.upload.onprogress = (e) => {
@@ -98,11 +92,11 @@ const OverviewVirtualTour = () => {
 
     xhr.onload = async () => {
       if (xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText);
-        const newCloudinaryUrl = response.imageUrl;
-
-        // Step B: Save URL to MySQL site_assets table
         try {
+          const response = JSON.parse(xhr.responseText);
+          const newCloudinaryUrl = response.imageUrl;
+
+          // Step B: Save URL to MySQL site_assets table
           const dbResponse = await fetch(
             `${API_URL}/api/settings/virtual-tour`,
             {
@@ -110,7 +104,7 @@ const OverviewVirtualTour = () => {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 imageUrl: newCloudinaryUrl,
-                adminId: 1, // Ideally get this from your Auth context
+                adminId: 1,
               }),
             },
           );
@@ -119,10 +113,12 @@ const OverviewVirtualTour = () => {
             if (preview) URL.revokeObjectURL(preview);
             setUploadedImage(newCloudinaryUrl);
             alert("Virtual Tour updated successfully!");
+          } else {
+            throw new Error("DB Save Failed");
           }
         } catch (err) {
-          console.error("Failed to save URL to database:", err);
-          alert("Image uploaded but failed to save to database.");
+          console.error("Save error:", err);
+          alert("Upload successful but failed to update live view.");
         } finally {
           setUploading(false);
           setShowModal(false);
@@ -131,7 +127,8 @@ const OverviewVirtualTour = () => {
           setProgress(0);
         }
       } else {
-        console.error("Upload failed");
+        console.error("Upload failed with status:", xhr.status);
+        alert("Server error (500) during upload. Check backend logs.");
         setUploading(false);
       }
     };
@@ -161,7 +158,9 @@ const OverviewVirtualTour = () => {
               className="p-1 rounded-full hover:bg-gray-200 transition shrink-0"
               onClick={() => setShowMenu(!showMenu)}
             >
-              <Ellipsis size={18} />
+              <ul className="list-none m-0 p-0">
+                <Ellipsis size={18} />
+              </ul>
             </button>
           </div>
 

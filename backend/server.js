@@ -55,33 +55,44 @@ app.use((req, res, next) => {
   );
   next();
 });
-app.get("/api/settings/virtual-tour", async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      "SELECT image_url FROM site_assets WHERE asset_name = 'virtual_tour_image'",
-    );
-    res.json({ imageUrl: rows[0]?.image_url || null });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch image from database" });
-  }
-});
+// --- DATABASE PERSISTENCE ROUTES ---
 
-// 2. Update the URL in MySQL (Call this after Cloudinary upload)
-// This route fetches the current "Active" image from the DB
+// GET: Fetch the current image
 app.get("/api/settings/virtual-tour", async (req, res) => {
   try {
     const [rows] = await db.query(
       "SELECT image_url FROM site_assets WHERE asset_name = 'virtual_tour_image' LIMIT 1",
     );
-
-    if (rows.length > 0) {
-      res.json({ imageUrl: rows[0].image_url });
-    } else {
-      res.status(404).json({ message: "No image found in database" });
-    }
+    // If no row exists, return null instead of crashing
+    res.status(200).json({ imageUrl: rows[0]?.image_url || null });
   } catch (error) {
-    console.error("Fetch Error:", error);
-    res.status(500).json({ error: "Server error fetching image" });
+    console.error("DB Fetch Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// POST: Update the image record after Cloudinary upload
+app.post("/api/settings/virtual-tour", async (req, res) => {
+  const { imageUrl, adminId } = req.body;
+  try {
+    const sql = `
+      UPDATE site_assets 
+      SET image_url = ?, updated_by = ? 
+      WHERE asset_name = 'virtual_tour_image'
+    `;
+    const [result] = await db.query(sql, [imageUrl, adminId || null]);
+
+    if (result.affectedRows === 0) {
+      // If the row doesn't exist, create it
+      await db.query(
+        "INSERT INTO site_assets (asset_name, image_url, updated_by) VALUES (?, ?, ?)",
+        ["virtual_tour_image", imageUrl, adminId || null],
+      );
+    }
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("DB Update Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
