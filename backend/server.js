@@ -5,7 +5,6 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const cron = require("node-cron");
 const db = require("./config/db");
-const upload = require("./cloudinaryConfig");
 const upload = require("./middleware/multer");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
