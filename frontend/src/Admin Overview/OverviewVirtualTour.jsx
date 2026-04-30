@@ -19,18 +19,21 @@ const OverviewVirtualTour = () => {
 
   // 1. Fetch current image from MySQL on component mount
   useEffect(() => {
-    const fetchTourImage = async () => {
+    const fetchAvailableImage = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/settings/virtual-tour`);
-        const data = await res.json();
+        const response = await fetch(`${API_URL}/api/settings/virtual-tour`);
+        const data = await response.json();
+
         if (data.imageUrl) {
+          // This sets the image to whatever was found in MySQL
           setUploadedImage(data.imageUrl);
         }
       } catch (err) {
-        console.error("Error fetching virtual tour image:", err);
+        console.error("Could not fetch the available image:", err);
       }
     };
-    fetchTourImage();
+
+    fetchAvailableImage();
   }, []);
 
   // 2. Handle File Selection with Validation

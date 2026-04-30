@@ -55,6 +55,35 @@ app.use((req, res, next) => {
   );
   next();
 });
+app.get("/api/settings/virtual-tour", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT image_url FROM site_assets WHERE asset_name = 'virtual_tour_image'",
+    );
+    res.json({ imageUrl: rows[0]?.image_url || null });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch image from database" });
+  }
+});
+
+// 2. Update the URL in MySQL (Call this after Cloudinary upload)
+// This route fetches the current "Active" image from the DB
+app.get("/api/settings/virtual-tour", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT image_url FROM site_assets WHERE asset_name = 'virtual_tour_image' LIMIT 1",
+    );
+
+    if (rows.length > 0) {
+      res.json({ imageUrl: rows[0].image_url });
+    } else {
+      res.status(404).json({ message: "No image found in database" });
+    }
+  } catch (error) {
+    console.error("Fetch Error:", error);
+    res.status(500).json({ error: "Server error fetching image" });
+  }
+});
 
 // Check if this file exists in /routes/
 // --- 5. TEST ENDPOINTS ---
