@@ -184,6 +184,49 @@ app.post("/api/settings/event-cards", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// GET: Fetch all home cards
+app.get("/api/settings/home-cards", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM home_card ORDER BY home_id DESC",
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST: Save or Update a home card
+app.post("/api/settings/home-cards", async (req, res) => {
+  const { id, title, description, imageUrl, userId } = req.body;
+  try {
+    if (id) {
+      await db.query(
+        "UPDATE home_card SET title = ?, description = ?, image_url = ? WHERE home_id = ?",
+        [title, description, imageUrl, id],
+      );
+    } else {
+      await db.query(
+        "INSERT INTO home_card (user_id, title, description, image_url) VALUES (?, ?, ?, ?)",
+        [userId || 1, title, description, imageUrl],
+      );
+    }
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE: Remove a home card
+app.delete("/api/settings/home-cards/:id", async (req, res) => {
+  try {
+    await db.query("DELETE FROM home_card WHERE home_id = ?", [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // Check if this file exists in /routes/
 // --- 5. TEST ENDPOINTS ---
 app.get("/api/test-direct", (req, res) => {

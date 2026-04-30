@@ -1,31 +1,87 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Ellipsis, Minus } from "lucide-react";
 
-const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const [localEditing, setLocalEditing] = useState(false);
-  const [image, setImage] = useState();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [showUploadModal, setShowUploadModal] = useState(false);
+const API_URL = "https://calidro-production.up.railway.app";
 
-  const startEdit = () => {
-    setLocalEditing(true);
-    setEditingCard(true);
-    setShowMenu(false);
+const AdminHomeCard = ({
+  cardData,
+  onDelete,
+  onRefresh,
+  isEditing,
+  setEditingCard,
+}) => {
+  const [title, setTitle] = useState(cardData.title || "");
+  const [description, setDescription] = useState(cardData.description || "");
+  const [image, setImage] = useState(cardData.image_url || null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [localEditing, setLocalEditing] = useState(false);
+
+  useEffect(() => {
+    setTitle(cardData.title || "");
+    setDescription(cardData.description || "");
+    setImage(cardData.image_url || null);
+  }, [cardData]);
+
+  const saveEdit = async () => {
+    setUploading(true);
+    let finalUrl = image;
+
+    try {
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("image", selectedFile);
+        const res = await fetch(`${API_URL}/api/images/upload?category=home`, {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        finalUrl = data.imageUrl;
+      }
+
+      const res = await fetch(`${API_URL}/api/settings/home-cards`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: cardData.home_id,
+          title,
+          description,
+          imageUrl: finalUrl,
+          userId: 1,
+        }),
+      });
+
+      if (res.ok) {
+        setLocalEditing(false);
+        setEditingCard(false);
+        onRefresh();
+      }
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Failed to save home card.");
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const saveEdit = () => {
-    setLocalEditing(false);
-    setEditingCard(false);
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setImage(URL.createObjectURL(file));
+    }
   };
 
   const cancelEdit = () => {
     setLocalEditing(false);
     setEditingCard(false);
+    setTitle(cardData.title || "");
+    setDescription(cardData.description || "");
+    setImage(cardData.image_url || null);
   };
 
-  // Logic: Dim this specific card if SOMEONE ELSE is being edited
   const isDimmed = isEditing && !localEditing;
 
   return (
@@ -33,10 +89,8 @@ const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
       <div
         className={`relative bg-white rounded-2xl shadow-md p-4 w-65 shrink-0 transition-all duration-300
           ${localEditing ? "ring-4 ring-[#4a3733]" : ""}
-          ${isDimmed ? "opacity-50 pointer-events-none" : "opacity-100"}
-        `}
+          ${isDimmed ? "opacity-50 pointer-events-none" : "opacity-100"}`}
       >
-        {/* Top Bar */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-gray-600">home card</span>
           <div className="flex gap-2">
@@ -55,12 +109,15 @@ const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
           </div>
         </div>
 
-        {/* Dropdown Menu */}
         {showMenu && (
           <div className="absolute right-4 top-10 bg-white border border-[#4a3733] rounded shadow-lg w-40 z-30">
             <button
               className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-              onClick={startEdit}
+              onClick={() => {
+                setLocalEditing(true);
+                setEditingCard(true);
+                setShowMenu(false);
+              }}
             >
               Edit Details
             </button>
@@ -76,14 +133,12 @@ const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
           </div>
         )}
 
-        {/* Image Area */}
         <img
-          src={image}
+          src={image || "https://via.placeholder.com/150"}
           className="rounded-xl w-full h-40 object-cover mb-3"
           alt="Home"
         />
 
-        {/* Inputs */}
         <input
           type="text"
           value={title}
@@ -92,7 +147,6 @@ const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
           placeholder="Home Title:"
           className={`w-full mb-2 px-3 py-2 rounded-lg outline-none text-sm transition ${localEditing ? "bg-white border" : "bg-gray-50 cursor-not-allowed"}`}
         />
-
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -102,7 +156,6 @@ const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
           className={`w-full px-3 py-2 rounded-lg outline-none text-sm resize-none transition ${localEditing ? "bg-white border" : "bg-gray-50 cursor-not-allowed"}`}
         />
 
-        {/* Save/Cancel Buttons */}
         {localEditing && (
           <div className="flex justify-end gap-2 mt-3">
             <button
@@ -113,15 +166,15 @@ const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
             </button>
             <button
               onClick={saveEdit}
+              disabled={uploading}
               className="px-3 py-1 bg-[#4a3733] text-white rounded-lg text-xs font-bold"
             >
-              Save
+              {uploading ? "..." : "Save"}
             </button>
           </div>
         )}
       </div>
 
-      {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100]">
           <div className="bg-white rounded-2xl p-6 w-80 relative shadow-2xl">
@@ -136,7 +189,7 @@ const AdminHomeCard = ({ onDelete, isEditing, setEditingCard }) => {
             </h2>
             <input
               type="file"
-              onChange={(e) => setImage(URL.createObjectURL(e.target.files[0]))}
+              onChange={handleFile}
               className="text-sm w-full"
             />
             <button

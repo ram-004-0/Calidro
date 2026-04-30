@@ -1,80 +1,87 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import AdminHeader from "../Components/AdminHeader";
 import AdminHomeCard from "../Props/AdminHomeCard";
 
+const API_URL = "https://calidro-production.up.railway.app";
+
 const AdminHome = () => {
   const scrollRef = useRef(null);
-  // Initializing with unique keys for better React list handling
-  const [cards, setCards] = useState([
-    Date.now(),
-    Date.now() + 1,
-    Date.now() + 2,
-  ]);
+  const [cards, setCards] = useState([]);
   const [editingCardIndex, setEditingCardIndex] = useState(null);
 
-  const scroll = (offset) => {
-    scrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+  const fetchCards = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/settings/home-cards`);
+      const data = await response.json();
+      setCards(data);
+    } catch (err) {
+      console.error("Failed to load home cards:", err);
+    }
   };
 
-  // Logic to add a card
+  useEffect(() => {
+    fetchCards();
+  }, []);
+
   const addCard = () => {
-    setCards([...cards, Date.now()]);
+    const newCard = {
+      home_id: null,
+      title: "",
+      description: "",
+      image_url: null,
+    };
+    setCards([newCard, ...cards]);
+    setEditingCardIndex(0);
   };
 
-  // NEW: Logic to enforce minimum of 3 cards
-  const deleteCard = (index) => {
+  const deleteCard = async (homeId, index) => {
     if (cards.length <= 3) {
-      alert("Minimum of 3 cards required for the Home section.");
+      alert("Minimum of 3 cards required.");
       return;
     }
-    setCards(cards.filter((_, i) => i !== index));
+    if (!window.confirm("Are you sure?")) return;
+
+    if (homeId) {
+      try {
+        await fetch(`${API_URL}/api/settings/home-cards/${homeId}`, {
+          method: "DELETE",
+        });
+        fetchCards();
+      } catch (err) {
+        console.error("Delete failed:", err);
+      }
+    } else {
+      setCards(cards.filter((_, i) => i !== index));
+      setEditingCardIndex(null);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full">
       <AdminHeader />
-      <section className="relative pb-2 w-full">
+      <section className="relative pb-2 w-full mt-4">
         <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] p-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
-              Home
-            </h1>
-          </div>
-          <div className="flex gap-4 mb-3">
-            <button
-              onClick={addCard}
-              className="px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all"
-            >
-              + Add Home Card
-            </button>
-          </div>
+          <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
+            Home Overview
+          </h1>
+          <button
+            onClick={addCard}
+            className="px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all mb-4"
+          >
+            + Add Home Card
+          </button>
 
           <div className="relative group">
-            {/* Nav Buttons */}
-            <button
-              onClick={() => scroll(-300)}
-              className="absolute -left-5 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center hover:scale-110 transition"
-            >
-              ‹
-            </button>
-            <button
-              onClick={() => scroll(300)}
-              className="absolute -right-5 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center hover:scale-110 transition"
-            >
-              ›
-            </button>
-
-            {/* THE LIST */}
             <div
               ref={scrollRef}
               className="flex gap-8 overflow-x-auto py-4 px-2 no-scrollbar scroll-smooth"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {cards.map((card, index) => (
                 <AdminHomeCard
-                  key={card}
-                  onDelete={() => deleteCard(index)}
-                  // Logic remains: Dim if someone ELSE is being edited
+                  key={card.home_id || `new-${index}`}
+                  cardData={card}
+                  onDelete={() => deleteCard(card.home_id, index)}
+                  onRefresh={fetchCards}
                   isEditing={
                     editingCardIndex !== null && editingCardIndex !== index
                   }
