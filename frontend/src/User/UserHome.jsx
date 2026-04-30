@@ -1,48 +1,50 @@
 import { useState, useEffect } from "react";
 import UserHeader from "../Components/UserHeader";
-import Sample from "../Props/sample.jsx";
+import Carousel from "../Components/Carousel"; // Adjust path as needed
 import UserRatingCard from "../Props/UserRatingCard.jsx";
 
 const API_URL = "https://calidro-production.up.railway.app";
 
 const UserHome = () => {
   // 1. STATE MANAGEMENT
-  const [reviews, setReviews] = useState([]);
+  const [homeCards, setHomeCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
 
-  // 2. FETCH REVIEWS FROM DATABASE
+  // 2. FETCH DATA FROM DATABASE
   useEffect(() => {
-    const fetchReviews = async () => {
+    const fetchData = async () => {
       try {
-        // Using your existing home-cards or a specific review endpoint if you have one
-        // For now, I'll assume you want to fetch the feedback/reviews
+        setLoading(true);
         const response = await fetch(`${API_URL}/api/settings/home-cards`);
         const data = await response.json();
-        setReviews(data);
+
+        // We use the same data for the carousel and the ratings section
+        // as per your current database structure
+        setHomeCards(data);
       } catch (error) {
-        console.error("Error fetching reviews:", error);
+        console.error("Error fetching home cards:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchReviews();
+    fetchData();
   }, []);
 
-  // 3. DYNAMIC CALCULATION LOGIC
-  // Calculate average rating
-  const totalReviews = reviews.length;
+  // 3. DYNAMIC CALCULATION LOGIC (For Ratings Section)
+  const totalReviews = homeCards.length;
+
+  // Calculating average based on 'rating' column in home_card table
   const averageRating =
     totalReviews > 0
       ? (
-          reviews.reduce((acc, curr) => acc + (curr.rating || 5), 0) /
+          homeCards.reduce((acc, curr) => acc + (Number(curr.rating) || 5), 0) /
           totalReviews
         ).toFixed(1)
       : "0.0";
 
-  // Generate dynamic stats for the bar chart
   const ratingStats = [5, 4, 3, 2, 1].map((star) => {
-    const count = reviews.filter((r) => r.rating === star).length;
+    const count = homeCards.filter((r) => Number(r.rating) === star).length;
     const percent =
       totalReviews > 0 ? `${(count / totalReviews) * 100}%` : "0%";
     return { label: `${star} star`, count, percent };
@@ -51,13 +53,17 @@ const UserHome = () => {
   // 4. FILTERING LOGIC
   const filteredReviews =
     activeFilter === "All"
-      ? reviews
-      : reviews.filter((rev) => rev.rating === parseInt(activeFilter));
+      ? homeCards
+      : homeCards.filter(
+          (rev) => Number(rev.rating) === parseInt(activeFilter),
+        );
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col">
       <UserHeader />
-      <Sample />
+
+      {/* Dynamic Carousel using fetched home_card data */}
+      {!loading && <Carousel data={homeCards} />}
 
       {/* --- About Us Section --- */}
       <section className="py-10 bg-[#f1f1f1]">
@@ -100,15 +106,14 @@ const UserHome = () => {
               Ratings & Feedback
             </h1>
 
-            {/* --- Dynamic Overview --- */}
             <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-16 mb-12 pb-12 border-b border-gray-100">
               <div className="flex flex-col items-center justify-center border-r border-gray-100 pr-8">
                 <span className="text-8xl font-bold text-[#4a3733]">
                   {averageRating}
                 </span>
                 <div className="text-yellow-500 text-2xl my-3">
-                  {"★".repeat(Math.round(averageRating))}
-                  {"☆".repeat(5 - Math.round(averageRating))}
+                  {"★".repeat(Math.floor(averageRating))}
+                  {"☆".repeat(5 - Math.floor(averageRating))}
                 </div>
                 <p className="text-gray-400 text-sm font-semibold uppercase">
                   {totalReviews} Total Ratings
@@ -135,7 +140,6 @@ const UserHome = () => {
               </div>
             </div>
 
-            {/* --- Filter Buttons --- */}
             <div className="flex flex-wrap gap-4 mb-12">
               {["All", "5", "4", "3", "2", "1"].map((star) => (
                 <button
@@ -152,7 +156,6 @@ const UserHome = () => {
               ))}
             </div>
 
-            {/* --- Display List --- */}
             <div className="space-y-8">
               {loading ? (
                 <div className="text-center py-10 italic text-gray-400">
@@ -161,15 +164,15 @@ const UserHome = () => {
               ) : filteredReviews.length > 0 ? (
                 filteredReviews.map((rev) => (
                   <UserRatingCard
-                    key={rev.home_id || rev.id}
-                    name={rev.user_name || "Calidro Guest"}
+                    key={rev.home_id}
+                    name={rev.created_by || "Calidro Guest"}
                     date={
                       rev.created_at
                         ? new Date(rev.created_at).toLocaleDateString()
                         : "Recent"
                     }
                     rating={rev.rating || 5}
-                    comment={rev.description || rev.comment}
+                    comment={rev.description}
                     images={rev.image_url ? [rev.image_url] : []}
                   />
                 ))
