@@ -184,8 +184,6 @@ app.post("/api/settings/event-cards", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// GET: Fetch all home cards
 app.get("/api/settings/home-cards", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -193,6 +191,7 @@ app.get("/api/settings/home-cards", async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
+    console.error("GET Error:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -200,20 +199,27 @@ app.get("/api/settings/home-cards", async (req, res) => {
 // POST: Save or Update a home card
 app.post("/api/settings/home-cards", async (req, res) => {
   const { id, title, description, imageUrl, userId } = req.body;
+
+  // Important: Ensure we have a valid userId for the Foreign Key
+  const activeUserId = userId || 1;
+
   try {
     if (id) {
+      // Update existing
       await db.query(
         "UPDATE home_card SET title = ?, description = ?, image_url = ? WHERE home_id = ?",
         [title, description, imageUrl, id],
       );
     } else {
+      // Insert new
       await db.query(
         "INSERT INTO home_card (user_id, title, description, image_url) VALUES (?, ?, ?, ?)",
-        [userId || 1, title, description, imageUrl],
+        [activeUserId, title, description, imageUrl],
       );
     }
     res.status(200).json({ success: true });
   } catch (error) {
+    console.error("POST Error:", error); // This helps you see the real error in Railway logs
     res.status(500).json({ error: error.message });
   }
 });
@@ -221,16 +227,14 @@ app.post("/api/settings/home-cards", async (req, res) => {
 // DELETE: Remove a home card
 app.delete("/api/settings/home-cards/:id", async (req, res) => {
   try {
-    await db.query("DELETE FROM home_card WHERE home_id = ?", [req.params.id]);
+    const [result] = await db.query("DELETE FROM home_card WHERE home_id = ?", [
+      req.params.id,
+    ]);
     res.json({ success: true });
   } catch (error) {
+    console.error("DELETE Error:", error);
     res.status(500).json({ error: error.message });
   }
-});
-// Check if this file exists in /routes/
-// --- 5. TEST ENDPOINTS ---
-app.get("/api/test-direct", (req, res) => {
-  res.status(200).json({ message: "Backend is alive and reaching server.js" });
 });
 
 // --- 6. SERVER SETUP ---

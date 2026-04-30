@@ -27,40 +27,46 @@ const AdminHomeCard = ({
 
   const saveEdit = async () => {
     setUploading(true);
-    let finalUrl = image;
-
     try {
+      // 1. Handle Image Upload first (if a new file was selected)
+      let finalUrl = image;
       if (selectedFile) {
         const formData = new FormData();
         formData.append("image", selectedFile);
-        const res = await fetch(`${API_URL}/api/images/upload?category=home`, {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        finalUrl = data.imageUrl;
+        const uploadRes = await fetch(
+          `${API_URL}/api/images/upload?category=home`,
+          {
+            method: "POST",
+            body: formData,
+          },
+        );
+        const uploadData = await uploadRes.json();
+        finalUrl = uploadData.imageUrl;
       }
 
+      // 2. Save to home_card table
       const res = await fetch(`${API_URL}/api/settings/home-cards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: cardData.home_id,
-          title,
-          description,
-          imageUrl: finalUrl,
-          userId: 1,
+          id: cardData.home_id, // Ensure this matches your DB column name
+          title: title,
+          description: description,
+          imageUrl: finalUrl, // Sending 'imageUrl' to match the POST route
+          userId: 1, // Ensure this user exists in your 'user' table
         }),
       });
 
       if (res.ok) {
         setLocalEditing(false);
         setEditingCard(false);
-        onRefresh();
+        onRefresh(); // Refresh the list in the parent
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.error}`);
       }
     } catch (err) {
-      console.error("Save failed:", err);
-      alert("Failed to save home card.");
+      console.error("Failed to save:", err);
     } finally {
       setUploading(false);
     }
