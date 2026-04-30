@@ -1,27 +1,44 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import GalleryCard from "../Props/GalleryCard";
 import RatingCard from "../Props/RatingCard";
-//images
-import image1 from "../assets/Images/wedding.JPG";
-import image2 from "../assets/Images/15.png";
-import image3 from "../assets/Images/big star event.JPG";
-import image4 from "../assets/Images/lilith.JPG";
-import image5 from "../assets/Images/debut.JPG";
+
+// Keep rating images as they are static for now
 import image6 from "../assets/Images/review1.JPG";
 import image7 from "../assets/Images/review2.JPG";
 import image8 from "../assets/Images/review3.jpg";
 import image9 from "../assets/Images/review4.JPG";
 
+const API_URL = "https://calidro-production.up.railway.app";
+
 const Gallery = () => {
   const eventsRef = useRef(null);
   const ratingsRef = useRef(null);
 
-  const slide = (ref, direction) => {
-    if (!ref.current) return;
+  // 1. Setup state for your database cards
+  const [dbEvents, setDbEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // 2. Fetch the data when the component loads
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/settings/event-cards`);
+        const data = await response.json();
+        setDbEvents(data);
+      } catch (error) {
+        console.error("Error fetching gallery events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  const slide = (ref, direction) => {
+    if (!ref.current || !ref.current.firstChild) return;
     const cardWidth = ref.current.firstChild.offsetWidth;
     ref.current.scrollBy({
-      left: direction * (cardWidth + 24), // includes gap
+      left: direction * (cardWidth + 24),
       behavior: "smooth",
     });
   };
@@ -34,16 +51,16 @@ const Gallery = () => {
           Previous Events
         </h1>
 
-        {/* Buttons */}
+        {/* Navigation Buttons */}
         <button
           onClick={() => slide(eventsRef, -1)}
-          className="absolute left-2 top-1/2 z-10 -translate-y-1/2 bg-[#4a3733] text-white p-3 rounded-full shadow-lg"
+          className="absolute left-2 top-1/2 z-10 -translate-y-1/2 bg-[#4a3733] text-white p-3 rounded-full shadow-lg hover:bg-[#3a2c28] transition-colors"
         >
           ‹
         </button>
         <button
           onClick={() => slide(eventsRef, 1)}
-          className="absolute right-2 top-1/2 z-10 -translate-y-1/2 bg-[#4a3733] text-white p-3 rounded-full shadow-lg"
+          className="absolute right-2 top-1/2 z-10 -translate-y-1/2 bg-[#4a3733] text-white p-3 rounded-full shadow-lg hover:bg-[#3a2c28] transition-colors"
         >
           ›
         </button>
@@ -54,72 +71,37 @@ const Gallery = () => {
             ref={eventsRef}
             className="flex gap-6 overflow-x-hidden scroll-smooth px-5"
           >
-            <GalleryCard
-              image={
-                <img
-                  src={image2}
-                  alt="Wedding"
-                  className="w-full h-full object-cover rounded-xl"
+            {loading ? (
+              <p className="text-[#4a3733] animate-pulse">Loading events...</p>
+            ) : dbEvents.length > 0 ? (
+              // 3. Map through the database events
+              dbEvents.map((event) => (
+                <GalleryCard
+                  key={event.events_overview_id}
+                  title={event.title}
+                  description={event.description}
+                  image={
+                    <img
+                      src={event.image_url}
+                      alt={event.title}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  }
                 />
-              }
-              title="Leni's Signing"
-              description="Former Vice President Leni Robredo delivered an engaging talk, sharing her insights and experiences, followed by a book signing."
-            />
-            <GalleryCard
-              image={
-                <img
-                  src={image1}
-                  alt="Wedding"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              }
-              title="Wedding"
-              description="Two souls, one promise. An elegant celebration of love, from heartfelt vows to the final dance, marking the beginning of a lifetime together."
-            />
-            <GalleryCard
-              image={
-                <img
-                  src={image3}
-                  alt="Wedding"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              }
-              title="Big Star Event"
-              description="A night of prestige and brilliance. We honor excellence and groundbreaking achievement under the glow of the spotlight."
-            />
-            <GalleryCard
-              image={
-                <img
-                  src={image4}
-                  alt="Wedding"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              }
-              title="Lilith in ONEderland"
-              description="A whimsical realm of magic and dreams. We’re celebrating Lilith’s first chapter with a pastel-filled wonderland of joy and enchantment."
-            />
-            <GalleryCard
-              image={
-                <img
-                  src={image5}
-                  alt="Wedding"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              }
-              title="Sofia's Debut"
-              description="A milestone of grace and poise. Join us as she steps into adulthood in a sophisticated night of tradition, charm, and new beginnings."
-            />
+              ))
+            ) : (
+              <p className="text-gray-500 italic">No events found.</p>
+            )}
           </div>
         </div>
       </section>
 
-      {/* ================= Ratings ================= */}
+      {/* ================= Ratings (Keep as is) ================= */}
       <section className="relative">
         <h1 className="px-10 text-3xl font-bold text-[#4a3733] mb-4">
           Ratings
         </h1>
 
-        {/* Buttons */}
         <button
           onClick={() => slide(ratingsRef, -1)}
           className="absolute left-2 top-1/2 z-10 -translate-y-1/2 bg-[#4a3733] text-white p-3 rounded-full shadow-lg"
@@ -133,7 +115,6 @@ const Gallery = () => {
           ›
         </button>
 
-        {/* Slider */}
         <div className="p-10 py-4">
           <div
             ref={ratingsRef}
@@ -155,7 +136,7 @@ const Gallery = () => {
               image={
                 <img
                   src={image7}
-                  alt="Rochi"
+                  alt="Mark"
                   className="w-full h-full object-cover"
                 />
               }
@@ -167,7 +148,7 @@ const Gallery = () => {
               image={
                 <img
                   src={image8}
-                  alt="Rochi"
+                  alt="Ella"
                   className="w-full h-full object-cover"
                 />
               }
@@ -179,7 +160,7 @@ const Gallery = () => {
               image={
                 <img
                   src={image9}
-                  alt="Rochi"
+                  alt="Bautista"
                   className="w-full h-full object-cover"
                 />
               }
