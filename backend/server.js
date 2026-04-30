@@ -5,6 +5,8 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const cron = require("node-cron");
 const db = require("./config/db");
+const upload = require("./cloudinaryConfig");
+const upload = require("./middleware/multer");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
@@ -109,6 +111,25 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
+});
+
+app.post("/api/images/upload", upload.single("image"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // req.file.path is the URL returned by Cloudinary
+    console.log("Uploaded to Cloudinary:", req.file.path);
+
+    res.status(200).json({
+      message: "Upload successful",
+      imageUrl: req.file.path,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 });
 
 cron.schedule("0 0 * * *", async () => {
