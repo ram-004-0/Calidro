@@ -95,6 +95,29 @@ app.post("/api/settings/virtual-tour", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.post("/api/images/upload", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      console.error("[UPLOAD ERROR] No file received in req.file");
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // req.file.path is the URL returned by Cloudinary (via multer-storage-cloudinary)
+    console.log("✅ Uploaded to Cloudinary:", req.file.path);
+
+    res.status(200).json({
+      message: "Upload successful",
+      imageUrl: req.file.path,
+    });
+  } catch (error) {
+    // This stops the 500 [object Object] and gives you a real error in the terminal
+    console.error("❌ CLOUDINARY/UPLOAD CRASH:", error);
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
 
 // Check if this file exists in /routes/
 // --- 5. TEST ENDPOINTS ---
@@ -150,25 +173,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
-});
-
-app.post("/api/images/upload", upload.single("image"), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-
-    // req.file.path is the URL returned by Cloudinary
-    console.log("Uploaded to Cloudinary:", req.file.path);
-
-    res.status(200).json({
-      message: "Upload successful",
-      imageUrl: req.file.path,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
 });
 
 cron.schedule("0 0 * * *", async () => {

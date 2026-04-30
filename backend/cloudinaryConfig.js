@@ -17,7 +17,7 @@ const storage = new CloudinaryStorage({
     const folderName = req.query.category || "general_uploads";
     return {
       folder: folderName,
-      allowed_formats: ["jpg", "png", "jpeg"], // Security: only allow images
+      allowed_formats: ["jpg", "png", "jpeg", "webp"], // Security: only allow images
       public_id: Date.now() + "-" + file.originalname.split(".")[0],
     };
   },

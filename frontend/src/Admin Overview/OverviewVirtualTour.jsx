@@ -127,8 +127,14 @@ const OverviewVirtualTour = () => {
           setProgress(0);
         }
       } else {
-        console.error("Upload failed with status:", xhr.status);
-        alert("Server error (500) during upload. Check backend logs.");
+        try {
+          const errorData = JSON.parse(xhr.responseText);
+          console.error("Server Error Details:", errorData);
+          alert(`Upload failed: ${errorData.error || "Check backend logs"}`);
+        } catch (e) {
+          console.error("Raw Server Error:", xhr.responseText);
+          alert("Server returned an error. Check the console.");
+        }
         setUploading(false);
       }
     };
