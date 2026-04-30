@@ -95,6 +95,37 @@ app.post("/api/settings/virtual-tour", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+// --- BOOK ASSET ROUTES ---
+
+// GET: Fetch Book Image
+app.get("/api/settings/book-asset", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT image_url FROM site_assets WHERE asset_name = 'book_image' LIMIT 1",
+    );
+    res.status(200).json({ imageUrl: rows[0]?.image_url || null });
+  } catch (error) {
+    console.error("Fetch Book Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// POST: Update Book Image
+app.post("/api/settings/book-asset", async (req, res) => {
+  const { imageUrl, adminId } = req.body;
+  try {
+    const sql = `
+      INSERT INTO site_assets (asset_name, image_url, updated_by)
+      VALUES ('book_image', ?, ?)
+      ON DUPLICATE KEY UPDATE image_url = VALUES(image_url), updated_by = VALUES(updated_by)
+    `;
+    await db.query(sql, [imageUrl, adminId || null]);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Update Book Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 app.post("/api/images/upload", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {

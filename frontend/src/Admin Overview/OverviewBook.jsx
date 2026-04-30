@@ -18,22 +18,16 @@ const OverviewBook = () => {
 
   // 1. Fetch current image from MySQL on component mount
   useEffect(() => {
-    const fetchAvailableImage = async () => {
+    const fetchBookImage = async () => {
       try {
-        // Updated endpoint to match the book asset
         const response = await fetch(`${API_URL}/api/settings/book-asset`);
-        if (!response.ok) throw new Error("Failed to fetch");
         const data = await response.json();
-
-        if (data.imageUrl) {
-          setUploadedImage(data.imageUrl);
-        }
+        if (data.imageUrl) setUploadedImage(data.imageUrl);
       } catch (err) {
-        console.error("Could not fetch the book image:", err);
+        console.error("Error loading book image:", err);
       }
     };
-
-    fetchAvailableImage();
+    fetchBookImage();
   }, []);
 
   // 2. Handle File Selection
@@ -66,25 +60,18 @@ const OverviewBook = () => {
     formData.append("image", selectedFile);
 
     setUploading(true);
-    setProgress(0);
-
     const xhr = new XMLHttpRequest();
-    // Step A: Upload to Cloudinary
-    xhr.open("POST", `${API_URL}/api/images/upload?category=${category}`);
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        setProgress(Math.round((e.loaded / e.total) * 100));
-      }
-    };
+    // Step A: Cloudinary Upload
+    xhr.open("POST", `${API_URL}/api/images/upload?category=book`);
 
     xhr.onload = async () => {
       if (xhr.status === 200) {
-        try {
-          const response = JSON.parse(xhr.responseText);
-          const newCloudinaryUrl = response.imageUrl;
+        const response = JSON.parse(xhr.responseText);
+        const newCloudinaryUrl = response.imageUrl;
 
-          // Step B: Save URL to MySQL
+        // Step B: Save to MySQL specifically for 'book_image'
+        try {
           const dbResponse = await fetch(`${API_URL}/api/settings/book-asset`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -96,31 +83,16 @@ const OverviewBook = () => {
 
           if (dbResponse.ok) {
             setUploadedImage(newCloudinaryUrl);
-            alert("Book image updated successfully!");
-          } else {
-            throw new Error("Failed to save to database");
+            alert("Book asset updated!");
           }
         } catch (err) {
-          console.error("Save error:", err);
-          alert("Image uploaded, but database sync failed.");
+          console.error("DB Sync Error:", err);
         } finally {
           setUploading(false);
           setShowModal(false);
-          setSelectedFile(null);
-          setPreview(null);
-          setProgress(0);
         }
-      } else {
-        alert("Upload failed. Check server logs.");
-        setUploading(false);
       }
     };
-
-    xhr.onerror = () => {
-      alert("Network error.");
-      setUploading(false);
-    };
-
     xhr.send(formData);
   };
 
