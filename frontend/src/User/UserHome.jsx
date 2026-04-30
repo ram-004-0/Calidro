@@ -1,69 +1,100 @@
 import { useState, useEffect } from "react";
 import UserHeader from "../Components/UserHeader";
-import Carousel from "../Components/Carousel"; // Adjust path as needed
+import Carousel from "../Props/sample.jsx";
 import UserRatingCard from "../Props/UserRatingCard.jsx";
 
 const API_URL = "https://calidro-production.up.railway.app";
 
 const UserHome = () => {
-  // 1. STATE MANAGEMENT
+  // 1. STATE FOR DYNAMIC CAROUSEL (home_card table)
   const [homeCards, setHomeCards] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingCards, setLoadingCards] = useState(true);
+
+  // 2. STATIC DATA FOR REVIEWS
+  const staticReviews = [
+    {
+      id: 1,
+      user_name: "Rochi",
+      rating: 5,
+      comment:
+        "The venue is absolutely stunning. Perfect for our wedding! The staff was very helpful.",
+      created_at: "2 weeks ago",
+      review_images: [],
+    },
+    {
+      id: 2,
+      user_name: "Ella",
+      rating: 4,
+      comment:
+        "Great place, but the parking was a bit tight. Overall 10/10 service and beautiful lights.",
+      created_at: "1 month ago",
+      review_images: [],
+    },
+    {
+      id: 3,
+      user_name: "Bautista",
+      rating: 3,
+      comment:
+        "The place is okay, but it was a bit hot inside during the afternoon.",
+      created_at: "2 months ago",
+      review_images: [],
+    },
+    {
+      id: 4,
+      user_name: "Mark",
+      rating: 5,
+      comment:
+        "Amazing experience! The virtual tour was exactly like the real thing.",
+      created_at: "3 days ago",
+      review_images: [],
+    },
+  ];
+
   const [activeFilter, setActiveFilter] = useState("All");
 
-  // 2. FETCH DATA FROM DATABASE
+  // 3. FETCH CAROUSEL DATA ONLY
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCarouselData = async () => {
       try {
-        setLoading(true);
         const response = await fetch(`${API_URL}/api/settings/home-cards`);
         const data = await response.json();
-
-        // We use the same data for the carousel and the ratings section
-        // as per your current database structure
         setHomeCards(data);
       } catch (error) {
         console.error("Error fetching home cards:", error);
       } finally {
-        setLoading(false);
+        setLoadingCards(false);
       }
     };
-    fetchData();
+    fetchCarouselData();
   }, []);
 
-  // 3. DYNAMIC CALCULATION LOGIC (For Ratings Section)
-  const totalReviews = homeCards.length;
+  // 4. STATIC RATING CALCULATION LOGIC
+  const ratingStats = [
+    { label: "5 star", count: 44, percent: "85%" },
+    { label: "4 star", count: 12, percent: "15%" },
+    { label: "3 star", count: 7, percent: "8%" },
+    { label: "2 star", count: 3, percent: "3%" },
+    { label: "1 star", count: 1, percent: "1%" },
+  ];
 
-  // Calculating average based on 'rating' column in home_card table
-  const averageRating =
-    totalReviews > 0
-      ? (
-          homeCards.reduce((acc, curr) => acc + (Number(curr.rating) || 5), 0) /
-          totalReviews
-        ).toFixed(1)
-      : "0.0";
-
-  const ratingStats = [5, 4, 3, 2, 1].map((star) => {
-    const count = homeCards.filter((r) => Number(r.rating) === star).length;
-    const percent =
-      totalReviews > 0 ? `${(count / totalReviews) * 100}%` : "0%";
-    return { label: `${star} star`, count, percent };
-  });
-
-  // 4. FILTERING LOGIC
+  // 5. FILTERING LOGIC (Static)
   const filteredReviews =
     activeFilter === "All"
-      ? homeCards
-      : homeCards.filter(
-          (rev) => Number(rev.rating) === parseInt(activeFilter),
-        );
+      ? staticReviews
+      : staticReviews.filter((rev) => rev.rating === parseInt(activeFilter));
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col">
       <UserHeader />
 
-      {/* Dynamic Carousel using fetched home_card data */}
-      {!loading && <Carousel data={homeCards} />}
+      {/* Dynamic Carousel using home_card database data */}
+      {loadingCards ? (
+        <div className="h-[400px] flex items-center justify-center text-white">
+          Loading Highlights...
+        </div>
+      ) : (
+        <Carousel data={homeCards} />
+      )}
 
       {/* --- About Us Section --- */}
       <section className="py-10 bg-[#f1f1f1]">
@@ -98,25 +129,20 @@ const UserHome = () => {
         </div>
       </section>
 
-      {/* --- Ratings Section --- */}
+      {/* --- Ratings Section (Back to Static) --- */}
       <section className="relative py-20 w-full bg-[#f1f1f1]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-white rounded-3xl shadow-xl p-8 md:p-14">
             <h1 className="text-2xl font-bold text-[#4a3733] mb-10 uppercase tracking-widest">
-              Ratings & Feedback
+              Ratings
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-16 mb-12 pb-12 border-b border-gray-100">
               <div className="flex flex-col items-center justify-center border-r border-gray-100 pr-8">
-                <span className="text-8xl font-bold text-[#4a3733]">
-                  {averageRating}
-                </span>
-                <div className="text-yellow-500 text-2xl my-3">
-                  {"★".repeat(Math.floor(averageRating))}
-                  {"☆".repeat(5 - Math.floor(averageRating))}
-                </div>
+                <span className="text-8xl font-bold text-[#4a3733]">5.0</span>
+                <div className="text-yellow-500 text-2xl my-3">★★★★★</div>
                 <p className="text-gray-400 text-sm font-semibold uppercase">
-                  {totalReviews} Total Ratings
+                  67 Ratings
                 </p>
               </div>
 
@@ -128,7 +154,7 @@ const UserHome = () => {
                     </span>
                     <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#4a3733] transition-all duration-1000"
+                        className="h-full bg-[#4a3733]"
                         style={{ width: stat.percent }}
                       ></div>
                     </div>
@@ -140,6 +166,7 @@ const UserHome = () => {
               </div>
             </div>
 
+            {/* --- Filter Buttons --- */}
             <div className="flex flex-wrap gap-4 mb-12">
               {["All", "5", "4", "3", "2", "1"].map((star) => (
                 <button
@@ -156,29 +183,22 @@ const UserHome = () => {
               ))}
             </div>
 
+            {/* --- Filtered Review Cards (Static) --- */}
             <div className="space-y-8">
-              {loading ? (
-                <div className="text-center py-10 italic text-gray-400">
-                  Loading feedback...
-                </div>
-              ) : filteredReviews.length > 0 ? (
+              {filteredReviews.length > 0 ? (
                 filteredReviews.map((rev) => (
                   <UserRatingCard
-                    key={rev.home_id}
-                    name={rev.created_by || "Calidro Guest"}
-                    date={
-                      rev.created_at
-                        ? new Date(rev.created_at).toLocaleDateString()
-                        : "Recent"
-                    }
-                    rating={rev.rating || 5}
-                    comment={rev.description}
-                    images={rev.image_url ? [rev.image_url] : []}
+                    key={rev.id}
+                    name={rev.user_name}
+                    date={rev.created_at}
+                    rating={rev.rating}
+                    comment={rev.comment}
+                    images={rev.review_images}
                   />
                 ))
               ) : (
                 <div className="py-20 text-center text-gray-400 italic text-lg">
-                  No {activeFilter} star ratings found.
+                  No {activeFilter} star ratings found for Calidro.
                 </div>
               )}
             </div>
