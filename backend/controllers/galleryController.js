@@ -154,19 +154,45 @@ const addImageToEvent = async (req, res) => {
 
 // Express Route: DELETE /api/gallery/delete-image
 const removeImage = async (req, res) => {
+  // Log the body so you can see it in your Railway/Terminal logs
+  console.log("Delete Image Request Body:", req.body);
+
   const { eventId, imageUrl } = req.body;
 
+  // Validation: If these are missing, return 400 instead of crashing with 500
+  if (!eventId || !imageUrl) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing eventId or imageUrl",
+    });
+  }
+
   try {
-    const query = `DELETE FROM previous_events_images WHERE previous_events_id = ? AND image_url = ?`;
+    const query = `
+      DELETE FROM previous_events_images 
+      WHERE previous_events_id = ? AND image_url = ?
+    `;
+
     const [result] = await db.execute(query, [eventId, imageUrl]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Image not found in database" });
+      return res.status(404).json({
+        success: false,
+        message: "Image not found in database",
+      });
     }
 
-    res.json({ success: true, message: "Image deleted" });
+    res.status(200).json({
+      success: true,
+      message: "Image deleted successfully",
+    });
   } catch (error) {
-    res.status(500).json({ message: "Database error", error: error.message });
+    console.error("SQL DELETE ERROR:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Database error",
+      error: error.message,
+    });
   }
 };
 
@@ -177,5 +203,5 @@ module.exports = {
   deleteEvent,
   updateEvent,
   addImageToEvent,
-  removeImage, // <--- Add this
+  removeImage,
 };

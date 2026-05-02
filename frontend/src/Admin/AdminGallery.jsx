@@ -147,17 +147,20 @@ const AdminGallery = () => {
   };
 
   const handleRemoveImage = async (eventId, imageId, imageUrl) => {
-    // 1. Ask for confirmation so users don't accidentally delete
+    // 1. Confirmation check
     if (!window.confirm("Are you sure you want to remove this image?")) return;
 
     try {
-      // 2. Call your backend to delete from MySQL
-      // Note: It's better to delete by ID if you have it, otherwise use the URL
+      // 2. Call backend with the data wrapped in the 'data' key
+      // This is required by Axios for DELETE requests to send a body
       await axios.delete(`${API_URL}/api/gallery/delete-image`, {
-        data: { eventId, imageUrl },
+        data: {
+          eventId: eventId,
+          imageUrl: imageUrl,
+        },
       });
 
-      // 3. Update local state so the UI reflects the change immediately
+      // 3. Update local state for immediate feedback
       setEvents((prev) =>
         prev.map((ev) => {
           if (ev.id === eventId) {
@@ -169,8 +172,14 @@ const AdminGallery = () => {
       );
 
       alert("Image removed successfully.");
+
+      // 4. Re-fetch to ensure the state matches the DB exactly
+      fetchEvents();
     } catch (error) {
-      console.error("Failed to remove image:", error);
+      console.error(
+        "Failed to remove image:",
+        error.response?.data || error.message,
+      );
       alert("Could not delete the image from the database.");
     }
   };

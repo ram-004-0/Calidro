@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
   res.status(200).send("Calidro Backend is running!");
 });
 
-// --- 3. ROUTES REGISTRATION ---
+// --- 3. ROUTES ---
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/gallery", galleryRoutes);
