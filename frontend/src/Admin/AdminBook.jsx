@@ -7,12 +7,20 @@ const API_URL =
 const AdminBook = () => {
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+
+  // HANDLE RESPONSIVENESS
+  useEffect(() => {
+    const handleResize = () => setIsMobileView(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // FETCH DATA FROM BACKEND
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/bookings/all-bookings`); //changed
+        const response = await fetch(`${API_URL}/api/bookings/all-bookings`);
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         setBookings(data);
@@ -52,8 +60,8 @@ const AdminBook = () => {
       {/* MODAL OVERLAY */}
       {selectedBooking && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
-            <div className="bg-[#4a3733] p-6 flex justify-between items-center text-white">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[95vh] flex flex-col">
+            <div className="bg-[#4a3733] p-6 flex justify-between items-center text-white shrink-0">
               <h2 className="text-xl font-bold uppercase tracking-wide">
                 Event Details
               </h2>
@@ -65,13 +73,13 @@ const AdminBook = () => {
               </button>
             </div>
 
-            {/* Modal Content (Kept as you requested) */}
-            <div className="p-8 grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
+            {/* Modal Content - scrollable on mobile if content exceeds height */}
+            <div className="p-6 md:p-8 grid grid-cols-2 gap-y-6 gap-x-8 text-sm overflow-y-auto">
               <div className="col-span-2 border-b pb-2">
                 <p className="text-gray-400 font-bold uppercase text-[10px]">
                   Address
                 </p>
-                <p className="text-lg font-semibold">
+                <p className="text-lg font-semibold leading-tight">
                   {selectedBooking.address}
                 </p>
               </div>
@@ -129,10 +137,10 @@ const AdminBook = () => {
                 </div>
               </div>
             </div>
-            <div className="p-6 bg-gray-100 flex justify-end">
+            <div className="p-6 bg-gray-100 flex justify-end shrink-0">
               <button
                 onClick={() => setSelectedBooking(null)}
-                className="bg-[#4a3733] text-white px-8 py-2 rounded-full font-bold uppercase text-xs hover:opacity-90 transition-opacity"
+                className="bg-[#4a3733] text-white px-8 py-2 rounded-full font-bold uppercase text-xs hover:opacity-90 transition-opacity w-full md:w-auto"
               >
                 Close
               </button>
@@ -142,18 +150,17 @@ const AdminBook = () => {
       )}
 
       {/* TABLE SECTION */}
-      <section className="flex-1 flex flex-col items-center p-4 md:p-0">
+      <section className="flex-1 flex flex-col items-center p-4 md:p-10">
         <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 h-[600px] flex flex-col">
           <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
             Reservation Requests
           </h1>
 
-          {/* Table Wrapper: flex-1 ensures it fills available space, overflow-hidden keeps it contained */}
           <div className="bg-white border rounded-lg shadow-lg flex-1 overflow-hidden flex flex-col">
-            {/* The table container: This is the part that scrolls */}
-            <div className="overflow-y-auto flex-1">
-              <table className="table-fixed w-full text-left border-collapse">
-                {/* Header is sticky and stays at the top */}
+            {/* Horizontal Scroll wrapper for Mobile, Vertical for both */}
+            <div className="overflow-x-auto overflow-y-auto flex-1">
+              {/* Added min-w to force columns to stay readable on mobile */}
+              <table className="table-fixed w-full min-w-[1000px] text-left border-collapse">
                 <thead className="sticky top-0 bg-white z-10 border-b shadow-sm">
                   <tr>
                     <th className="py-4 px-2 w-1/6">Name</th>
@@ -173,7 +180,7 @@ const AdminBook = () => {
                       <td className="py-4 px-2 truncate">{b.contactNo}</td>
                       <td className="py-4 px-2 truncate text-sm">{b.email}</td>
                       <td className="py-4 px-2 truncate">{b.eventName}</td>
-                      <td className="py-4 px-2 text-sm">
+                      <td className="py-4 px-2 text-sm whitespace-nowrap">
                         {new Date(b.date).toLocaleDateString("en-US", {
                           month: "long",
                           day: "numeric",
@@ -193,19 +200,21 @@ const AdminBook = () => {
                         {b.typeOfEvent}
                         <button
                           onClick={() => setSelectedBooking(b)}
-                          className="block text-blue-600 text-xs mt-1 hover:underline"
+                          className="block text-blue-600 text-xs mt-1 hover:underline font-bold uppercase"
                         >
                           View Details
                         </button>
                       </td>
                       <td className="py-4 px-2">
-                        <span className="bg-gray-200 text-gray-800 rounded-full px-3 py-1 text-[10px] font-bold uppercase">
+                        <span className="bg-gray-200 text-gray-800 rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap">
                           {b.paymentType || "N/A"}
                         </span>
                       </td>
                       <td className="py-4 px-2">
                         <span
-                          className={`rounded-full px-3 py-1 text-[10px] font-bold ${getStatusStyles(b.bookingStatus)}`}
+                          className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap ${getStatusStyles(
+                            b.bookingStatus,
+                          )}`}
                         >
                           {b.bookingStatus}
                         </span>
@@ -215,6 +224,13 @@ const AdminBook = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Added a small swipe hint for mobile users */}
+            {isMobileView && (
+              <div className="md:hidden text-center text-[10px] text-gray-400 py-1 border-t italic">
+                Swipe horizontally to view more columns
+              </div>
+            )}
           </div>
         </div>
       </section>
