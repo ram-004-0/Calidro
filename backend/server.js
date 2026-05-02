@@ -9,6 +9,7 @@ const upload = require("./middleware/multer");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const galleryRoutes = require("./routes/galleryRoutes");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
 // Place this ABOVE your route definitions
@@ -45,6 +46,7 @@ app.get("/", (req, res) => {
 // --- 3. ROUTES REGISTRATION ---
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/gallery", galleryRoutes);
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
 

@@ -1,41 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios"; // Ensure axios is installed: npm install axios
 import AdminHeader from "../Components/AdminHeader";
 import AdminGalleryCard from "../Props/AdminGalleryCard";
-//static images
-import image1 from "../assets/Images/16.png";
-import image2 from "../assets/Images/15.png";
-import image3 from "../assets/Images/debut.JPG";
+
+const API_URL = "https://calidro-production.up.railway.app";
+
 const AdminGallery = () => {
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: "Leni Robredo's Signing",
-      date: "2024-05-20",
-      type: "Corporate",
-      description:
-        "Former Vice President Leni Robredo delivered an engaging talk, sharing her insights and experiences, followed by a book signing afterwards.",
-      images: [image2, image1],
-    },
-    {
-      id: 2,
-      title: "Sofia's Debut",
-      date: "2024-06-12",
-      type: "Birthday",
-      description: "18th birthday celebration at the grand ballroom.",
-      images: [image3],
-    },
-  ]);
-
+  const [events, setEvents] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // --- NEW: UPDATE EVENT DETAILS ---
-  const handleUpdateEvent = (id, updatedData) => {
-    setEvents((prev) =>
-      prev.map((ev) => (ev.id === id ? { ...ev, ...updatedData } : ev)),
-    );
+  // --- FETCH DATA FROM DATABASE ---
+  const fetchEvents = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/gallery/all`);
+      // Map database field names to your frontend prop names if they differ
+      const formattedEvents = response.data.map((ev) => ({
+        id: ev.previous_events_id,
+        title: ev.title,
+        date: ev.event_date.split("T")[0], // Formats YYYY-MM-DD
+        type: ev.event_type,
+        description: ev.description,
+        images: ev.images, // This is the array from the backend
+      }));
+      setEvents(formattedEvents);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      setLoading(false);
+    }
   };
 
-  // --- NEW: REMOVE SPECIFIC PHOTO ---
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  // --- UPDATE EVENT DETAILS ---
+  const handleUpdateEvent = async (id, updatedData) => {
+    try {
+      // Logic for backend update call would go here
+      // For now, updating local state:
+      setEvents((prev) =>
+        prev.map((ev) => (ev.id === id ? { ...ev, ...updatedData } : ev)),
+      );
+      // await axios.put(`http://localhost:5000/api/gallery/update/${id}`, updatedData);
+    } catch (error) {
+      console.error("Update failed:", error);
+    }
+  };
+
+  // --- REMOVE SPECIFIC PHOTO ---
   const handleRemoveImage = (eventId, imageIndex) => {
     setEvents((prev) =>
       prev.map((ev) => {
@@ -47,34 +61,57 @@ const AdminGallery = () => {
         return ev;
       }),
     );
+    // Note: You would typically call an API here to delete from previous_events_images table
   };
 
-  const handleAdd = () => {
-    const newEvent = {
-      id: Date.now(),
+  // --- ADD NEW EVENT ---
+  const handleAdd = async () => {
+    const newEventData = {
+      user_id: 1, // Example ID
+      created_by: "Admin",
       title: "New Event Title",
-      date: new Date().toISOString().split("T")[0],
-      type: "Other",
+      event_date: new Date().toISOString().split("T")[0],
+      event_type: "Other",
       description: "New event description...",
       images: [],
     };
-    setEvents([newEvent, ...events]);
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/gallery/add`,
+        newEventData,
+      );
+      // Refresh list or add the returned object with its new DB ID
+      fetchEvents();
+    } catch (error) {
+      console.error("Error adding event:", error);
+    }
   };
 
-  const handleDelete = () => {
+  // --- DELETE EVENT ---
+  const handleDelete = async () => {
     if (
       selectedId &&
       window.confirm("Are you sure you want to delete this event?")
     ) {
-      setEvents(events.filter((item) => item.id !== selectedId));
-      setSelectedId(null);
+      try {
+        await axios.delete(`${API_URL}/api/gallery/delete/${selectedId}`);
+        setEvents(events.filter((item) => item.id !== selectedId));
+        setSelectedId(null);
+      } catch (error) {
+        console.error("Delete failed:", error);
+      }
     }
   };
 
+  // --- IMAGE UPLOAD ---
   const handleImageUpload = (eventId, files) => {
+    // In a real app, you'd use FormData to upload to Cloudinary/S3
+    // and then save the resulting URL to your previous_events_images table.
     const newPhotoUrls = Array.from(files).map((file) =>
       URL.createObjectURL(file),
     );
+
     setEvents((prevEvents) =>
       prevEvents.map((ev) =>
         ev.id === eventId
@@ -112,7 +149,11 @@ const AdminGallery = () => {
                 <button
                   onClick={handleDelete}
                   disabled={!selectedId}
-                  className={`flex-1 py-2 rounded-full font-bold transition active:scale-95 ${selectedId ? "bg-red-400 text-white" : "bg-gray-300 text-gray-500"}`}
+                  className={`flex-1 py-2 rounded-full font-bold transition active:scale-95 ${
+                    selectedId
+                      ? "bg-red-400 text-white"
+                      : "bg-gray-300 text-gray-500"
+                  }`}
                 >
                   Delete
                 </button>
@@ -124,17 +165,25 @@ const AdminGallery = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto flex flex-col gap-6 pr-2 scrollbar-thin scrollbar-thumb-[#4a3733] scrollbar-track-transparent">
-            {events.map((item) => (
-              <AdminGalleryCard
-                key={item.id}
-                event={item}
-                isSelected={selectedId === item.id}
-                onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
-                onImageUpload={handleImageUpload}
-                onUpdate={handleUpdateEvent} // Passed function
-                onRemoveImage={handleRemoveImage} // Passed function
-              />
-            ))}
+            {loading ? (
+              <p className="text-center text-[#4a3733] font-bold">
+                Loading Events...
+              </p>
+            ) : (
+              events.map((item) => (
+                <AdminGalleryCard
+                  key={item.id}
+                  event={item}
+                  isSelected={selectedId === item.id}
+                  onSelect={(id) =>
+                    setSelectedId(id === selectedId ? null : id)
+                  }
+                  onImageUpload={handleImageUpload}
+                  onUpdate={handleUpdateEvent}
+                  onRemoveImage={handleRemoveImage}
+                />
+              ))
+            )}
           </div>
         </div>
       </section>

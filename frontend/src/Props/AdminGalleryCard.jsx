@@ -12,7 +12,6 @@ const AdminGalleryCard = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ ...event });
 
-  // Keep local state in sync with external data
   useEffect(() => {
     setEditData({ ...event });
   }, [event]);
@@ -66,7 +65,7 @@ const AdminGalleryCard = ({
             onClick={(e) => e.stopPropagation()}
           >
             <input
-              className="border p-1 rounded w-full"
+              className="border p-1 rounded w-full outline-none focus:border-[#4a3733]"
               value={editData.title}
               onChange={(e) =>
                 setEditData({ ...editData, title: e.target.value })
@@ -75,14 +74,14 @@ const AdminGalleryCard = ({
             />
             <input
               type="date"
-              className="border p-1 rounded w-full text-xs"
+              className="border p-1 rounded w-full text-xs outline-none focus:border-[#4a3733]"
               value={editData.date}
               onChange={(e) =>
                 setEditData({ ...editData, date: e.target.value })
               }
             />
             <select
-              className="border p-1 rounded w-full text-xs"
+              className="border p-1 rounded w-full text-xs outline-none focus:border-[#4a3733]"
               value={editData.type}
               onChange={(e) =>
                 setEditData({ ...editData, type: e.target.value })
@@ -94,7 +93,7 @@ const AdminGalleryCard = ({
               <option value="Other">Other</option>
             </select>
             <textarea
-              className="border p-1 rounded w-full text-xs h-20 resize-none"
+              className="border p-1 rounded w-full text-xs h-20 resize-none outline-none focus:border-[#4a3733]"
               value={editData.description}
               onChange={(e) =>
                 setEditData({ ...editData, description: e.target.value })
@@ -104,13 +103,13 @@ const AdminGalleryCard = ({
             <div className="flex gap-2 mt-1">
               <button
                 onClick={handleSave}
-                className="flex-1 bg-green-500 text-white py-1 rounded text-[10px] font-bold uppercase"
+                className="flex-1 bg-green-500 text-white py-1 rounded text-[10px] font-bold uppercase hover:bg-green-600 transition"
               >
                 SAVE
               </button>
               <button
                 onClick={handleCancel}
-                className="flex-1 bg-gray-400 text-white py-1 rounded text-[10px] font-bold uppercase"
+                className="flex-1 bg-gray-400 text-white py-1 rounded text-[10px] font-bold uppercase hover:bg-gray-500 transition"
               >
                 CANCEL
               </button>
@@ -137,7 +136,7 @@ const AdminGalleryCard = ({
                     e.stopPropagation();
                     setIsEditing(true);
                   }}
-                  className="bg-[#4a3733] text-white py-1 rounded font-bold text-[10px] uppercase hover:bg-[#3d2e2a]"
+                  className="bg-[#4a3733] text-white py-1 rounded font-bold text-[10px] uppercase hover:bg-[#3d2e2a] transition"
                 >
                   EDIT DETAILS
                 </button>
@@ -150,7 +149,7 @@ const AdminGalleryCard = ({
         )}
       </div>
 
-      {/* Columns 2, 3, and 4: Images from the array */}
+      {/* Columns 2, 3, and 4: Images */}
       {event.images?.map((img, j) => (
         <div
           key={j}
@@ -158,14 +157,13 @@ const AdminGalleryCard = ({
         >
           <img src={img} alt="event" className="w-full h-full object-cover" />
 
-          {/* REMOVE BUTTON: Visible when card is selected */}
           {isSelected && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveImage(event.id, j);
               }}
-              className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+              className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
             >
               ✕
             </button>
@@ -173,11 +171,11 @@ const AdminGalleryCard = ({
         </div>
       ))}
 
-      {/* Add Photo Button: Acts as the next grid item if selected */}
+      {/* Add Photo Button Placeholder */}
       {isSelected && !isEditing && (
         <div
           onClick={handleUploadClick}
-          className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-40 self-center hover:bg-gray-50 text-gray-400 cursor-pointer"
+          className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-40 self-center hover:bg-gray-50 text-gray-400 cursor-pointer transition-colors"
         >
           <span className="text-xl">+</span>
           <span className="text-[10px] font-bold uppercase">Add Photo</span>
