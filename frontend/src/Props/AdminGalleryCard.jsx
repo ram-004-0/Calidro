@@ -21,7 +21,7 @@ const AdminGalleryCard = ({
 
   const handleSave = (e) => {
     e.stopPropagation();
-    onUpdate(event.id, editData); // This now has the function from the parent
+    onUpdate(event.id, editData);
     setIsEditing(false);
   };
 
@@ -54,6 +54,7 @@ const AdminGalleryCard = ({
         accept="image/*"
       />
 
+      {/* Column 1: Event Details */}
       <div className="flex flex-col gap-2 text-sm">
         <p className="uppercase text-[10px] font-bold text-gray-400">
           Event Details
@@ -117,7 +118,7 @@ const AdminGalleryCard = ({
           </div>
         ) : (
           <>
-            <p>
+            <p className="line-clamp-1">
               Title: <strong>{event.title}</strong>
             </p>
             <p>
@@ -136,7 +137,7 @@ const AdminGalleryCard = ({
                     e.stopPropagation();
                     setIsEditing(true);
                   }}
-                  className="bg-[#f4dfba] hover:bg-[#e9d1a8] py-1 rounded font-bold text-[10px] uppercase"
+                  className="bg-[#4a3733] text-white py-1 rounded font-bold text-[10px] uppercase hover:bg-[#3d2e2a]"
                 >
                   EDIT DETAILS
                 </button>
@@ -149,19 +150,15 @@ const AdminGalleryCard = ({
         )}
       </div>
 
-      {/* Image Columns with Remove Function */}
+      {/* Columns 2, 3, and 4: Images from the array */}
       {event.images?.map((img, j) => (
         <div
           key={j}
-          className="relative group bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center h-40 shadow-inner overflow-hidden"
+          className="relative group bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center h-40 shadow-inner overflow-hidden self-center"
         >
-          {img.includes("/") || img.includes("blob:") ? (
-            <img src={img} alt="event" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-gray-400 text-xs">{img}</span>
-          )}
+          <img src={img} alt="event" className="w-full h-full object-cover" />
 
-          {/* REMOVE BUTTON: Only visible when card is selected */}
+          {/* REMOVE BUTTON: Visible when card is selected */}
           {isSelected && (
             <button
               onClick={(e) => {
@@ -176,13 +173,14 @@ const AdminGalleryCard = ({
         </div>
       ))}
 
+      {/* Add Photo Button: Acts as the next grid item if selected */}
       {isSelected && !isEditing && (
         <div
           onClick={handleUploadClick}
-          className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-40 hover:bg-gray-50 text-gray-400 cursor-pointer"
+          className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-40 self-center hover:bg-gray-50 text-gray-400 cursor-pointer"
         >
           <span className="text-xl">+</span>
-          <span className="text-[10px]">Add Photo</span>
+          <span className="text-[10px] font-bold uppercase">Add Photo</span>
         </div>
       )}
     </div>
