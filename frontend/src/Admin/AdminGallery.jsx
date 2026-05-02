@@ -213,140 +213,145 @@ const AdminGallery = () => {
     <div className="min-h-screen bg-[#433633] flex flex-col overflow-x-hidden">
       <AdminHeader />
 
-      <section className="flex-1 flex flex-col items-center p-4 md:p-0 mt-4">
-        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 h-[600px] flex flex-col">
-          <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 uppercase">
-            Previous Events
-          </h1>
+      <section className="relative pb-2 w-full">
+        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex flex-col overflow-hidden">
+          <div className="p-6 flex flex-col h-full w-full">
+            <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 uppercase">
+              Previous Events
+            </h1>
 
-          {/* Controls */}
-          <div className="overflow-x-auto no-scrollbar mb-6 flex-shrink-0">
-            <div className="grid grid-cols-4 gap-4 md:gap-6 min-w-[800px] lg:min-w-full">
-              <select className="bg-white border rounded-full p-3 outline-none cursor-pointer">
-                <option>Type</option>
-              </select>
-              <input
-                className="bg-white border rounded-full p-3 outline-none"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setIsAdding(true)}
-                  className="flex-1 bg-[#f4dfba] hover:bg-[#e9d1a8] py-2 rounded-full font-bold transition"
-                >
-                  + Add New
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={!selectedId}
-                  className={`flex-1 py-2 rounded-full font-bold transition ${selectedId ? "bg-red-400 text-white" : "bg-gray-300 text-gray-500"}`}
-                >
-                  Delete
-                </button>
-              </div>
-              <select
-                className="bg-white border rounded-full p-3 outline-none cursor-pointer"
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-              >
-                <option value="newest">Newest to Oldest</option>
-                <option value="oldest">Oldest to Newest</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto flex flex-col gap-6 pr-2 scrollbar-thin scrollbar-thumb-[#4a3733]">
-            {isAdding && (
-              <div className="bg-white p-6 rounded-lg border-2 border-dashed border-[#4a3733] grid grid-cols-4 gap-4 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase">
-                    New Event Details
-                  </p>
-                  <input
-                    value={newEvent.title}
-                    className="border p-2 rounded text-sm"
-                    placeholder="Title"
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, title: e.target.value })
-                    }
-                  />
-                  <input
-                    value={newEvent.event_date}
-                    type="date"
-                    className="border p-2 rounded text-sm"
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, event_date: e.target.value })
-                    }
-                  />
-                  <select
-                    value={newEvent.event_type}
-                    className="border p-2 rounded text-sm"
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, event_type: e.target.value })
-                    }
+            {/* Controls */}
+            <div className="overflow-x-auto no-scrollbar mb-6 flex-shrink-0">
+              <div className="grid grid-cols-4 gap-4 md:gap-6 min-w-[800px] lg:min-w-full">
+                <select className="bg-white border rounded-full p-3 outline-none cursor-pointer">
+                  <option>Type</option>
+                </select>
+                <input
+                  className="bg-white border rounded-full p-3 outline-none"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsAdding(true)}
+                    className="flex-1 bg-[#f4dfba] hover:bg-[#e9d1a8] py-2 rounded-full font-bold transition"
                   >
-                    <option value="Wedding">Wedding</option>
-                    <option value="Corporate">Corporate</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <textarea
-                    value={newEvent.description}
-                    className="border p-2 rounded text-sm h-20"
-                    placeholder="Description"
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, description: e.target.value })
-                    }
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveNewEvent}
-                      className="flex-1 bg-green-600 text-white py-2 rounded font-bold text-xs"
+                    + Add New
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={!selectedId}
+                    className={`flex-1 py-2 rounded-full font-bold transition ${selectedId ? "bg-red-400 text-white" : "bg-gray-300 text-gray-500"}`}
+                  >
+                    Delete
+                  </button>
+                </div>
+                <select
+                  className="bg-white border rounded-full p-3 outline-none cursor-pointer"
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                >
+                  <option value="newest">Newest to Oldest</option>
+                  <option value="oldest">Oldest to Newest</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto flex flex-col gap-6 pr-2 scrollbar-thin scrollbar-thumb-[#4a3733]">
+              {isAdding && (
+                <div className="bg-white p-6 rounded-lg border-2 border-dashed border-[#4a3733] grid grid-cols-4 gap-4 animate-in fade-in duration-300">
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">
+                      New Event Details
+                    </p>
+                    <input
+                      value={newEvent.title}
+                      className="border p-2 rounded text-sm"
+                      placeholder="Title"
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, title: e.target.value })
+                      }
+                    />
+                    <input
+                      value={newEvent.event_date}
+                      type="date"
+                      className="border p-2 rounded text-sm"
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, event_date: e.target.value })
+                      }
+                    />
+                    <select
+                      value={newEvent.event_type}
+                      className="border p-2 rounded text-sm"
+                      onChange={(e) =>
+                        setNewEvent({ ...newEvent, event_type: e.target.value })
+                      }
                     >
-                      SAVE TO DB
-                    </button>
-                    <button
-                      onClick={() => setIsAdding(false)}
-                      className="flex-1 bg-gray-400 text-white py-2 rounded font-bold text-xs"
-                    >
-                      CANCEL
-                    </button>
+                      <option value="Wedding">Wedding</option>
+                      <option value="Corporate">Corporate</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <textarea
+                      value={newEvent.description}
+                      className="border p-2 rounded text-sm h-20"
+                      placeholder="Description"
+                      onChange={(e) =>
+                        setNewEvent({
+                          ...newEvent,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveNewEvent}
+                        className="flex-1 bg-green-600 text-white py-2 rounded font-bold text-xs"
+                      >
+                        SAVE TO DB
+                      </button>
+                      <button
+                        onClick={() => setIsAdding(false)}
+                        className="flex-1 bg-gray-400 text-white py-2 rounded font-bold text-xs"
+                      >
+                        CANCEL
+                      </button>
+                    </div>
+                  </div>
+                  <div className="col-span-3 flex items-center justify-center border rounded bg-gray-50 text-gray-400 italic">
+                    Save the event first to begin adding photos.
                   </div>
                 </div>
-                <div className="col-span-3 flex items-center justify-center border rounded bg-gray-50 text-gray-400 italic">
-                  Save the event first to begin adding photos.
-                </div>
-              </div>
-            )}
+              )}
 
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-10">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4a3733] mb-2"></div>
-                <p className="text-center text-[#4a3733] font-bold">
-                  Loading Events...
-                </p>
-              </div>
-            ) : sortedEvents.length > 0 ? (
-              // Use sortedEvents (or displayEvents if you added search logic)
-              sortedEvents.map((item) => (
-                <AdminGalleryCard
-                  key={item.id}
-                  event={item}
-                  isSelected={selectedId === item.id}
-                  onSelect={(id) =>
-                    setSelectedId(id === selectedId ? null : id)
-                  }
-                  onImageUpload={handleImageUpload}
-                  onUpdate={handleUpdateEvent}
-                  onRemoveImage={handleRemoveImage}
-                />
-              ))
-            ) : (
-              <div className="text-center py-10 text-gray-500 italic">
-                No events found. Click "+ Add New" to create one!
-              </div>
-            )}
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4a3733] mb-2"></div>
+                  <p className="text-center text-[#4a3733] font-bold">
+                    Loading Events...
+                  </p>
+                </div>
+              ) : sortedEvents.length > 0 ? (
+                // Use sortedEvents (or displayEvents if you added search logic)
+                sortedEvents.map((item) => (
+                  <AdminGalleryCard
+                    key={item.id}
+                    event={item}
+                    isSelected={selectedId === item.id}
+                    onSelect={(id) =>
+                      setSelectedId(id === selectedId ? null : id)
+                    }
+                    onImageUpload={handleImageUpload}
+                    onUpdate={handleUpdateEvent}
+                    onRemoveImage={handleRemoveImage}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-10 text-gray-500 italic">
+                  No events found. Click "+ Add New" to create one!
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
