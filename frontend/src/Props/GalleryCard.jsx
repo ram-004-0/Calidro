@@ -1,24 +1,29 @@
 const GalleryCard = ({ image, title, description }) => {
   return (
     <div className="flex-shrink-0">
-      {" "}
-      {/* Added to prevent shrinking in slider */}
       <div className="grid grid-cols-[60%_40%] bg-white border border-white gap-4 p-4 rounded-lg shadow-lg h-80 w-[560px]">
-        {" "}
-        {/* w-140 = 560px */}
-        {/* Container for the image */}
+        {/* Container for the image - fixed by grid span */}
         <div className="rounded-2xl overflow-hidden h-full">{image}</div>
-        {/* Container for text */}
-        <div className="flex flex-col justify-center">
-          <h1 className="text-[#4a3733] font-bold text-lg mb-2 uppercase">
-            {title}
-          </h1>
-          <p className="text-[#4a3733] text-sm leading-relaxed">
-            {description}
-          </p>
+
+        {/* Container for text - centered vertically */}
+        <div className="flex flex-col justify-center overflow-hidden">
+          {/* Title: Fixed height area to prevent shifting */}
+          <div className="h-14 flex items-end mb-2">
+            <h1 className="text-[#4a3733] font-bold text-lg uppercase line-clamp-2">
+              {title}
+            </h1>
+          </div>
+
+          {/* Description: Fixed height area with line clamp */}
+          <div className="h-32">
+            <p className="text-[#4a3733] text-sm leading-relaxed line-clamp-5">
+              {description}
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default GalleryCard;
