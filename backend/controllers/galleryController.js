@@ -38,22 +38,16 @@ const createEvent = async (req, res) => {
     images,
   } = req.body;
 
-  // 1. Validation
   if (!title || !event_date || !user_id) {
-    return res
-      .status(400)
-      .json({ message: "Missing required fields: title, date, or user_id" });
+    return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // Get a specific connection for the transaction
   const connection = await db.getConnection();
 
   try {
-    // START TRANSACTION
     await connection.beginTransaction();
-    console.log("Transaction started...");
 
-    // 2. Insert the main event
+    // 1. Insert Event
     const eventQuery = `
       INSERT INTO previous_events (user_id, created_by, title, event_date, event_type, description)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -69,49 +63,31 @@ const createEvent = async (req, res) => {
     ]);
 
     const newEventId = eventResult.insertId;
-    console.log(`Event created with ID: ${newEventId}`);
 
-    // 3. Handle images table insertion
+    // 2. Insert Images (The Fix)
     if (images && Array.isArray(images) && images.length > 0) {
-      // Map the array of URLs into an array of arrays
       const imageValues = images.map((url) => [newEventId, url]);
 
-      // Bulk insert requires .query and [imageValues] (nested array)
+      // FIXED: mysql2 expects bulk values wrapped in an extra array [ [ [v1,v2], [v1,v2] ] ]
       const imageQuery = `INSERT INTO previous_events_images (previous_events_id, image_url) VALUES ?`;
-
       await connection.query(imageQuery, [imageValues]);
-      console.log(`${images.length} images linked to event.`);
     }
 
-    // COMMIT BOTH INSERTS
     await connection.commit();
-    console.log("Transaction committed successfully.");
-
-    res.status(201).json({
-      success: true,
-      message: "Event and images created successfully",
-      eventId: newEventId,
-    });
+    res.status(201).json({ success: true, eventId: newEventId });
   } catch (error) {
-    // IF ANYTHING FAILS, UNDO THE EVENT INSERT
     await connection.rollback();
+    console.error("SQL ERROR:", error.message);
 
-    console.error("DATABASE INSERTION ERROR:", error);
-
-    // Common Foreign Key Error (User ID doesn't exist)
+    // Handle the Foreign Key failure specifically
     if (error.code === "ER_NO_REFERENCED_ROW_2") {
       return res.status(400).json({
-        message:
-          "Constraint Error: The user_id provided does not exist in the user table.",
+        message: "Error: The user_id does not exist in the 'user' table.",
       });
     }
 
-    res.status(500).json({
-      message: "Error creating event",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Database error", error: error.message });
   } finally {
-    // ALWAYS release the connection
     connection.release();
   }
 };
