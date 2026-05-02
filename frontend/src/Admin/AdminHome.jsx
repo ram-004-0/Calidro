@@ -59,37 +59,41 @@ const AdminHome = () => {
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full">
       <AdminHeader />
-      <section className="relative pb-2 w-full mt-4">
-        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] p-6 flex flex-col overflow-hidden">
-          <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
-            Home Overview
-          </h1>
-          <button
-            onClick={addCard}
-            className="px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all mb-4"
-          >
-            + Add Home Card
-          </button>
-
-          <div className="relative group">
-            <div
-              ref={scrollRef}
-              className="flex gap-8 overflow-x-auto py-4 px-2 no-scrollbar scroll-smooth"
+      <section className="relative pb-2 w-full">
+        {/* Consistent Container Wrapper */}
+        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
+          {/* Inner Content Wrapper with Padding */}
+          <div className="p-6 flex flex-col w-full h-full">
+            <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
+              Home Overview
+            </h1>
+            <button
+              onClick={addCard}
+              className="px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all mb-4"
             >
-              {cards.map((card, index) => (
-                <AdminHomeCard
-                  key={card.home_id || `new-${index}`}
-                  cardData={card}
-                  onDelete={() => deleteCard(card.home_id, index)}
-                  onRefresh={fetchCards}
-                  isEditing={
-                    editingCardIndex !== null && editingCardIndex !== index
-                  }
-                  setEditingCard={(editing) =>
-                    setEditingCardIndex(editing ? index : null)
-                  }
-                />
-              ))}
+              + Add Home Card
+            </button>
+
+            <div className="relative group">
+              <div
+                ref={scrollRef}
+                className="flex gap-8 overflow-x-auto py-4 px-2 no-scrollbar scroll-smooth"
+              >
+                {cards.map((card, index) => (
+                  <AdminHomeCard
+                    key={card.home_id || `new-${index}`}
+                    cardData={card}
+                    onDelete={() => deleteCard(card.home_id, index)}
+                    onRefresh={fetchCards}
+                    isEditing={
+                      editingCardIndex !== null && editingCardIndex !== index
+                    }
+                    setEditingCard={(editing) =>
+                      setEditingCardIndex(editing ? index : null)
+                    }
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
