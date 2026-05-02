@@ -9,6 +9,20 @@ const AdminGallery = () => {
   const [events, setEvents] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const displayEvents = events
+    .filter(
+      (ev) =>
+        ev.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ev.type.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
 
   // --- NEW: State for the dynamic Add Form ---
   const [isAdding, setIsAdding] = useState(false);
@@ -43,6 +57,17 @@ const AdminGallery = () => {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  const sortedEvents = [...events].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+
+    if (sortOrder === "newest") {
+      return dateB - dateA; // Recent dates first
+    } else {
+      return dateA - dateB; // Older dates first
+    }
+  });
 
   // --- DYNAMIC ADD LOGIC ---
   const handleSaveNewEvent = async () => {
@@ -202,6 +227,8 @@ const AdminGallery = () => {
               <input
                 className="bg-white border rounded-full p-3 outline-none"
                 placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
               <div className="flex gap-2">
                 <button
@@ -218,14 +245,18 @@ const AdminGallery = () => {
                   Delete
                 </button>
               </div>
-              <select className="bg-white border rounded-full p-3 outline-none cursor-pointer">
-                <option>Sort</option>
+              <select
+                className="bg-white border rounded-full p-3 outline-none cursor-pointer"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <option value="newest">Newest to Oldest</option>
+                <option value="oldest">Oldest to Newest</option>
               </select>
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto flex flex-col gap-6 pr-2 scrollbar-thin scrollbar-thumb-[#4a3733]">
-            {/* DYNAMIC ADD FORM SECTION */}
             {isAdding && (
               <div className="bg-white p-6 rounded-lg border-2 border-dashed border-[#4a3733] grid grid-cols-4 gap-4 animate-in fade-in duration-300">
                 <div className="flex flex-col gap-2">
@@ -233,6 +264,7 @@ const AdminGallery = () => {
                     New Event Details
                   </p>
                   <input
+                    value={newEvent.title}
                     className="border p-2 rounded text-sm"
                     placeholder="Title"
                     onChange={(e) =>
@@ -240,6 +272,7 @@ const AdminGallery = () => {
                     }
                   />
                   <input
+                    value={newEvent.event_date}
                     type="date"
                     className="border p-2 rounded text-sm"
                     onChange={(e) =>
@@ -247,6 +280,7 @@ const AdminGallery = () => {
                     }
                   />
                   <select
+                    value={newEvent.event_type}
                     className="border p-2 rounded text-sm"
                     onChange={(e) =>
                       setNewEvent({ ...newEvent, event_type: e.target.value })
@@ -257,6 +291,7 @@ const AdminGallery = () => {
                     <option value="Other">Other</option>
                   </select>
                   <textarea
+                    value={newEvent.description}
                     className="border p-2 rounded text-sm h-20"
                     placeholder="Description"
                     onChange={(e) =>
@@ -285,11 +320,15 @@ const AdminGallery = () => {
             )}
 
             {loading ? (
-              <p className="text-center text-[#4a3733] font-bold">
-                Loading Events...
-              </p>
-            ) : (
-              events.map((item) => (
+              <div className="flex flex-col items-center justify-center py-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4a3733] mb-2"></div>
+                <p className="text-center text-[#4a3733] font-bold">
+                  Loading Events...
+                </p>
+              </div>
+            ) : sortedEvents.length > 0 ? (
+              // Use sortedEvents (or displayEvents if you added search logic)
+              sortedEvents.map((item) => (
                 <AdminGalleryCard
                   key={item.id}
                   event={item}
@@ -302,6 +341,10 @@ const AdminGallery = () => {
                   onRemoveImage={handleRemoveImage}
                 />
               ))
+            ) : (
+              <div className="text-center py-10 text-gray-500 italic">
+                No events found. Click "+ Add New" to create one!
+              </div>
             )}
           </div>
         </div>
