@@ -213,8 +213,8 @@ const AdminGallery = () => {
     <div className="min-h-screen bg-[#433633] flex flex-col overflow-x-hidden">
       <AdminHeader />
 
-      <section className="relative pb-2 w-full">
-        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
+      <section className="relative pb-2 w-full flex-1 flex flex-col items-center px-4 mt-6">
+        <div className="max-w-[1460px] w-full mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex flex-col overflow-hidden p-6">
           <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 uppercase">
             Previous Events
           </h1>
