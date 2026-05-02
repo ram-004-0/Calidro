@@ -150,87 +150,93 @@ const AdminBook = () => {
       )}
 
       {/* TABLE SECTION */}
-      <section className="flex-1 flex flex-col items-center md:p-3">
-        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 h-[600px] flex flex-col">
-          <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
-            Reservation Requests
-          </h1>
+      <section className="relative pb-2 w-full">
+        {/* Consistent Container Wrapper */}
+        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
+          {/* Inner Content Wrapper with Padding */}
+          <div className="p-6 flex flex-col w-full h-full">
+            <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase flex-shrink-0">
+              Reservation Requests
+            </h1>
 
-          <div className="bg-white border rounded-lg shadow-lg flex-1 overflow-hidden flex flex-col">
-            {/* Horizontal Scroll wrapper for Mobile, Vertical for both */}
-            <div className="overflow-x-auto overflow-y-auto flex-1">
-              {/* Added min-w to force columns to stay readable on mobile */}
-              <table className="table-fixed w-full min-w-[1000px] text-left border-collapse">
-                <thead className="sticky top-0 bg-white z-10 border-b shadow-sm">
-                  <tr>
-                    <th className="py-4 px-2 w-1/6">Name</th>
-                    <th className="py-4 px-2 w-1/8">Contact</th>
-                    <th className="py-4 px-2 w-1/6">Email</th>
-                    <th className="py-4 px-2 w-1/6">Event Name</th>
-                    <th className="py-4 px-2 w-1/6">Date & Time</th>
-                    <th className="py-4 px-2 w-1/8">Type of Event</th>
-                    <th className="py-4 px-2 w-1/8">Payment Type</th>
-                    <th className="py-4 px-2 w-1/8">Booking Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {bookings.map((b) => (
-                    <tr key={b.id} className="hover:bg-gray-50">
-                      <td className="py-4 px-2 truncate">{b.userName}</td>
-                      <td className="py-4 px-2 truncate">{b.contactNo}</td>
-                      <td className="py-4 px-2 truncate text-sm">{b.email}</td>
-                      <td className="py-4 px-2 truncate">{b.eventName}</td>
-                      <td className="py-4 px-2 text-sm whitespace-nowrap">
-                        {new Date(b.date).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                        <br />
-                        {new Date(`1970-01-01T${b.time}`).toLocaleTimeString(
-                          "en-US",
-                          {
-                            hour: "numeric",
-                            minute: "2-digit",
-                            hour12: true,
-                          },
-                        )}
-                      </td>
-                      <td className="py-4 px-2">
-                        {b.typeOfEvent}
-                        <button
-                          onClick={() => setSelectedBooking(b)}
-                          className="block text-blue-600 text-xs mt-1 hover:underline font-bold uppercase"
-                        >
-                          View Details
-                        </button>
-                      </td>
-                      <td className="py-4 px-2">
-                        <span className="bg-gray-200 text-gray-800 rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap">
-                          {b.paymentType || "N/A"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2">
-                        <span
-                          className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap ${getStatusStyles(
-                            b.bookingStatus,
-                          )}`}
-                        >
-                          {b.bookingStatus}
-                        </span>
-                      </td>
+            <div className="bg-white border rounded-lg shadow-lg flex-1 overflow-hidden flex flex-col">
+              {/* Horizontal Scroll wrapper for Mobile, Vertical for both */}
+              <div className="overflow-x-auto overflow-y-auto flex-1">
+                {/* Added min-w to force columns to stay readable on mobile */}
+                <table className="table-fixed w-full min-w-[1000px] text-left border-collapse">
+                  <thead className="sticky top-0 bg-white z-10 border-b shadow-sm">
+                    <tr>
+                      <th className="py-4 px-2 w-1/6">Name</th>
+                      <th className="py-4 px-2 w-1/8">Contact</th>
+                      <th className="py-4 px-2 w-1/6">Email</th>
+                      <th className="py-4 px-2 w-1/6">Event Name</th>
+                      <th className="py-4 px-2 w-1/6">Date & Time</th>
+                      <th className="py-4 px-2 w-1/8">Type of Event</th>
+                      <th className="py-4 px-2 w-1/8">Payment Type</th>
+                      <th className="py-4 px-2 w-1/8">Booking Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Added a small swipe hint for mobile users */}
-            {isMobileView && (
-              <div className="md:hidden text-center text-[10px] text-gray-400 py-1 border-t italic">
-                Swipe horizontally to view more columns
+                  </thead>
+                  <tbody className="divide-y">
+                    {bookings.map((b) => (
+                      <tr key={b.id} className="hover:bg-gray-50">
+                        <td className="py-4 px-2 truncate">{b.userName}</td>
+                        <td className="py-4 px-2 truncate">{b.contactNo}</td>
+                        <td className="py-4 px-2 truncate text-sm">
+                          {b.email}
+                        </td>
+                        <td className="py-4 px-2 truncate">{b.eventName}</td>
+                        <td className="py-4 px-2 text-sm whitespace-nowrap">
+                          {new Date(b.date).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                          <br />
+                          {new Date(`1970-01-01T${b.time}`).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            },
+                          )}
+                        </td>
+                        <td className="py-4 px-2">
+                          {b.typeOfEvent}
+                          <button
+                            onClick={() => setSelectedBooking(b)}
+                            className="block text-blue-600 text-xs mt-1 hover:underline font-bold uppercase"
+                          >
+                            View Details
+                          </button>
+                        </td>
+                        <td className="py-4 px-2">
+                          <span className="bg-gray-200 text-gray-800 rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap">
+                            {b.paymentType || "N/A"}
+                          </span>
+                        </td>
+                        <td className="py-4 px-2">
+                          <span
+                            className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap ${getStatusStyles(
+                              b.bookingStatus,
+                            )}`}
+                          >
+                            {b.bookingStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+
+              {/* Added a small swipe hint for mobile users */}
+              {isMobileView && (
+                <div className="md:hidden text-center text-[10px] text-gray-400 py-1 border-t italic">
+                  Swipe horizontally to view more columns
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
