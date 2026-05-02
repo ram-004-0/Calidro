@@ -17,7 +17,7 @@ const RatingCard = ({ image, name, comment, stars }) => {
         className={`grid gap-4 p-6 rounded-lg shadow-lg transition-all duration-300 bg-white border border-gray-100 overflow-hidden
           ${
             isMobileView
-              ? "grid-cols-1 w-[300px] h-[450px]" // Fixed Mobile Height
+              ? "grid-cols-1 w-[300px] h-[480px]" // Fixed Mobile Height
               : "grid-cols-[60%_40%] w-[560px] h-80" // Desktop Side-by-Side
           }`}
       >
