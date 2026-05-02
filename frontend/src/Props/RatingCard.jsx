@@ -24,7 +24,7 @@ const RatingCard = ({ image, name, comment, stars }) => {
         {/* Image Container */}
         <div
           className={`rounded-2xl overflow-hidden shrink-0 ${
-            isMobileView ? "h-40" : "h-full"
+            isMobileView ? "h-48" : "h-full"
           }`}
         >
           {image}
