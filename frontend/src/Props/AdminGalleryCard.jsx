@@ -161,7 +161,7 @@ const AdminGalleryCard = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onRemoveImage(event.id, j);
+                onRemoveImage(event.id, j, img);
               }}
               className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
             >
