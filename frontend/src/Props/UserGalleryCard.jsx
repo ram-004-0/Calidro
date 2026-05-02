@@ -4,14 +4,10 @@ const UserGalleryCard = ({ event }) => {
   if (!event) return null;
 
   return (
-    /* RESPONSIVE FIX: 
-       1. Added 'overflow-x-auto' so the card content doesn't break on small screens.
-       2. Added 'min-w-[600px] md:min-w-full' to ensure the 4 columns have enough room to breathe.
-    */
     <div className="overflow-x-auto no-scrollbar rounded-lg shadow-lg">
       <div className="grid grid-cols-4 bg-white border border-white gap-4 p-4 h-80 flex-shrink-0 min-w-[750px] md:min-w-full transition-all">
         {/* Column 1: Info */}
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-2 overflow-y-auto pr-1">
           <p className="text-sm md:text-base">
             <strong className="text-[#4a3733]">{event.title}</strong>
           </p>
@@ -21,39 +17,43 @@ const UserGalleryCard = ({ event }) => {
           <p className="text-xs md:text-sm">
             Type of Event: <span className="font-semibold">{event.type}</span>
           </p>
-          <p className="text-xs md:text-sm">
-            Description:{" "}
-            <span className="text-[10px] md:text-xs italic text-gray-500 block mt-1">
+          <div className="text-xs md:text-sm">
+            Description:
+            <span className="text-[10px] md:text-xs italic text-gray-500 block mt-1 leading-relaxed">
               {event.description}
             </span>
-          </p>
+          </div>
         </div>
 
         {/* Columns 2, 3, 4: Images */}
-        {/* Added 'h-full' to the wrapper and fixed image sizing to ensure 
-           they fill your h-80 card perfectly. 
-        */}
-        {event.images.map((img, j) => (
-          <div
-            key={j}
-            className="bg-white border border-gray-100 p-2 rounded-lg shadow-inner flex items-center justify-center overflow-hidden h-full"
-          >
-            {img.includes("/") || img.includes("blob:") ? (
-              <img
-                src={img}
-                alt={`event-${j}`}
-                className="w-full h-full object-cover rounded shadow-sm"
-              />
-            ) : (
-              <div className="flex flex-col items-center">
-                <span className="text-gray-300 text-[10px] uppercase mb-1">
-                  Preview
-                </span>
-                <span className="text-gray-400 text-sm font-medium">{img}</span>
-              </div>
-            )}
-          </div>
-        ))}
+        {/* We map up to 3 slots. If the DB has fewer images, we show a placeholder 
+            to keep your 4-column structure looking perfect. */}
+        {[0, 1, 2].map((index) => {
+          const img = event.images[index];
+          return (
+            <div
+              key={index}
+              className="bg-white border border-gray-100 p-2 rounded-lg shadow-inner flex items-center justify-center overflow-hidden h-full"
+            >
+              {img ? (
+                <img
+                  src={img}
+                  alt={`event-${index}`}
+                  className="w-full h-full object-cover rounded shadow-sm"
+                />
+              ) : (
+                <div className="flex flex-col items-center opacity-20">
+                  <div className="w-12 h-12 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-gray-300">?</span>
+                  </div>
+                  <span className="text-gray-300 text-[10px] uppercase mt-2">
+                    No Image
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
