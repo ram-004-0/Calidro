@@ -1,4 +1,4 @@
-const db = require("../config/db"); // Assuming your db connection is here
+const db = require("../config/db");
 
 // GET all events with their images
 const getAllEvents = async (req, res) => {
@@ -13,7 +13,6 @@ const getAllEvents = async (req, res) => {
 
     const [rows] = await db.execute(query);
 
-    // Transform the GROUP_CONCAT string back into a clean array
     const formattedData = rows.map((event) => ({
       ...event,
       images: event.images ? event.images.split(",") : [],
@@ -36,67 +35,103 @@ const createEvent = async (req, res) => {
     event_date,
     event_type,
     description,
-    images, // This should be an array of strings (URLs)
+    images,
   } = req.body;
 
-  // 1. Validation: Ensure we have the minimum required data
+  // 1. Validation
   if (!title || !event_date || !user_id) {
-    return res.status(400).json({ message: "Missing required fields" });
+    return res
+      .status(400)
+      .json({ message: "Missing required fields: title, date, or user_id" });
   }
 
+  // Get a specific connection for the transaction
+  const connection = await db.getConnection();
+
   try {
+    // START TRANSACTION
+    await connection.beginTransaction();
+    console.log("Transaction started...");
+
     // 2. Insert the main event
     const eventQuery = `
       INSERT INTO previous_events (user_id, created_by, title, event_date, event_type, description)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    // Use .execute for standard parameterized queries
-    const [result] = await db.execute(eventQuery, [
+    const [eventResult] = await connection.execute(eventQuery, [
       user_id,
-      created_by,
+      created_by || "Admin",
       title,
       event_date,
-      event_type,
-      description,
+      event_type || "Other",
+      description || "",
     ]);
 
-    const newEventId = result.insertId;
+    const newEventId = eventResult.insertId;
+    console.log(`Event created with ID: ${newEventId}`);
 
     // 3. Handle images table insertion
     if (images && Array.isArray(images) && images.length > 0) {
-      // Map the array of URLs into an array of arrays: [[id, url], [id, url]]
+      // Map the array of URLs into an array of arrays
       const imageValues = images.map((url) => [newEventId, url]);
 
-      // CRITICAL: For bulk inserts (VALUES ?), use .query instead of .execute
-      // and ensure imageValues is wrapped in an extra array.
+      // Bulk insert requires .query and [imageValues] (nested array)
       const imageQuery = `INSERT INTO previous_events_images (previous_events_id, image_url) VALUES ?`;
 
-      await db.query(imageQuery, [imageValues]);
+      await connection.query(imageQuery, [imageValues]);
+      console.log(`${images.length} images linked to event.`);
     }
 
+    // COMMIT BOTH INSERTS
+    await connection.commit();
+    console.log("Transaction committed successfully.");
+
     res.status(201).json({
+      success: true,
       message: "Event and images created successfully",
       eventId: newEventId,
     });
   } catch (error) {
-    console.error("Database Error:", error);
+    // IF ANYTHING FAILS, UNDO THE EVENT INSERT
+    await connection.rollback();
+
+    console.error("DATABASE INSERTION ERROR:", error);
+
+    // Common Foreign Key Error (User ID doesn't exist)
+    if (error.code === "ER_NO_REFERENCED_ROW_2") {
+      return res.status(400).json({
+        message:
+          "Constraint Error: The user_id provided does not exist in the user table.",
+      });
+    }
+
     res.status(500).json({
       message: "Error creating event",
       error: error.message,
     });
+  } finally {
+    // ALWAYS release the connection
+    connection.release();
   }
 };
 
-// DELETE an event (Images will auto-delete due to ON DELETE CASCADE)
+// DELETE an event
 const deleteEvent = async (req, res) => {
   const { id } = req.params;
   try {
-    await db.execute(
+    const [result] = await db.execute(
       "DELETE FROM previous_events WHERE previous_events_id = ?",
       [id],
     );
-    res.status(200).json({ message: "Event and associated images deleted" });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Event and associated images deleted successfully" });
   } catch (error) {
     res
       .status(500)
