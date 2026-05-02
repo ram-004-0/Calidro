@@ -67,12 +67,14 @@ const AdminHome = () => {
             <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
               Home Overview
             </h1>
-            <button
-              onClick={addCard}
-              className="px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all mb-4"
-            >
-              + Add Home Card
-            </button>
+            <div className="flex-shrink-0">
+              <button
+                onClick={addCard}
+                className="w-fit px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all mb-4"
+              >
+                + Add Home Card
+              </button>
+            </div>
 
             <div className="relative group">
               <div
