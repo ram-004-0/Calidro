@@ -177,4 +177,5 @@ module.exports = {
   deleteEvent,
   updateEvent,
   addImageToEvent,
+  removeImage, // <--- Add this
 };
