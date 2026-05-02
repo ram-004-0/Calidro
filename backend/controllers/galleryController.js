@@ -36,15 +36,22 @@ const createEvent = async (req, res) => {
     event_date,
     event_type,
     description,
-    images,
+    images, // This should be an array of strings (URLs)
   } = req.body;
 
+  // 1. Validation: Ensure we have the minimum required data
+  if (!title || !event_date || !user_id) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
   try {
-    // 1. Insert the main event
+    // 2. Insert the main event
     const eventQuery = `
       INSERT INTO previous_events (user_id, created_by, title, event_date, event_type, description)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
+
+    // Use .execute for standard parameterized queries
     const [result] = await db.execute(eventQuery, [
       user_id,
       created_by,
@@ -53,22 +60,31 @@ const createEvent = async (req, res) => {
       event_type,
       description,
     ]);
+
     const newEventId = result.insertId;
 
-    // 2. If there are images, insert them into the images table
-    if (images && images.length > 0) {
+    // 3. Handle images table insertion
+    if (images && Array.isArray(images) && images.length > 0) {
+      // Map the array of URLs into an array of arrays: [[id, url], [id, url]]
       const imageValues = images.map((url) => [newEventId, url]);
+
+      // CRITICAL: For bulk inserts (VALUES ?), use .query instead of .execute
+      // and ensure imageValues is wrapped in an extra array.
       const imageQuery = `INSERT INTO previous_events_images (previous_events_id, image_url) VALUES ?`;
+
       await db.query(imageQuery, [imageValues]);
     }
 
-    res
-      .status(201)
-      .json({ message: "Event created successfully", eventId: newEventId });
+    res.status(201).json({
+      message: "Event and images created successfully",
+      eventId: newEventId,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating event", error: error.message });
+    console.error("Database Error:", error);
+    res.status(500).json({
+      message: "Error creating event",
+      error: error.message,
+    });
   }
 };
 
