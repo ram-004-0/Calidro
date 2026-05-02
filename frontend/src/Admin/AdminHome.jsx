@@ -60,7 +60,7 @@ const AdminHome = () => {
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full">
       <AdminHeader />
       <section className="relative pb-2 w-full mt-4">
-        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] p-6">
+        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] p-6 flex flex-col overflow-hidden">
           <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
             Home Overview
           </h1>
