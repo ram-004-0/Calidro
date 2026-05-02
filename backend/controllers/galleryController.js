@@ -115,4 +115,66 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-module.exports = { getAllEvents, createEvent, deleteEvent };
+// PUT (Update) event details
+// 1. Update text details (Title, Date, Type, Desc)
+const updateEvent = async (req, res) => {
+  const { id } = req.params;
+  const { title, event_date, event_type, description } = req.body;
+
+  try {
+    const query = `
+      UPDATE previous_events 
+      SET title = ?, event_date = ?, event_type = ?, description = ? 
+      WHERE previous_events_id = ?
+    `;
+    await db.execute(query, [title, event_date, event_type, description, id]);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: "Update failed", error: error.message });
+  }
+};
+
+// 2. Add a new image URL to an existing event
+const addImageToEvent = async (req, res) => {
+  const { id } = req.params;
+  const { image_url } = req.body;
+
+  try {
+    await db.execute(
+      "INSERT INTO previous_events_images (previous_events_id, image_url) VALUES (?, ?)",
+      [id, image_url],
+    );
+    res.status(201).json({ success: true });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Image DB insert failed", error: error.message });
+  }
+};
+
+// Express Route: DELETE /api/gallery/delete-image
+const removeImage = async (req, res) => {
+  const { eventId, imageUrl } = req.body;
+
+  try {
+    const query = `DELETE FROM previous_events_images WHERE previous_events_id = ? AND image_url = ?`;
+    const [result] = await db.execute(query, [eventId, imageUrl]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Image not found in database" });
+    }
+
+    res.json({ success: true, message: "Image deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Database error", error: error.message });
+  }
+};
+
+// Export these new functions
+module.exports = {
+  getAllEvents,
+  createEvent,
+  deleteEvent,
+  updateEvent,
+  addImageToEvent,
+};

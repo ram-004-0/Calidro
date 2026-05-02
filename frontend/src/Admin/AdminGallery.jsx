@@ -90,37 +90,89 @@ const AdminGallery = () => {
 
   // --- PLACEHOLDERS FOR FUTURE LOGIC ---
   const handleUpdateEvent = async (id, updatedData) => {
-    // You can expand this to call axios.put(`${API_URL}/api/gallery/update/${id}`, updatedData)
-    setEvents((prev) =>
-      prev.map((ev) => (ev.id === id ? { ...ev, ...updatedData } : ev)),
-    );
+    try {
+      const response = await axios.put(`${API_URL}/api/gallery/update/${id}`, {
+        title: updatedData.title,
+        event_date: updatedData.date, // Card uses .date, DB uses event_date
+        event_type: updatedData.type,
+        description: updatedData.description,
+      });
+
+      if (response.data.success) {
+        setEvents((prev) =>
+          prev.map((ev) => (ev.id === id ? { ...ev, ...updatedData } : ev)),
+        );
+        alert("Database updated!");
+      }
+    } catch (error) {
+      alert("Failed to update database.");
+    }
   };
 
-  const handleImageUpload = (eventId, files) => {
-    // In a real flow, upload to Cloudinary here, then send URLs to DB
-    const newPhotoUrls = Array.from(files).map((file) =>
-      URL.createObjectURL(file),
-    );
-    setEvents((prev) =>
-      prev.map((ev) =>
-        ev.id === eventId
-          ? { ...ev, images: [...ev.images, ...newPhotoUrls] }
-          : ev,
-      ),
-    );
+  const handleImageUpload = async (eventId, files) => {
+    const fileArray = Array.from(files);
+
+    // Set loading state if you have one, or show a toast
+    console.log(`Starting upload for ${fileArray.length} files...`);
+
+    try {
+      // Process each file
+      for (const file of fileArray) {
+        // 1. Prepare FormData for Cloudinary
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "gallery_unsigned"); // Required by Cloudinary
+
+        // 2. Upload to Cloudinary API
+        const cloudRes = await axios.post(
+          "https://api.cloudinary.com/v1_1/da4fp4fsr/image/upload",
+          formData,
+        );
+
+        const secureUrl = cloudRes.data.secure_url;
+
+        // 3. Save the permanent URL to your MySQL database
+        await axios.post(`${API_URL}/api/gallery/add-image/${eventId}`, {
+          image_url: secureUrl,
+        });
+      }
+
+      // 4. Refresh the UI once all images are saved
+      alert("Images uploaded and saved successfully!");
+      fetchEvents();
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("An error occurred during the upload process.");
+    }
   };
 
-  const handleRemoveImage = (eventId, index) => {
-    setEvents((prev) =>
-      prev.map((ev) => {
-        if (ev.id === eventId) {
-          const updated = [...ev.images];
-          updated.splice(index, 1);
-          return { ...ev, images: updated };
-        }
-        return ev;
-      }),
-    );
+  const handleRemoveImage = async (eventId, imageId, imageUrl) => {
+    // 1. Ask for confirmation so users don't accidentally delete
+    if (!window.confirm("Are you sure you want to remove this image?")) return;
+
+    try {
+      // 2. Call your backend to delete from MySQL
+      // Note: It's better to delete by ID if you have it, otherwise use the URL
+      await axios.delete(`${API_URL}/api/gallery/delete-image`, {
+        data: { eventId, imageUrl },
+      });
+
+      // 3. Update local state so the UI reflects the change immediately
+      setEvents((prev) =>
+        prev.map((ev) => {
+          if (ev.id === eventId) {
+            const updated = ev.images.filter((img) => img !== imageUrl);
+            return { ...ev, images: updated };
+          }
+          return ev;
+        }),
+      );
+
+      alert("Image removed successfully.");
+    } catch (error) {
+      console.error("Failed to remove image:", error);
+      alert("Could not delete the image from the database.");
+    }
   };
 
   return (
