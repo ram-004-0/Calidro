@@ -132,11 +132,7 @@ export default function BookingPage({ onNext }) {
 
     const fetchBookings = async () => {
       try {
-        console.log("Fetching from:", `${API_URL}/api/bookings/all`); // Debug check
         const response = await axios.get(`${API_URL}/api/bookings/all`);
-
-        console.log("API Response:", response.data); // Debug check
-
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
@@ -147,7 +143,6 @@ export default function BookingPage({ onNext }) {
     };
 
     fetchBookings();
-
     return () => window.removeEventListener("resize", handleResize);
   }, []); // Empty dependency array ensures this runs once on mount
 
@@ -170,16 +165,19 @@ export default function BookingPage({ onNext }) {
     const dateStr = format(date, "yyyy-MM-dd");
     const isPastDate = isBefore(date, startOfToday());
     const isBooked = bookedDates.includes(dateStr);
-    const isUnavailableDate = isUnavailable(date);
 
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
-    if (isUnavailableDate || isBooked) {
-      return "bg-red-300 cursor-not-allowed";
-    }
-    if (isPastDate) {
-      return "bg-gray-100 text-gray-300 cursor-not-allowed";
-    }
+
+    // PRIORITY: If it is booked (including completed events from DB), show RED
+    if (isBooked) return "bg-red-300 cursor-not-allowed";
+
+    // If it's not booked but it's in the past, show GRAY
+    if (isPastDate) return "bg-gray-100 text-gray-300 cursor-not-allowed";
+
+    // Selection state
     if (selectedDate && isSameDay(date, selectedDate)) return "bg-yellow-300";
+
+    // Default available state
     return "bg-green-200 hover:bg-green-300 cursor-pointer";
   };
 
