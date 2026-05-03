@@ -136,27 +136,12 @@ export default function BookingPage({ onNext }) {
         const formattedDates = response.data
           .map((b) => {
             if (!b.event_date) return null;
-
-            // Instead of splitting strings, let's create a real Date object
-            // and format it. This is much safer for MySQL 'DATE' types.
-            // We use the first 10 chars (YYYY-MM-DD) to avoid time-shift.
             const dateOnly = b.event_date.substring(0, 10);
             return dateOnly;
           })
           .filter(Boolean);
 
-        const todayStr = format(new Date(), "yyyy-MM-dd");
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
-
-        console.log("FINAL BOOKED ARRAY:", [
-          ...formattedDates,
-          todayStr,
-          tomorrowStr,
-        ]);
-
-        setBookedDates([...formattedDates, todayStr, tomorrowStr]);
+        setBookedDates([...formattedDates]);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
         setBookedDates([format(new Date(), "yyyy-MM-dd")]);
