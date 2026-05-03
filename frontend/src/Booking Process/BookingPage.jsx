@@ -133,9 +133,11 @@ export default function BookingPage({ onNext }) {
     const fetchBookings = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
+        console.log("Raw Bookings from Server:", response.data);
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
+        console.log("Formatted Booked Dates:", formattedDates);
         setBookedDates(formattedDates);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
@@ -459,7 +461,6 @@ export default function BookingPage({ onNext }) {
           {/* Reduced gap and py-3 to py-2 to shrink height */}
 
           <div className="grid grid-cols-7 gap-1 text-center">
-            {/* ... inside the days.map loop ... */}
             {days.map((day) => {
               const dateStr = format(day, "yyyy-MM-dd");
               const isPast = isBefore(day, startOfToday());
