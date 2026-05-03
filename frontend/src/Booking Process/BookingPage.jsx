@@ -126,33 +126,42 @@ export default function BookingPage({ onNext }) {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    //view from mobile
+    // View from mobile
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
 
     const fetchBookings = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
-        const formattedDates = response.data.map((b) =>
-          format(new Date(b.event_date), "yyyy-MM-dd"),
-        );
 
-        // Target TODAY and TOMORROW so you can see them immediately
+        // Robust Date Parsing:
+        // We split the string by 'T' to get just the YYYY-MM-DD part
+        // to avoid timezone shifting.
+        const formattedDates = response.data.map((b) => {
+          const datePart = b.event_date.split("T")[0];
+          return datePart;
+        });
+
+        // Test Dates (Today and Tomorrow)
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
 
-        console.log("Setting Booked Dates to include:", todayStr, tomorrowStr);
+        console.log("Database Dates:", formattedDates);
+        console.log("Injecting Test Dates:", todayStr, tomorrowStr);
+
+        // Combine everything into state
         setBookedDates([...formattedDates, todayStr, tomorrowStr]);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
-        // Even if the fetch fails, set the test dates so we can see the colors
+        // Fallback for UI testing if server is down
         setBookedDates([format(new Date(), "yyyy-MM-dd")]);
       }
     };
 
     fetchBookings();
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const unavailableDates = [...bookedDates];
