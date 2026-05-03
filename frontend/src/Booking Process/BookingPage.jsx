@@ -169,7 +169,8 @@ export default function BookingPage({ onNext }) {
 
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const isPastDate = isBefore(date, startOfToday());
+    const isPastDate =
+      isBefore(date, startOfToday()) || isSameDay(date, startOfToday());
     const isBooked = bookedDates.includes(dateStr);
 
     // 1. Outside of current month
@@ -473,7 +474,8 @@ export default function BookingPage({ onNext }) {
           <div className="grid grid-cols-7 gap-1 text-center">
             {days.map((day) => {
               const dateStr = format(day, "yyyy-MM-dd");
-              const isPast = isBefore(day, startOfToday());
+              const isPast =
+                isBefore(day, startOfToday()) || isSameDay(day, startOfToday());
               const isBooked = bookedDates.includes(dateStr);
 
               // A date is disabled if it's in the past OR if it's already booked
