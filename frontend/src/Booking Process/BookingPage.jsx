@@ -459,14 +459,14 @@ export default function BookingPage({ onNext }) {
           {/* Reduced gap and py-3 to py-2 to shrink height */}
 
           <div className="grid grid-cols-7 gap-1 text-center">
+            {/* ... inside the days.map loop ... */}
             {days.map((day) => {
+              const dateStr = format(day, "yyyy-MM-dd");
               const isPast = isBefore(day, startOfToday());
+              const isBooked = bookedDates.includes(dateStr);
 
-              const isBooked = bookedDates.includes(format(day, "yyyy-MM-dd"));
-
-              const isUnavailableDate = isUnavailable(day);
-
-              const isDisabled = isPast || isBooked || isUnavailableDate;
+              // A date is disabled if it's in the past OR if it's already booked
+              const isDisabled = isPast || isBooked;
 
               return (
                 <div
@@ -474,13 +474,10 @@ export default function BookingPage({ onNext }) {
                   onClick={() => {
                     if (!isDisabled) {
                       setSelectedDate(day);
-
                       setSelectedTime("");
                     }
                   }}
-                  className={`py-3 rounded-xl text-sm font-semibold transition ${getDayStyle(day)} ${
-                    isDisabled ? "cursor-not-allowed" : "cursor-pointer"
-                  }`}
+                  className={`py-3 rounded-xl text-sm font-semibold transition ${getDayStyle(day)}`}
                 >
                   {format(day, "d")}
                 </div>
