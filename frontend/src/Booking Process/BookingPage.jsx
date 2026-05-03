@@ -133,21 +133,27 @@ export default function BookingPage({ onNext }) {
     const fetchBookings = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
-        console.log("Raw Bookings from Server:", response.data);
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
-        // ADD THESE TWO LINES FOR TESTING:
-        const testDates = ["2024-05-01", "2024-05-15", "2024-05-20"];
-        setBookedDates([...formattedDates, ...testDates]);
+
+        // Target TODAY and TOMORROW so you can see them immediately
+        const todayStr = format(new Date(), "yyyy-MM-dd");
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
+
+        console.log("Setting Booked Dates to include:", todayStr, tomorrowStr);
+        setBookedDates([...formattedDates, todayStr, tomorrowStr]);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
+        // Even if the fetch fails, set the test dates so we can see the colors
+        setBookedDates([format(new Date(), "yyyy-MM-dd")]);
       }
     };
 
     fetchBookings();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
   const unavailableDates = [...bookedDates];
   const monthStart = startOfMonth(currentMonth);
@@ -167,21 +173,27 @@ export default function BookingPage({ onNext }) {
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
     const isPastDate = isBefore(date, startOfToday());
-    const isBooked = bookedDates.includes(dateStr);
+    const isBooked = bookedDates.includes(dateStr); // Use bookedDates directly
 
+    // 1. Outside of current month
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
 
-    // 1. If it is booked (even if in the past), it MUST be Red
-    if (isBooked) return "bg-red-300 cursor-not-allowed text-white";
+    // 2. PRIORITY: If it is booked, it MUST be Red (even if it's in the past)
+    if (isBooked) {
+      return "bg-red-300 cursor-not-allowed text-white";
+    }
 
-    // 2. If it is a past date (but not booked), it should be Gray
-    if (isPastDate) return "bg-gray-100 text-gray-300 cursor-not-allowed";
+    // 3. If it is a past date (but NOT booked)
+    if (isPastDate) {
+      return "bg-gray-100 text-gray-300 cursor-not-allowed";
+    }
 
-    // 3. If it is the currently selected date
-    if (selectedDate && isSameDay(date, selectedDate))
+    // 4. If it is the selected date
+    if (selectedDate && isSameDay(date, selectedDate)) {
       return "bg-yellow-300 font-bold";
+    }
 
-    // 4. Otherwise, it is available
+    // 5. Available
     return "bg-green-200 hover:bg-green-300 cursor-pointer";
   };
 
