@@ -99,18 +99,16 @@ export default function BookingPage({ onNext }) {
 
   const updateBookingOnly = async (payload) => {
     try {
-      // Log the full URL to your console to verify it's correct
-      const url = `${API_URL}/api/bookings/reschedule/${rescheduleData.id}`;
-      console.log("Sending PUT to:", url);
+      // Change 'id' to 'booking_id' to match your SQL schema
+      const bId = rescheduleData.booking_id || rescheduleData.id;
+      const url = `${API_URL}/api/bookings/reschedule/${bId}`;
 
-      const response = await axios.put(url, payload);
+      console.log("Sending PUT to:", url);
+      await axios.put(url, payload);
       alert("Booking updated successfully!");
     } catch (err) {
-      // If this is still 404, the URL string above is wrong for your backend setup
       console.error("Update failed:", err.response?.data || err.message);
-      alert(
-        "Failed to update booking. Server responded with 404: Check if the route exists.",
-      );
+      alert("Failed to update booking. Check console for details.");
     }
   };
 
@@ -126,7 +124,6 @@ export default function BookingPage({ onNext }) {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    // View from mobile
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
 
@@ -134,23 +131,30 @@ export default function BookingPage({ onNext }) {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
 
+        console.log("RAW DATA FROM DB:", response.data); // Look at this in F12 console!
+
         const formattedDates = response.data
           .map((b) => {
-            // 1. Use b.event_date (matching your SQL column)
-            // 2. Ensure it is a string before splitting
-            const rawDate = b.event_date;
-            if (!rawDate) return null;
+            if (!b.event_date) return null;
 
-            // SQL DATE usually comes back as "YYYY-MM-DDT00:00:00.000Z"
-            // or "YYYY-MM-DD". We split to be safe.
-            return rawDate.split("T")[0];
+            // Instead of splitting strings, let's create a real Date object
+            // and format it. This is much safer for MySQL 'DATE' types.
+            // We use the first 10 chars (YYYY-MM-DD) to avoid time-shift.
+            const dateOnly = b.event_date.substring(0, 10);
+            return dateOnly;
           })
-          .filter((date) => date !== null); // Remove any empty entries
+          .filter(Boolean);
 
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
+
+        console.log("FINAL BOOKED ARRAY:", [
+          ...formattedDates,
+          todayStr,
+          tomorrowStr,
+        ]);
 
         setBookedDates([...formattedDates, todayStr, tomorrowStr]);
       } catch (err) {
