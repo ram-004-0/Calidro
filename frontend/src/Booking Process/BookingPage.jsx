@@ -137,8 +137,9 @@ export default function BookingPage({ onNext }) {
         const formattedDates = response.data.map((b) =>
           format(new Date(b.event_date), "yyyy-MM-dd"),
         );
-        console.log("Formatted Booked Dates:", formattedDates);
-        setBookedDates(formattedDates);
+        // ADD THESE TWO LINES FOR TESTING:
+        const testDates = ["2024-05-01", "2024-05-15", "2024-05-20"];
+        setBookedDates([...formattedDates, ...testDates]);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
       }
