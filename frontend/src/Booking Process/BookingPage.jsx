@@ -168,16 +168,17 @@ export default function BookingPage({ onNext }) {
 
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
 
-    // PRIORITY: If it is booked (including completed events from DB), show RED
-    if (isBooked) return "bg-red-300 cursor-not-allowed";
+    // 1. If it is booked (even if in the past), it MUST be Red
+    if (isBooked) return "bg-red-300 cursor-not-allowed text-white";
 
-    // If it's not booked but it's in the past, show GRAY
+    // 2. If it is a past date (but not booked), it should be Gray
     if (isPastDate) return "bg-gray-100 text-gray-300 cursor-not-allowed";
 
-    // Selection state
-    if (selectedDate && isSameDay(date, selectedDate)) return "bg-yellow-300";
+    // 3. If it is the currently selected date
+    if (selectedDate && isSameDay(date, selectedDate))
+      return "bg-yellow-300 font-bold";
 
-    // Default available state
+    // 4. Otherwise, it is available
     return "bg-green-200 hover:bg-green-300 cursor-pointer";
   };
 
