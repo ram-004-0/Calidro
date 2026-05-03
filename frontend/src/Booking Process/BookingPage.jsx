@@ -134,28 +134,27 @@ export default function BookingPage({ onNext }) {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
 
-        // Robust Date Parsing:
-        // We split the string by 'T' to get just the YYYY-MM-DD part
-        // to avoid timezone shifting.
-        const formattedDates = response.data.map((b) => {
-          const datePart = b.event_date.split("T")[0];
-          return datePart;
-        });
+        const formattedDates = response.data
+          .map((b) => {
+            // 1. Use b.event_date (matching your SQL column)
+            // 2. Ensure it is a string before splitting
+            const rawDate = b.event_date;
+            if (!rawDate) return null;
 
-        // Test Dates (Today and Tomorrow)
+            // SQL DATE usually comes back as "YYYY-MM-DDT00:00:00.000Z"
+            // or "YYYY-MM-DD". We split to be safe.
+            return rawDate.split("T")[0];
+          })
+          .filter((date) => date !== null); // Remove any empty entries
+
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
 
-        console.log("Database Dates:", formattedDates);
-        console.log("Injecting Test Dates:", todayStr, tomorrowStr);
-
-        // Combine everything into state
         setBookedDates([...formattedDates, todayStr, tomorrowStr]);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
-        // Fallback for UI testing if server is down
         setBookedDates([format(new Date(), "yyyy-MM-dd")]);
       }
     };
@@ -182,7 +181,7 @@ export default function BookingPage({ onNext }) {
   const getDayStyle = (date) => {
     const dateStr = format(date, "yyyy-MM-dd");
     const isPastDate = isBefore(date, startOfToday());
-    const isBooked = bookedDates.includes(dateStr); // Use bookedDates directly
+    const isBooked = bookedDates.includes(dateStr);
 
     // 1. Outside of current month
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
