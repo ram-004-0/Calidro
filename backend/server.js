@@ -199,7 +199,27 @@ app.get("/api/settings/home-cards", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// DELETE: Remove an event card by ID
+app.delete("/api/settings/event-cards/delete/:id", async (req, res) => {
+  const { id } = req.params; // Get the ID from the URL
+  try {
+    const [result] = await db.query(
+      "DELETE FROM events_overview_card WHERE events_overview_id = ?",
+      [id],
+    );
 
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Card not found" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Card deleted successfully" });
+  } catch (error) {
+    console.error("Backend delete error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 // POST: Save or Update a home card
 app.post("/api/settings/home-cards", async (req, res) => {
   const { id, title, description, imageUrl, userId } = req.body;
