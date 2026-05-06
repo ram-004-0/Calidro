@@ -108,7 +108,6 @@ const OverviewEvents = () => {
         </div>
       </div>
 
-      {/* Style block for the clean scrollbar */}
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           height: 6px;
@@ -117,7 +116,7 @@ const OverviewEvents = () => {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #f4dfba;
+          background: #433633;
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -125,7 +124,7 @@ const OverviewEvents = () => {
         }
         .custom-scrollbar {
           scrollbar-width: thin;
-          scrollbar-color: #f4dfba transparent;
+          scrollbar-color: #433633 transparent;
         }
       `}</style>
     </div>
