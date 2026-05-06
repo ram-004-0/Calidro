@@ -143,13 +143,16 @@ const UserGallery = () => {
               <div className="flex justify-center items-center h-full text-[#4a3733] font-bold animate-pulse uppercase">
                 Loading Previous Events...
               </div>
-            ) : events.length > 0 ? (
-              events.map((event, i) => (
+            ) : filteredAndSortedEvents.length > 0 ? (
+              /* We map over the filtered list so the UI updates when you type or filter */
+              filteredAndSortedEvents.map((event, i) => (
                 <UserGalleryCard key={event.id || i} event={event} />
               ))
             ) : (
               <div className="text-center py-20 text-gray-400 italic">
-                No events found.
+                {searchTerm || eventType
+                  ? "No events match your search criteria."
+                  : "No events found."}
               </div>
             )}
           </div>
