@@ -99,29 +99,20 @@ const AdminGallery = () => {
   };
 
   const handleDelete = async () => {
-    if (!selectedId) return;
-
-    if (!window.confirm("Are you sure you want to delete this event?")) return;
-
-    try {
-      // Corrected the path from /api/settings/event-cards/ to /api/gallery/delete/
-      const res = await fetch(`${API_URL}/api/gallery/delete/${selectedId}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
-        alert("Event deleted successfully!");
+    if (
+      selectedId &&
+      window.confirm("Are you sure you want to delete this event?")
+    ) {
+      try {
+        await axios.delete(`${API_URL}/api/gallery/delete/${selectedId}`);
+        setEvents(events.filter((item) => item.id !== selectedId));
         setSelectedId(null);
-        fetchEvents(); // Refresh the list
-      } else {
-        // If you still get a 404 here, the backend route /api/gallery/delete/:id is missing
-        const errorData = await res.json();
-        alert(`Delete failed: ${errorData.error || "Check backend routes"}`);
+      } catch (error) {
+        console.error("Delete failed:", error);
       }
-    } catch (err) {
-      console.error("Error deleting card:", err);
     }
   };
+
   // --- PLACEHOLDERS FOR FUTURE LOGIC ---
   const handleUpdateEvent = async (id, updatedData) => {
     try {
