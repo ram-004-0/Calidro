@@ -68,8 +68,8 @@ const UserGallery = () => {
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full overflow-x-hidden">
       <UserHeader />
 
-      <section className="relative pb-10 w-full flex-1 px-4 md:px-0">
-        <div className="w-full max-w-[1460px] mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 h-[596px] flex flex-col transition-all">
+      <section className="relative pb-2 w-full flex-1 px-4 md:px-0">
+        <div className="w-full max-w-[1460px] mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 h-[600px] flex flex-col transition-all">
           <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 uppercase">
             Previous Events
           </h1>
