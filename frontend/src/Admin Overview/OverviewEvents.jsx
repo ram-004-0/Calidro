@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import OverviewEventCard from "../Props/OverviewEventCard";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const API_URL = "https://calidro-production.up.railway.app";
 
