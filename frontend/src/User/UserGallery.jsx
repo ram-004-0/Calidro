@@ -21,32 +21,22 @@ const UserGallery = () => {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/previous-events`);
 
-      // FIX: Only set events using the actual response data
-      // Removed setEvents(formattedData) because formattedData doesn't exist
-      setEvents(response.data);
+      // Ensure data is an array before setting state
+      if (Array.isArray(response.data)) {
+        setEvents(response.data);
+      } else {
+        setEvents([]);
+      }
     } catch (error) {
       console.error("Error fetching gallery:", error);
-      setError("Failed to load gallery events.");
+      setEvents([]); // Fallback to empty list on error
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Call both fetchers properly
     fetchEvents();
-
-    const fetchBookings = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/bookings/all-bookings`);
-        const data = await response.json();
-        setEventsData(data);
-      } catch (err) {
-        console.error("Failed to load bookings", err);
-      }
-    };
-
-    fetchBookings();
   }, []);
 
   const filteredAndSortedEvents = events
