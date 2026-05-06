@@ -8,6 +8,19 @@ const OverviewEvents = () => {
   const [cards, setCards] = useState([]);
   const [editingCardIndex, setEditingCardIndex] = useState(null);
 
+  // --- NEW: Scroll Function ---
+  const scroll = (direction) => {
+    if (galleryRef.current) {
+      const { scrollLeft, clientWidth } = galleryRef.current;
+      const scrollTo =
+        direction === "left"
+          ? scrollLeft - clientWidth / 2
+          : scrollLeft + clientWidth / 2;
+
+      galleryRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
+    }
+  };
+
   const fetchCards = async () => {
     try {
       const response = await fetch(`${API_URL}/api/settings/event-cards`);
@@ -30,7 +43,8 @@ const OverviewEvents = () => {
       image_url: null,
     };
     setCards([newCard, ...cards]);
-    setEditingCardIndex(0); // Set the newly added card to be ready for editing
+    setEditingCardIndex(0);
+    galleryRef.current.scrollTo({ left: 0, behavior: "smooth" });
   };
 
   const deleteCard = async (cardId, index) => {
@@ -71,6 +85,20 @@ const OverviewEvents = () => {
       <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
         Events Overview
       </h1>
+      <div className="flex gap-2">
+        <button
+          onClick={() => scroll("left")}
+          className="p-2 bg-white border border-[#4a3733] rounded-full hover:bg-[#f4dfba] transition-colors"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <button
+          onClick={() => scroll("right")}
+          className="p-2 bg-white border border-[#4a3733] rounded-full hover:bg-[#f4dfba] transition-colors"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
       <button
         onClick={addCard}
         className="px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all mb-4"

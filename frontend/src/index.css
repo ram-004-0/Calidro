@@ -35,3 +35,26 @@ html {
 .pill {
   @apply bg-white rounded-full px-6 py-2;
 }
+
+/* Custom Scrollbar for the Gallery */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #f4dfba; /* Matches your button color */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4a3733; /* Matches your text color */
+}
+
+.scroll-snap-align-start {
+  scroll-snap-align: start;
+}
