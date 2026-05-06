@@ -326,10 +326,57 @@ const AdminGallery = () => {
                       onChange={(e) =>
                         setNewEvent({ ...newEvent, event_type: e.target.value })
                       }
+                      required
                     >
-                      <option value="Wedding">Wedding</option>
-                      <option value="Corporate">Corporate</option>
-                      <option value="Other">Other</option>
+                      <option value="" disabled>
+                        Select an event type
+                      </option>
+
+                      <optgroup label="Social Events">
+                        <option value="Birthday Party">Birthday Party</option>
+                        <option value="Debut">Debut (18th Birthday)</option>
+                        <option value="Wedding Ceremony">
+                          Wedding Ceremony
+                        </option>
+                        <option value="Wedding Reception">
+                          Wedding Reception
+                        </option>
+                        <option value="Anniversary">
+                          Anniversary Celebration
+                        </option>
+                      </optgroup>
+
+                      <optgroup label="Family Milestones">
+                        <option value="Baby Shower">Baby Shower</option>
+                        <option value="Gender Reveal">Gender Reveal</option>
+                        <option value="Baptism">Baptism / Christening</option>
+                        <option value="Graduation Party">
+                          Graduation Party
+                        </option>
+                      </optgroup>
+
+                      <optgroup label="Corporate Events">
+                        <option value="Corporate Meeting">
+                          Corporate Meeting
+                        </option>
+                        <option value="Seminar">Seminar / Workshop</option>
+                        <option value="Conference">Conference</option>
+                        <option value="Team Building">
+                          Team Building Event
+                        </option>
+                        <option value="Company Party">Company Party</option>
+                      </optgroup>
+
+                      <optgroup label="Creative / Others">
+                        <option value="Exhibit">Exhibit / Art Showcase</option>
+                        <option value="Pop-up Market">
+                          Pop-up Market / Bazaar
+                        </option>
+                        <option value="Photoshoot">
+                          Photoshoot / Studio Rental
+                        </option>
+                        <option value="Other">Other</option>
+                      </optgroup>
                     </select>
                     <textarea
                       value={newEvent.description}
