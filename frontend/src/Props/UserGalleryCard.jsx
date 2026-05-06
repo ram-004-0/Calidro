@@ -29,12 +29,18 @@ const UserGalleryCard = ({ event }) => {
         </div>
 
         {[0, 1, 2].map((index) => {
-          const imgPath = index === 0 ? event?.image : null;
+          // 1. Get the path (e.g., "http://res.cloudinary.com/...")
           const imgPath =
             event.images && event.images[index] ? event.images[index] : null;
+
+          // 2. Decide the URL:
+          // If it's Cloudinary (starts with http), use it as is.
+          // Otherwise, use the API_URL prefix.
           const fullImgUrl = imgPath?.startsWith("http")
             ? imgPath
-            : `${API_URL}/${imgPath}`;
+            : imgPath
+              ? `${API_URL}/${imgPath}`
+              : null;
 
           return (
             <div
