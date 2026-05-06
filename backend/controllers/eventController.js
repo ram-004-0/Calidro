@@ -22,7 +22,6 @@ exports.getPreviousEvents = async (req, res) => {
     // Format the data so the frontend gets exactly what it expects
     const formattedRows = rows.map((row) => ({
       ...row,
-      // If image_list is null, return empty array; otherwise split string into array
       images: row.image_list ? row.image_list.split(",") : [],
     }));
 
