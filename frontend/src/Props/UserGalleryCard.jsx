@@ -14,7 +14,16 @@ const UserGalleryCard = ({ event }) => {
           <p className="text-xs md:text-sm">
             Date:{" "}
             <span className="font-semibold">
-              {event.date || event.event_date}
+              {event.date || event.event_date
+                ? new Date(event.date || event.event_date).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    },
+                  )
+                : "N/A"}
             </span>
           </p>
           <p className="text-xs md:text-sm">
