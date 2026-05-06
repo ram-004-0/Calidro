@@ -1,5 +1,5 @@
 import React from "react";
-
+const API_URL = "https://calidro-production.up.railway.app";
 const UserGalleryCard = ({ event }) => {
   if (!event) return null;
 
@@ -12,7 +12,10 @@ const UserGalleryCard = ({ event }) => {
             <strong className="text-[#4a3733]">{event.title}</strong>
           </p>
           <p className="text-xs md:text-sm">
-            Date: <span className="font-semibold">{event.date}</span>
+            Date:{" "}
+            <span className="font-semibold">
+              {event.date || event.event_date}
+            </span>
           </p>
           <p className="text-xs md:text-sm">
             Type of Event: <span className="font-semibold">{event.type}</span>
@@ -25,11 +28,13 @@ const UserGalleryCard = ({ event }) => {
           </div>
         </div>
 
-        {/* Columns 2, 3, 4: Images */}
-        {/* We map up to 3 slots. If the DB has fewer images, we show a placeholder 
-            to keep your 4-column structure looking perfect. */}
         {[0, 1, 2].map((index) => {
-          const img = event?.images?.[index];
+          const imgPath = event?.images?.[index];
+
+          // FIX: Check if path is already a full URL (http), if not, prefix it
+          const fullImgUrl = imgPath?.startsWith("http")
+            ? imgPath
+            : `${API_URL}/${imgPath}`;
           return (
             <div
               key={index}
