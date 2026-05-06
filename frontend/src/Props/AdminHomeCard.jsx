@@ -107,7 +107,7 @@ const AdminHomeCard = ({
               <Ellipsis size={18} />
             </button>
             <button
-              onClick={onDelete}
+              onClick={() => onDelete(cardData.home_id)}
               className="p-1 hover:bg-red-50 text-red-600 rounded-full transition"
             >
               <Minus size={18} />

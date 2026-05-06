@@ -99,20 +99,41 @@ const AdminGallery = () => {
   };
 
   const handleDelete = async () => {
-    if (
-      selectedId &&
-      window.confirm("Are you sure you want to delete this event?")
-    ) {
-      try {
-        await axios.delete(`${API_URL}/api/gallery/delete/${selectedId}`);
-        setEvents(events.filter((item) => item.id !== selectedId));
+    // 1. Safety check: Prevent execution if no ID is selected
+    if (!selectedId) {
+      alert("Please select an event to delete.");
+      return;
+    }
+
+    // 2. User confirmation
+    if (!window.confirm("Are you sure you want to delete this gallery event?"))
+      return;
+
+    try {
+      // 3. Execute the DELETE request to the gallery endpoint
+      const res = await fetch(`${API_URL}/api/gallery/delete/${selectedId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        alert("Event deleted successfully!");
+
+        // 4. Reset selection state so the "Delete" button becomes disabled again
         setSelectedId(null);
-      } catch (error) {
-        console.error("Delete failed:", error);
+
+        // 5. Refresh the list from the server to reflect changes in the UI
+        fetchEvents();
+      } else {
+        // Handle server-side errors (e.g., 404 or 500)
+        const errorData = await res.json();
+        alert(`Delete failed: ${errorData.error || "Server error"}`);
       }
+    } catch (err) {
+      // Handle network errors
+      console.error("Error during deletion:", err);
+      alert("Could not connect to the server to delete this event.");
     }
   };
-
   // --- PLACEHOLDERS FOR FUTURE LOGIC ---
   const handleUpdateEvent = async (id, updatedData) => {
     try {
