@@ -9,16 +9,11 @@ exports.getPreviousEvents = async (req, res) => {
         pe.event_type AS type, 
         pe.event_date AS date, 
         pe.description,
-        GROUP_CONCAT(pei.image_url) AS image_list
+        GROUP_CONCAT(pei.image_url SEPARATOR ',') AS image_list
       FROM previous_events pe
       LEFT JOIN previous_events_images pei 
         ON pe.previous_events_id = pei.previous_events_id
-      GROUP BY 
-        pe.previous_events_id, 
-        pe.title, 
-        pe.event_type, 
-        pe.event_date, 
-        pe.description
+      GROUP BY pe.previous_events_id
       ORDER BY pe.event_date DESC
     `;
 
