@@ -29,7 +29,7 @@ const UserGalleryCard = ({ event }) => {
         </div>
 
         {[0, 1, 2].map((index) => {
-          const imgPath = event?.images?.[index];
+          const imgPath = index === 0 ? event?.image : null;
 
           // FIX: Check if path is already a full URL (http), if not, prefix it
           const fullImgUrl = imgPath?.startsWith("http")
