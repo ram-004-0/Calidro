@@ -59,8 +59,8 @@ const UserGallery = () => {
       return matchesType && matchesSearch;
     })
     .sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
+      const dateA = new Date(a.event_date).getTime();
+      const dateB = new Date(b.event_date).getTime();
       return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
     });
 
