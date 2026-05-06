@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
 import OverviewEventCard from "../Props/OverviewEventCard";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const API_URL = "https://calidro-production.up.railway.app";
 
@@ -8,19 +7,6 @@ const OverviewEvents = () => {
   const galleryRef = useRef(null);
   const [cards, setCards] = useState([]);
   const [editingCardIndex, setEditingCardIndex] = useState(null);
-
-  // --- NEW: Scroll Function ---
-  const scroll = (direction) => {
-    if (galleryRef.current) {
-      const { scrollLeft, clientWidth } = galleryRef.current;
-      const scrollTo =
-        direction === "left"
-          ? scrollLeft - clientWidth / 2
-          : scrollLeft + clientWidth / 2;
-
-      galleryRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
-    }
-  };
 
   const fetchCards = async () => {
     try {
@@ -95,37 +81,53 @@ const OverviewEvents = () => {
       </button>
 
       <div className="relative w-full">
-        <button
-          onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/80 backdrop-blur-sm border-2 border-[#4a3733] rounded-full shadow-lg hover:bg-[#f4dfba] transition-all -ml-4 opacity-0 group-hover:opacity-100"
-        >
-          <ChevronLeft size={24} className="text-[#4a3733]" />
-        </button>
+        {/* 
+            - snap-x snap-mandatory: enables horizontal scroll snapping
+            - custom-scrollbar: class for the thin styling below
+        */}
         <div
           ref={galleryRef}
-          className="flex gap-6 overflow-x-auto scroll-smooth px-10 py-2"
-          style={{ scrollbarWidth: "none" }}
+          className="flex gap-6 overflow-x-auto scroll-smooth px-10 py-4 snap-x snap-mandatory custom-scrollbar"
         >
           {cards.map((card, index) => (
-            <OverviewEventCard
+            <div
               key={card.events_overview_id || `new-${index}`}
-              cardData={card}
-              onDelete={() => deleteCard(card.events_overview_id, index)}
-              onRefresh={fetchCards}
-              isEditing={editingCardIndex === index}
-              setEditingCard={(editing) =>
-                setEditingCardIndex(editing ? index : null)
-              }
-            />
+              className="snap-start shrink-0"
+            >
+              <OverviewEventCard
+                cardData={card}
+                onDelete={() => deleteCard(card.events_overview_id, index)}
+                onRefresh={fetchCards}
+                isEditing={editingCardIndex === index}
+                setEditingCard={(editing) =>
+                  setEditingCardIndex(editing ? index : null)
+                }
+              />
+            </div>
           ))}
         </div>
-        <button
-          onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/80 backdrop-blur-sm border-2 border-[#4a3733] rounded-full shadow-lg hover:bg-[#f4dfba] transition-all -mr-4 opacity-0 group-hover:opacity-100"
-        >
-          <ChevronRight size={24} className="text-[#4a3733]" />
-        </button>
       </div>
+
+      {/* Style block for the clean scrollbar */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #f4dfba;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #4a3733;
+        }
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #f4dfba transparent;
+        }
+      `}</style>
     </div>
   );
 };
