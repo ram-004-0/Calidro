@@ -43,10 +43,20 @@ const OverviewEvents = () => {
 
     if (cardId) {
       try {
-        await fetch(`${API_URL}/api/settings/event-cards/${cardId}`, {
-          method: "DELETE",
-        });
-        fetchCards(); // Refresh from DB
+        // Change the URL to include /delete/ if your backend requires it
+        const response = await fetch(
+          `${API_URL}/api/settings/event-cards/delete/${cardId}`,
+          {
+            method: "DELETE",
+          },
+        );
+
+        if (response.ok) {
+          fetchCards(); // Refresh from DB
+        } else {
+          console.error("Server returned an error:", response.status);
+          alert("Delete failed on the server. Check backend routes.");
+        }
       } catch (err) {
         console.error("Delete failed:", err);
       }
