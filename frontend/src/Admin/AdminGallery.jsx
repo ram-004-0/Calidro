@@ -99,39 +99,27 @@ const AdminGallery = () => {
   };
 
   const handleDelete = async () => {
-    // 1. Safety check: Prevent execution if no ID is selected
-    if (!selectedId) {
-      alert("Please select an event to delete.");
-      return;
-    }
+    if (!selectedId) return;
 
-    // 2. User confirmation
-    if (!window.confirm("Are you sure you want to delete this gallery event?"))
-      return;
+    if (!window.confirm("Are you sure you want to delete this event?")) return;
 
     try {
-      // 3. Execute the DELETE request to the gallery endpoint
+      // Corrected the path from /api/settings/event-cards/ to /api/gallery/delete/
       const res = await fetch(`${API_URL}/api/gallery/delete/${selectedId}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
         alert("Event deleted successfully!");
-
-        // 4. Reset selection state so the "Delete" button becomes disabled again
         setSelectedId(null);
-
-        // 5. Refresh the list from the server to reflect changes in the UI
-        fetchEvents();
+        fetchEvents(); // Refresh the list
       } else {
-        // Handle server-side errors (e.g., 404 or 500)
+        // If you still get a 404 here, the backend route /api/gallery/delete/:id is missing
         const errorData = await res.json();
-        alert(`Delete failed: ${errorData.error || "Server error"}`);
+        alert(`Delete failed: ${errorData.error || "Check backend routes"}`);
       }
     } catch (err) {
-      // Handle network errors
-      console.error("Error during deletion:", err);
-      alert("Could not connect to the server to delete this event.");
+      console.error("Error deleting card:", err);
     }
   };
   // --- PLACEHOLDERS FOR FUTURE LOGIC ---
