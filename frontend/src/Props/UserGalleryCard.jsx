@@ -41,11 +41,15 @@ const UserGalleryCard = ({ event }) => {
               key={index}
               className="bg-white border border-gray-100 p-2 rounded-lg shadow-inner flex items-center justify-center overflow-hidden h-full"
             >
-              {img ? (
+              {imgPath ? (
                 <img
                   src={fullImgUrl}
                   alt={`event-${index}`}
                   className="w-full h-full object-cover rounded shadow-sm"
+                  onError={(e) => {
+                    e.target.src =
+                      "https://via.placeholder.com/300?text=Image+Not+Found";
+                  }}
                 />
               ) : (
                 <div className="flex flex-col items-center opacity-20">
