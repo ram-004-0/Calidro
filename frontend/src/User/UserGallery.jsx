@@ -8,6 +8,7 @@ const API_URL = "https://calidro-production.up.railway.app";
 const UserGallery = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState("newest");
 
   // --- FETCH DATA FROM DATABASE ---
   const fetchEvents = async () => {
@@ -50,11 +51,43 @@ const UserGallery = () => {
           {/* Search/Filter Bar */}
           <div className="overflow-x-auto no-scrollbar mb-4 flex-shrink-0">
             <div className="grid grid-cols-3 gap-6 md:gap-10 min-w-[700px] lg:min-w-full">
-              <select className="bg-white border border-gray-300 rounded-full p-3 outline-none cursor-pointer text-sm md:text-base">
-                <option>Type of event</option>
-                <option>Wedding</option>
-                <option>Birthday</option>
-                <option>Corporate</option>
+              <select
+                className="bg-white border border-gray-300 rounded-full p-3 outline-none cursor-pointer text-sm md:text-base"
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Select an event type
+                </option>
+
+                <optgroup label="Social Events">
+                  <option value="Birthday Party">Birthday Party</option>
+                  <option value="Debut">Debut (18th Birthday)</option>
+                  <option value="Wedding Ceremony">Wedding Ceremony</option>
+                  <option value="Wedding Reception">Wedding Reception</option>
+                  <option value="Anniversary">Anniversary Celebration</option>
+                </optgroup>
+
+                <optgroup label="Family Milestones">
+                  <option value="Baby Shower">Baby Shower</option>
+                  <option value="Gender Reveal">Gender Reveal</option>
+                  <option value="Baptism">Baptism / Christening</option>
+                  <option value="Graduation Party">Graduation Party</option>
+                </optgroup>
+
+                <optgroup label="Corporate Events">
+                  <option value="Corporate Meeting">Corporate Meeting</option>
+                  <option value="Seminar">Seminar / Workshop</option>
+                  <option value="Conference">Conference</option>
+                  <option value="Team Building">Team Building Event</option>
+                  <option value="Company Party">Company Party</option>
+                </optgroup>
+
+                <optgroup label="Creative / Others">
+                  <option value="Exhibit">Exhibit / Art Showcase</option>
+                  <option value="Pop-up Market">Pop-up Market / Bazaar</option>
+                  <option value="Photoshoot">Photoshoot / Studio Rental</option>
+                  <option value="Other">Other</option>
+                </optgroup>
               </select>
 
               <input
@@ -62,10 +95,13 @@ const UserGallery = () => {
                 placeholder="Search"
               />
 
-              <select className="bg-white border border-gray-300 rounded-full p-3 outline-none cursor-pointer text-sm md:text-base">
-                <option>Sort by</option>
-                <option>Date</option>
-                <option>Type</option>
+              <select
+                className="bg-white border rounded-full p-3 outline-none cursor-pointer"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <option value="newest">Newest to Oldest</option>
+                <option value="oldest">Oldest to Newest</option>
               </select>
             </div>
           </div>
