@@ -116,7 +116,7 @@ const OverviewEventCard = ({
           ${isEditing && !localEditing ? "opacity-50" : "opacity-100"}`}
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-gray-600">event card</span>
+          <span className="text-sm text-gray-600">Event Card</span>
           <div className="flex gap-2">
             <button
               onClick={() => setShowMenu(!showMenu)}

@@ -98,7 +98,7 @@ const AdminHomeCard = ({
           ${isDimmed ? "opacity-50 pointer-events-none" : "opacity-100"}`}
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-gray-600">home card</span>
+          <span className="text-sm text-gray-600">Home Card</span>
           <div className="flex gap-2">
             <button
               onClick={() => setShowMenu(!showMenu)}

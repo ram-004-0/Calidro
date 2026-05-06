@@ -81,10 +81,6 @@ const OverviewEvents = () => {
       </button>
 
       <div className="relative w-full">
-        {/* 
-            - snap-x snap-mandatory: enables horizontal scroll snapping
-            - custom-scrollbar: class for the thin styling below
-        */}
         <div
           ref={galleryRef}
           className="flex gap-6 overflow-x-auto scroll-smooth px-10 py-4 snap-x snap-mandatory custom-scrollbar"
