@@ -86,20 +86,7 @@ const OverviewEvents = () => {
       <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase">
         Events Overview
       </h1>
-      <div className="flex gap-2">
-        <button
-          onClick={() => scroll("left")}
-          className="p-2 bg-white border border-[#4a3733] rounded-full hover:bg-[#f4dfba] transition-colors"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <button
-          onClick={() => scroll("right")}
-          className="p-2 bg-white border border-[#4a3733] rounded-full hover:bg-[#f4dfba] transition-colors"
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
+
       <button
         onClick={addCard}
         className="px-6 py-2 bg-[#f4dfba] hover:bg-[#e9d1a8] rounded-full font-bold text-[#4a3733] shadow-md transition-all mb-4"
@@ -108,6 +95,12 @@ const OverviewEvents = () => {
       </button>
 
       <div className="relative w-full">
+        <button
+          onClick={() => scroll("left")}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/80 backdrop-blur-sm border-2 border-[#4a3733] rounded-full shadow-lg hover:bg-[#f4dfba] transition-all -ml-4 opacity-0 group-hover:opacity-100"
+        >
+          <ChevronLeft size={24} className="text-[#4a3733]" />
+        </button>
         <div
           ref={galleryRef}
           className="flex gap-6 overflow-x-auto scroll-smooth px-10 py-2"
@@ -126,6 +119,12 @@ const OverviewEvents = () => {
             />
           ))}
         </div>
+        <button
+          onClick={() => scroll("right")}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/80 backdrop-blur-sm border-2 border-[#4a3733] rounded-full shadow-lg hover:bg-[#f4dfba] transition-all -mr-4 opacity-0 group-hover:opacity-100"
+        >
+          <ChevronRight size={24} className="text-[#4a3733]" />
+        </button>
       </div>
     </div>
   );
