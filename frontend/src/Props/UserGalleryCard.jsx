@@ -35,6 +35,7 @@ const UserGalleryCard = ({ event }) => {
           const fullImgUrl = imgPath?.startsWith("http")
             ? imgPath
             : `${API_URL}/${imgPath}`;
+
           return (
             <div
               key={index}
@@ -42,7 +43,7 @@ const UserGalleryCard = ({ event }) => {
             >
               {img ? (
                 <img
-                  src={img}
+                  src={fullImgUrl}
                   alt={`event-${index}`}
                   className="w-full h-full object-cover rounded shadow-sm"
                 />
