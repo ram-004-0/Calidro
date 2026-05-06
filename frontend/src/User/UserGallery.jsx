@@ -8,15 +8,19 @@ const API_URL = "https://calidro-production.up.railway.app";
 const UserGallery = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Search n Filter Bar States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [eventType, setEventType] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
 
-  // --- FETCH DATA FROM DATABASE ---
+  const [eventsData, setEventsData] = useState([]);
+  const [error, setError] = useState(null);
+
   const fetchEvents = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/gallery/all`);
 
-      // Mapping database fields to the frontend state structure
       const formattedData = response.data.map((ev) => ({
         id: ev.previous_events_id,
         title: ev.title,
@@ -35,8 +39,32 @@ const UserGallery = () => {
   };
 
   useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/bookings/all-bookings`);
+        const data = await response.json();
+        setEventsData(data);
+      } catch (err) {
+        console.error("Failed to load events", err);
+      }
+    };
     fetchEvents();
   }, []);
+
+  const filteredAndSortedEvents = events
+    .filter((event) => {
+      const matchesType = eventType === "" || event.type === eventType;
+      const matchesSearch = event.title
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      return matchesType && matchesSearch;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full overflow-x-hidden">
@@ -53,7 +81,8 @@ const UserGallery = () => {
             <div className="grid grid-cols-3 gap-6 md:gap-10 min-w-[700px] lg:min-w-full">
               <select
                 className="bg-white border border-gray-300 rounded-full p-3 outline-none cursor-pointer text-sm md:text-base"
-                defaultValue=""
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
               >
                 <option value="" disabled>
                   Select an event type
@@ -93,6 +122,8 @@ const UserGallery = () => {
               <input
                 className="bg-white border border-gray-300 rounded-full p-3 outline-none text-sm md:text-base"
                 placeholder="Search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
 
               <select

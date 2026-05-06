@@ -220,7 +220,7 @@ const AdminGallery = () => {
               Previous Events
             </h1>
 
-            {/* Controls */}
+            {/* Search/Filter Bar */}
             <div className="overflow-x-auto no-scrollbar mb-6 flex-shrink-0">
               <div className="grid grid-cols-4 gap-4 md:gap-6 min-w-[800px] lg:min-w-full">
                 <select
