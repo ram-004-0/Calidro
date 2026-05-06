@@ -19,16 +19,8 @@ const UserGallery = () => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/gallery/all`);
-
-      const formattedData = response.data.map((ev) => ({
-        id: ev.previous_events_id,
-        title: ev.title,
-        date: ev.event_date ? ev.event_date.split("T")[0] : "No Date",
-        type: ev.event_type,
-        description: ev.description,
-        images: ev.images || [], // The array of URLs from the backend
-      }));
+      const response = await axios.get(`${API_URL}/api/previous-events`);
+      setEvents(response.data);
 
       setEvents(formattedData);
     } catch (error) {
@@ -39,16 +31,18 @@ const UserGallery = () => {
   };
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    fetchEvents();
+    const fetchBookings = async () => {
       try {
         const response = await fetch(`${API_URL}/api/bookings/all-bookings`);
         const data = await response.json();
         setEventsData(data);
       } catch (err) {
-        console.error("Failed to load events", err);
+        console.error("Failed to load bookings", err);
       }
     };
-    fetchEvents();
+
+    fetchBookings();
   }, []);
 
   const filteredAndSortedEvents = events
