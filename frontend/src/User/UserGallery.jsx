@@ -52,10 +52,16 @@ const UserGallery = () => {
       return matchesType && matchesSearch;
     })
     .sort((a, b) => {
-      // Use fallback dates (0) to prevent getTime() on undefined
-      const dateA = new Date(a?.event_date || 0).getTime();
-      const dateB = new Date(b?.event_date || 0).getTime();
-      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+      // Use 'date' because that is the alias you set in your SQL query
+      // Fallback to 0 if the date is missing
+      const dateA = new Date(a?.date || 0).getTime();
+      const dateB = new Date(b?.date || 0).getTime();
+
+      if (sortOrder === "newest") {
+        return dateB - dateA;
+      } else {
+        return dateA - dateB;
+      }
     });
 
   return (
@@ -119,7 +125,7 @@ const UserGallery = () => {
               />
 
               <select
-                className="bg-white border rounded-full p-3 outline-none cursor-pointer"
+                className="bg-white border border-gray-300 rounded-full p-3 outline-none cursor-pointer text-sm md:text-base"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
               >
