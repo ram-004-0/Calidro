@@ -13,6 +13,7 @@ import {
   XCircle,
   SquarePen,
   Banknote,
+  Star,
 } from "lucide-react";
 import axios from "axios";
 
@@ -341,6 +342,16 @@ const UserBookingCard = ({ booking: initialBooking }) => {
           {booking.bookingStatus !== "completed" &&
           booking.bookingStatus !== "cancelled" ? (
             <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
+              {booking.bookingStatus?.toLowerCase() === "completed" && (
+                <button
+                  onClick={() => navigate(`/rate-event/${booking.booking_id}`)}
+                  className="flex items-center gap-2 rounded-lg border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm font-semibold text-yellow-700 hover:bg-yellow-100 transition-colors"
+                >
+                  <Star size={16} fill="currentColor" />
+                  Rate Event
+                </button>
+              )}
+
               {isEditing ? (
                 // EDIT MODE: Only show Save and Cancel
                 <>
