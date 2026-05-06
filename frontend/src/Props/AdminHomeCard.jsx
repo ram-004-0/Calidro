@@ -182,36 +182,92 @@ const AdminHomeCard = ({
       </div>
 
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-2xl p-6 w-80 relative shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] transition-opacity">
+          <div className="bg-white rounded-3xl p-8 w-[350px] relative shadow-2xl border border-gray-100">
+            {/* Close Button */}
             <button
               onClick={() => setShowUploadModal(false)}
-              className="absolute top-2 right-4 text-xl"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl transition-colors"
             >
               ×
             </button>
-            <h2 className="font-bold text-[#4a3733] mb-4 uppercase">
-              Update Home Photo
+
+            <h2 className="font-bold text-[#4a3733] text-xl mb-6 text-center tracking-tight">
+              UPDATE HOME PHOTO
             </h2>
-            <input
-              type="file"
-              onChange={handleFile}
-              className="text-sm w-full"
-            />
-            <button
-              onClick={async () => {
-                if (selectedFile) {
-                  await saveEdit(); // This triggers the actual Cloudinary upload
-                  setShowUploadModal(false);
-                } else {
-                  alert("Please select a file first");
-                }
-              }}
-              disabled={uploading}
-              className="mt-6 w-full bg-[#4a3733] text-white py-2 rounded-xl font-bold disabled:bg-gray-400"
-            >
-              {uploading ? "Uploading..." : "Upload & Save"}
-            </button>
+
+            <div className="space-y-6">
+              {/* Clickable Upload Area */}
+              <label className="group flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-[#4a3733] hover:bg-gray-50 transition-all">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <svg
+                    className="w-8 h-8 mb-3 text-gray-400 group-hover:text-[#4a3733]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  <p className="text-sm text-gray-500 font-medium">
+                    {selectedFile ? selectedFile.name : "Click to select photo"}
+                  </p>
+                </div>
+                {/* THE HIDDEN INPUT: This is what opens your file explorer */}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFile}
+                />
+              </label>
+
+              {/* Action Button */}
+              <button
+                onClick={async () => {
+                  if (selectedFile) {
+                    // This calls your saveEdit function to send the file to Cloudinary/Railway
+                    await saveEdit();
+                    setShowUploadModal(false);
+                  } else {
+                    alert("Please select a file first");
+                  }
+                }}
+                disabled={uploading}
+                className="w-full bg-[#4a3733] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 disabled:bg-gray-300 disabled:active:scale-100 transition-all"
+              >
+                {uploading ? (
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin h-5 w-5 mr-3 text-white"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Uploading...
+                  </span>
+                ) : (
+                  "Upload & Save"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
