@@ -39,18 +39,22 @@ const UserGallery = () => {
     fetchEvents();
   }, []);
 
-  const filteredAndSortedEvents = events
+  const filteredAndSortedEvents = (events || []) // Ensure events isn't null
     .filter((event) => {
+      if (!event) return false; // Skip null entries
+
       const matchesType = eventType === "" || event.type === eventType;
-      const matchesSearch = event.title
-        ?.toLowerCase()
+      // Use optional chaining and fallback for search
+      const matchesSearch = (event.title || "")
+        .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
       return matchesType && matchesSearch;
     })
     .sort((a, b) => {
-      const dateA = new Date(a.event_date).getTime();
-      const dateB = new Date(b.event_date).getTime();
+      // Use fallback dates (0) to prevent getTime() on undefined
+      const dateA = new Date(a?.event_date || 0).getTime();
+      const dateB = new Date(b?.event_date || 0).getTime();
       return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
     });
 

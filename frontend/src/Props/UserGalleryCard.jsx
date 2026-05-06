@@ -29,7 +29,7 @@ const UserGalleryCard = ({ event }) => {
         {/* We map up to 3 slots. If the DB has fewer images, we show a placeholder 
             to keep your 4-column structure looking perfect. */}
         {[0, 1, 2].map((index) => {
-          const img = event.images[index];
+          const img = event?.images?.[index];
           return (
             <div
               key={index}
