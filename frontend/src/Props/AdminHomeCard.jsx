@@ -28,11 +28,11 @@ const AdminHomeCard = ({
   const saveEdit = async () => {
     setUploading(true);
     try {
-      // 1. Handle Image Upload first (if a new file was selected)
       let finalUrl = image;
       if (selectedFile) {
         const formData = new FormData();
         formData.append("image", selectedFile);
+
         const uploadRes = await fetch(
           `${API_URL}/api/images/upload?category=home`,
           {
@@ -199,10 +199,18 @@ const AdminHomeCard = ({
               className="text-sm w-full"
             />
             <button
-              onClick={() => setShowUploadModal(false)}
-              className="mt-6 w-full bg-[#4a3733] text-white py-2 rounded-xl font-bold"
+              onClick={async () => {
+                if (selectedFile) {
+                  await saveEdit(); // This triggers the actual Cloudinary upload
+                  setShowUploadModal(false);
+                } else {
+                  alert("Please select a file first");
+                }
+              }}
+              disabled={uploading}
+              className="mt-6 w-full bg-[#4a3733] text-white py-2 rounded-xl font-bold disabled:bg-gray-400"
             >
-              Done
+              {uploading ? "Uploading..." : "Upload & Save"}
             </button>
           </div>
         </div>
