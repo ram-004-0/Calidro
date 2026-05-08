@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; //
 import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
-
+import { ArrowLeft } from "lucide-react";
 const API_URL =
   "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
 
@@ -67,6 +67,12 @@ const Login = () => {
     >
       <div className="w-full max-w-lg bg-white/70 backdrop-blur-md shadow-xl p-8 rounded-2xl lg:ml-30 mx-auto">
         <div className="flex justify-between mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-sm font-bold text-gray-600 hover:text-black transition-colors"
+          >
+            ← BACK
+          </button>
           <button
             onClick={handleLogin}
             className="text-lg font-semibold border-b-2 border-black pb-2"
