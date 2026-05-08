@@ -1,27 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const db = require("../config/db"); // Adjust based on your db file path
-const cloudinary = require("../config/cloudinaryConfig");
-const { verifyToken } = require("../middleware/authMiddleware"); // To get user_id from token
+const db = require("../config/db");
+const upload = require("../middleware/multer"); // Use your existing multer file
+const { verifyToken } = require("../middleware/authMiddleware");
 
-// Use memory storage for faster transit to Cloudinary
-const upload = multer({ storage: multer.memoryStorage() });
-
+// Note: Use upload.array because users can upload multiple photos
 router.post(
   "/rate",
   verifyToken,
   upload.array("images", 5),
   async (req, res) => {
     const { booking_id, rating, comment } = req.body;
-    const user_id = req.user.user_id; // Extracted from the JWT token by your middleware
+    const user_id = req.user.user_id;
 
     let connection;
     try {
       connection = await db.getConnection();
       await connection.beginTransaction();
 
-      // 1. Insert the main rating data
+      // 1. Insert into rating table
       const [ratingResult] = await connection.execute(
         "INSERT INTO rating (user_id, booking_id, rating, comment) VALUES (?, ?, ?, ?)",
         [user_id, booking_id, rating, comment],
@@ -29,28 +26,13 @@ router.post(
 
       const newRatingId = ratingResult.insertId;
 
-      // 2. Handle Image Uploads if they exist
+      // 2. Save Image URLs
+      // With your multer.js, the Cloudinary URLs are in file.path
       if (req.files && req.files.length > 0) {
-        const uploadPromises = req.files.map((file) => {
-          return new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              { folder: "event_reviews" },
-              (error, result) => {
-                if (error) reject(error);
-                else resolve(result.secure_url);
-              },
-            );
-            stream.end(file.buffer);
-          });
-        });
-
-        const imageUrls = await Promise.all(uploadPromises);
-
-        // 3. Save Image URLs to the rating_images table
-        for (const url of imageUrls) {
+        for (const file of req.files) {
           await connection.execute(
             "INSERT INTO rating_images (rating_id, image_url) VALUES (?, ?)",
-            [newRatingId, url],
+            [newRatingId, file.path],
           );
         }
       }
@@ -60,14 +42,16 @@ router.post(
     } catch (error) {
       if (connection) await connection.rollback();
       console.error("Rating Error:", error);
-      res.status(500).json({ message: "Failed to submit rating" });
+      res
+        .status(500)
+        .json({ message: "Failed to submit rating", error: error.message });
     } finally {
       if (connection) connection.release();
     }
   },
 );
 
-// GET ROUTE: Fetch ratings WITH usernames (The JOIN you asked for)
+// GET ROUTE: Fetch ratings with usernames
 router.get("/event-ratings/:bookingId", async (req, res) => {
   try {
     const query = `
