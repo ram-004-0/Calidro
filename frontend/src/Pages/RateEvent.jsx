@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Star, Camera, X } from "lucide-react";
 
+const API_URL = "https://calidro-production.up.railway.app";
+
 const RateEvent = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
@@ -32,9 +34,9 @@ const RateEvent = () => {
     images.forEach((img) => formData.append("images", img));
 
     try {
-      const res = await fetch("YOUR_API_URL/api/rate", {
+      const res = await fetch(`${API_URL}/api/rate`, {
         method: "POST",
-        body: formData, // Don't set headers, browser sets multipart/form-data
+        body: formData,
       });
 
       if (res.ok) {
