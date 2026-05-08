@@ -7,10 +7,12 @@ const cron = require("node-cron");
 const db = require("./config/db");
 const upload = require("./middleware/multer");
 const app = express();
+
 const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const galleryRoutes = require("./routes/galleryRoutes");
 const previousEventRoutes = require("./routes/previousEventRoutes");
+const ratingRoutes = require("./routes/ratingRoutes");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
 // Place this ABOVE your route definitions
@@ -49,6 +51,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/previous-events", previousEventRoutes);
+app.use("/api", ratingRoutes);
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
 
