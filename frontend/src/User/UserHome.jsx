@@ -7,15 +7,13 @@ const API_URL = "https://calidro-production.up.railway.app";
 
 const UserHome = () => {
   const [homeCards, setHomeCards] = useState([]);
-  const [reviews, setReviews] = useState([]);
-  const [loadingCards, setLoadingCards] = useState(true);
+  const [reviews, setReviews] = useState([]); // Default to empty array
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
 
-  // 3. FETCH CAROUSEL DATA ONLY
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch both Carousel and Reviews
         const [cardRes, reviewRes] = await Promise.all([
           fetch(`${API_URL}/api/settings/home-cards`),
           fetch(`${API_URL}/api/all-ratings`),
@@ -24,8 +22,9 @@ const UserHome = () => {
         const cardData = await cardRes.json();
         const reviewData = await reviewRes.json();
 
-        setHomeCards(cardData);
-        setReviews(reviewData);
+        // Safety: Ensure reviewData is actually an array before setting state
+        setHomeCards(Array.isArray(cardData) ? cardData : []);
+        setReviews(Array.isArray(reviewData) ? reviewData : []);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -44,7 +43,6 @@ const UserHome = () => {
         ).toFixed(1)
       : "0.0";
 
-  // Calculate stats for the bars (5 star, 4 star, etc.)
   const ratingStats = [5, 4, 3, 2, 1].map((star) => {
     const count = reviews.filter((r) => r.rating === star).length;
     const percent =
@@ -52,11 +50,18 @@ const UserHome = () => {
     return { label: `${star} star`, count, percent };
   });
 
-  // Filtering Logic
   const filteredReviews =
     activeFilter === "All"
       ? reviews
       : reviews.filter((rev) => rev.rating === parseInt(activeFilter));
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#433633] flex items-center justify-center text-white">
+        Loading Calidro...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col">
