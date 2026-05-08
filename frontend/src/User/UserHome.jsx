@@ -58,13 +58,6 @@ const UserHome = () => {
       ? reviews
       : reviews.filter((rev) => rev.rating === parseInt(activeFilter));
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-[#433633] flex items-center justify-center text-white">
-        Loading Calidro...
-      </div>
-    );
-
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col">
       <UserHeader />
