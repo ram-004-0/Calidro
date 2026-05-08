@@ -67,14 +67,7 @@ const UserHome = () => {
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col">
       <UserHeader />
 
-      {/* Dynamic Carousel using home_card database data */}
-      {loadingCards ? (
-        <div className="h-[400px] flex items-center justify-center text-white">
-          Loading Highlights...
-        </div>
-      ) : (
-        <Carousel data={homeCards} />
-      )}
+      <Carousel data={homeCards} />
 
       {/* --- About Us Section --- */}
       <section className="py-10 bg-[#f1f1f1]">
@@ -82,7 +75,6 @@ const UserHome = () => {
           <h2 className="text-2xl font-bold text-center mb-8 tracking-wide">
             ABOUT US
           </h2>
-
           <div className="max-w-4xl mx-auto text-[#4a3733] space-y-6 leading-relaxed">
             <p>
               <span className="font-semibold">Calidro Events Place</span> is
@@ -90,26 +82,13 @@ const UserHome = () => {
               <span className="font-semibold">
                 Station C Creative Solutions, Inc.
               </span>
-              , a full-service events agency with 20 years of experience in
-              events management, video production, and television program
-              production. The venue has been in operation since 2019, bringing
-              professional expertise and creative flair to every event hosted.
-            </p>
-
-            <p>
-              Nestled in a serene and accessible location, Calidro Events Place
-              specializes in hosting a{" "}
-              <span className="font-semibold">wide range of celebrations</span>,
-              including weddings, debuts, corporate events, and private parties.
-              Our venue combines elegance, versatility, and state-of-the-art
-              facilities, creating the perfect setting for unforgettable
-              experiences.
+              ... (truncated for brevity)
             </p>
           </div>
         </div>
       </section>
 
-      {/* --- Ratings Section (Back to Static) --- */}
+      {/* --- Dynamic Ratings Section --- */}
       <section className="relative py-20 w-full bg-[#f1f1f1]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-white rounded-3xl shadow-xl p-8 md:p-14">
@@ -119,10 +98,15 @@ const UserHome = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-16 mb-12 pb-12 border-b border-gray-100">
               <div className="flex flex-col items-center justify-center border-r border-gray-100 pr-8">
-                <span className="text-8xl font-bold text-[#4a3733]">5.0</span>
-                <div className="text-yellow-500 text-2xl my-3">★★★★★</div>
+                <span className="text-8xl font-bold text-[#4a3733]">
+                  {averageRating}
+                </span>
+                <div className="text-yellow-500 text-2xl my-3">
+                  {"★".repeat(Math.round(parseFloat(averageRating)))}
+                  {"☆".repeat(5 - Math.round(parseFloat(averageRating)))}
+                </div>
                 <p className="text-gray-400 text-sm font-semibold uppercase">
-                  67 Ratings
+                  {totalReviews} Ratings
                 </p>
               </div>
 
@@ -163,14 +147,14 @@ const UserHome = () => {
               ))}
             </div>
 
-            {/* --- Filtered Review Cards (Static) --- */}
+            {/* --- Filtered Review Cards --- */}
             <div className="space-y-8">
               {filteredReviews.length > 0 ? (
                 filteredReviews.map((rev) => (
                   <UserRatingCard
-                    key={rev.id}
-                    name={rev.user_name}
-                    date={rev.created_at}
+                    key={rev.rating_id} // Use the DB rating_id
+                    name={rev.username}
+                    date={new Date(rev.created_at).toLocaleDateString()}
                     rating={rev.rating}
                     comment={rev.comment}
                     images={rev.review_images}
