@@ -26,7 +26,6 @@ const RateEvent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Use FormData because we are sending files (images)
     const formData = new FormData();
     formData.append("booking_id", bookingId);
     formData.append("rating", rating);
@@ -34,17 +33,29 @@ const RateEvent = () => {
     images.forEach((img) => formData.append("images", img));
 
     try {
+      const token = localStorage.getItem("token");
+
       const res = await fetch(`${API_URL}/api/rate`, {
         method: "POST",
-        body: formData,
+        headers: {
+          // ADD THIS HEADER:
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData, // Do NOT set Content-Type header manually when using FormData
       });
 
       if (res.ok) {
         alert("Thank you for your review!");
         navigate("/userhome");
+      } else if (res.status === 403 || res.status === 401) {
+        alert("Session expired or unauthorized. Please log in again.");
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.message}`);
       }
     } catch (err) {
       console.error("Submit failed", err);
+      alert("Network error. Please try again.");
     }
   };
 
