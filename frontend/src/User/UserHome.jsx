@@ -82,7 +82,20 @@ const UserHome = () => {
               <span className="font-semibold">
                 Station C Creative Solutions, Inc.
               </span>
-              ... (truncated for brevity)
+              , a full-service events agency with 20 years of experience in
+              events management, video production, and television program
+              production. The venue has been in operation since 2019, bringing
+              professional expertise and creative flair to every event hosted.
+            </p>
+
+            <p>
+              Nestled in a serene and accessible location, Calidro Events Place
+              specializes in hosting a{" "}
+              <span className="font-semibold">wide range of celebrations</span>,
+              including weddings, debuts, corporate events, and private parties.
+              Our venue combines elegance, versatility, and state-of-the-art
+              facilities, creating the perfect setting for unforgettable
+              experiences.
             </p>
           </div>
         </div>
