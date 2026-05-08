@@ -338,10 +338,8 @@ const UserBookingCard = ({ booking: initialBooking }) => {
           </div>
 
           {/* --- ACTION BUTTONS --- */}
-
-          {/* --- ACTION BUTTONS --- */}
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-            {/* 1. Show Rating button ONLY when status is 'completed' */}
+            {/* Rate event button*/}
             {booking.bookingStatus?.toLowerCase() === "completed" && (
               <button
                 onClick={() => navigate(`/rate-event/${booking.booking_id}`)}
