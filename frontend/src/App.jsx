@@ -3,10 +3,12 @@ import {
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
+  Navigate,
 } from "react-router-dom";
 import { ChatProvider } from "./context/ChatContext";
 
 import Login from "./Pages/Login";
+import RateEvent from "./Pages/RateEvent";
 import Landing from "./Pages/Landing";
 import UserHome from "./User/UserHome";
 import UserVirtualTour from "./User/UserVirtualTour";
@@ -29,7 +31,22 @@ import PaymentPage from "./Booking Process/PaymentPage";
 
 import RootLayout from "./RootLayout";
 
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+const ProtectedRoute = ({ children, role }) => {
+  const { user, loading } = useAuth();
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
+  if (!user) return <Navigate replace to="/login" />;
+  if (role && user.role !== role) return <Navigate replace to="/" />;
+
+  return children;
+};
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -37,6 +54,14 @@ const router = createBrowserRouter(
       <Route index element={<Landing />} />
       <Route path="login" element={<Login />} />
       <Route path="userhome" element={<UserHome />} />
+      <Route
+        path="/rate-event/:bookingId"
+        element={
+          <ProtectedRoute role="user">
+            <RateEvent />
+          </ProtectedRoute>
+        }
+      />
       <Route path="user-virtual-tour" element={<UserVirtualTour />} />
       <Route path="usergallery" element={<UserGallery />} />
       <Route path="userbook" element={<UserBook />} />
