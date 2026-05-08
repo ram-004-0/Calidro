@@ -51,6 +51,33 @@ router.post(
   },
 );
 
+router.get("/all-ratings", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        r.*, u.username, 
+        GROUP_CONCAT(ri.image_url) as review_images
+      FROM rating r
+      JOIN user u ON r.user_id = u.user_id
+      LEFT JOIN rating_images ri ON r.rating_id = ri.rating_id
+      GROUP BY r.rating_id
+      ORDER BY r.created_at DESC
+    `;
+
+    const [results] = await db.execute(query);
+
+    const formattedResults = results.map((rev) => ({
+      ...rev,
+      review_images: rev.review_images ? rev.review_images.split(",") : [],
+    }));
+
+    res.json(formattedResults);
+  } catch (error) {
+    console.error("Fetch All Ratings Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET ROUTE: Fetch ratings with usernames
 router.get("/event-ratings/:bookingId", async (req, res) => {
   try {
