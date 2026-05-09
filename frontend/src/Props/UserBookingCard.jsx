@@ -61,6 +61,8 @@ const UserBookingCard = ({ booking: initialBooking }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
 
+  const hasBeenRated = booking.is_rated === 1 || booking.is_rated === true;
+
   const balance = useMemo(() => {
     return (booking.total || 0) - (booking.paid || 0);
   }, [booking.total, booking.paid]);
@@ -339,16 +341,26 @@ const UserBookingCard = ({ booking: initialBooking }) => {
 
           {/* --- ACTION BUTTONS --- */}
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-            {/* Rate event button*/}
-            {booking.bookingStatus?.toLowerCase() === "completed" && (
-              <button
-                onClick={() => navigate(`/rate-event/${booking.booking_id}`)}
-                className="flex items-center gap-2 rounded-lg border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm font-semibold text-yellow-700 hover:bg-yellow-100 transition-colors"
-              >
-                <Star size={16} fill="currentColor" />
-                Rate Event
-              </button>
-            )}
+            {/* Rate Event button*/}
+            {booking.bookingStatus?.toLowerCase() === "completed" &&
+              !hasBeenRated && (
+                <button
+                  onClick={() => navigate(`/rate-event/${booking.booking_id}`)}
+                  className="flex items-center gap-2 rounded-lg border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm font-semibold text-yellow-700 hover:bg-yellow-100 transition-colors"
+                >
+                  <Star size={16} fill="currentColor" />
+                  Rate Event
+                </button>
+              )}
+
+            {/* 3. OPTIONAL: SHOW A "THANK YOU" OR "RATED" BADGE */}
+            {hasBeenRated &&
+              booking.bookingStatus?.toLowerCase() === "completed" && (
+                <span className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 italic">
+                  <Star size={16} className="text-gray-300" />
+                  Feedback submitted
+                </span>
+              )}
 
             {/* 2. Show Management buttons ONLY if NOT completed and NOT cancelled */}
             {booking.bookingStatus?.toLowerCase() !== "completed" &&
