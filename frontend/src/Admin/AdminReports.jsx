@@ -48,17 +48,23 @@ const AdminReports = () => {
       <AdminHeader />
 
       <section className="flex-1 flex flex-col items-center p-4 md:p-6 lg:p-10">
-        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 min-h-[600px] flex flex-col">
+        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 min-h-[600px] flex flex-col overflow-hidden">
           <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 md:mb-6 uppercase">
             Reports
           </h1>
 
           <div
-            className={`flex flex-1 gap-4 md:gap-6 ${isMobileView ? "flex-col" : "flex-row"}`}
+            className={`flex flex-1 gap-4 md:gap-6 ${
+              isMobileView
+                ? "flex-col overflow-y-auto"
+                : "flex-row overflow-hidden"
+            }`}
           >
             {/* LEFT COLUMN */}
             <div
-              className={`${isMobileView ? "w-full" : "flex-[0.45]"} flex flex-col gap-4 md:gap-6`}
+              className={`${
+                isMobileView ? "w-full" : "flex-[0.45]"
+              } flex flex-col gap-4 md:gap-6 shrink-0`}
             >
               <div className="bg-white rounded-3xl p-4 md:p-6 flex items-center justify-between shadow-sm border border-white/50">
                 <div className="space-y-1 md:space-y-2">
@@ -91,7 +97,9 @@ const AdminReports = () => {
                       stroke="#facc15"
                     />
                     <span
-                      className={`absolute font-black text-[#4a3733] pb-1 ${isMobileView ? "text-xl" : "text-2xl"}`}
+                      className={`absolute font-black text-[#4a3733] pb-1 ${
+                        isMobileView ? "text-xl" : "text-2xl"
+                      }`}
                     >
                       4.6
                     </span>
@@ -107,24 +115,32 @@ const AdminReports = () => {
                   Total Reviews
                 </h2>
                 <span
-                  className={`font-black text-[#4a3733] tracking-tighter ${isMobileView ? "text-5xl" : "text-7xl"}`}
+                  className={`font-black text-[#4a3733] tracking-tighter ${
+                    isMobileView ? "text-5xl" : "text-7xl"
+                  }`}
                 >
                   1024
                 </span>
               </div>
             </div>
 
-            {/* RIGHT COLUMN - Fixed Chart Container */}
+            {/* RIGHT COLUMN - Chart */}
             <div
-              className={`${isMobileView ? "w-full" : "flex-[0.55]"} bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 flex flex-col min-h-[400px]`}
+              className={`${
+                isMobileView ? "w-full h-[400px]" : "flex-[0.55]"
+              } bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 flex flex-col min-w-0`}
             >
               <h2 className="text-xs md:text-sm font-bold text-[#4a3733] mb-6 md:mb-8 uppercase tracking-widest">
                 No. of Events
               </h2>
 
-              {/* Added min-width: 0 to allow flex child to shrink/grow correctly and a fixed min-height */}
-              <div className="flex-1 w-full min-w-0 min-h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
+              {/* The "Container" Fix: relative + flex-1 + min-h-0 */}
+              <div className="relative flex-1 min-h-0 w-full">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                  key={isMobileView ? "mobile" : "desktop"}
+                >
                   <BarChart
                     data={barData}
                     margin={{ top: 20, right: 10, left: -30, bottom: 20 }}
