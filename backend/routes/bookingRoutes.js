@@ -532,13 +532,13 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
     const { total_amount, amount_paid } = rows[0];
 
     // Only set to 'full' if the amount paid covers the total
-    const isFullyPaid = amount_paid >= total_amount;
-    const newStatus = isFullyPaid ? "confirmed" : "pending";
-    const newPaymentType = isFullyPaid ? "full" : "partial";
+    const isFullyPaid = newTotalPaid >= totalAmount;
+    const finalStatus = isFullyPaid ? "confirmed" : "partial";
+    const finalPaymentType = isFullyPaid ? "full" : "partial";
 
     await db.query(
-      `UPDATE booking SET status = ?, payment_type = ? WHERE booking_id = ?`,
-      [newStatus, newPaymentType, bookingId],
+      "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
+      [newTotalPaid, finalStatus, finalPaymentType, bookingId],
     );
 
     res.json({ success: true, paymentType: newPaymentType, status: newStatus });
@@ -685,15 +685,19 @@ router.post("/webhook/paymongo", async (req, res) => {
       const totalAmount = parseFloat(rows[0].total_amount);
       const newTotalPaid = currentPaid + paymentAmount;
 
-      // Update the database
-      // We use 'confirmed' because your ENUM supports it
+      // Use rounding to avoid float math bugs
+      const isFullyPaid = Math.round(newTotalPaid) >= Math.round(totalAmount);
+
+      const finalStatus = isFullyPaid ? "confirmed" : "partial";
+      const finalPaymentType = isFullyPaid ? "full" : "partial";
+
       await db.query(
-        "UPDATE booking SET amount_paid = ?, status = 'confirmed' WHERE booking_id = ?",
-        [newTotalPaid, "confirmed", bookingId],
+        "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
+        [newTotalPaid, finalStatus, finalPaymentType, bookingId],
       );
 
       console.log(
-        `✅ DB UPDATED: Booking ${bookingId} total is now ₱${newTotalPaid}`,
+        `✅ DB UPDATED: Booking ${bookingId} is now ${finalStatus} (Paid: ₱${newTotalPaid})`,
       );
     } else {
       console.error(
