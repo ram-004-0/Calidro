@@ -11,46 +11,46 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import axios from "axios";
+
+const API_URL = "https://calidro-production.up.railway.app";
 
 const AdminReports = () => {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
-  // Handle responsiveness
+  const [reportData, setReportData] = useState({
+    barData: [],
+    starRatings: [],
+    avgRating: 0,
+    totalReviews: 0,
+    loading: true,
+  });
+
   useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/reports/admin-stats`);
+        setReportData({ ...res.data, loading: false });
+      } catch (err) {
+        console.error("Error fetching reports", err);
+      }
+    };
+    fetchStats();
+
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const barData = [
-    { name: "January", value: 10 },
-    { name: "February", value: 14 },
-    { name: "March", value: 19 },
-    { name: "April", value: 9 },
-    { name: "May", value: 21 },
-    { name: "June", value: 15 },
-    { name: "July", value: 7 },
-    { name: "August", value: 4 },
-    { name: "September", value: 1 },
-    { name: "December", value: 1 },
-  ];
-
-  const starRatings = [
-    { stars: 5, percent: "65%" },
-    { stars: 4, percent: "28%" },
-    { stars: 3, percent: "5%" },
-    { stars: 2, percent: "1%" },
-    { stars: 1, percent: "1%" },
-  ];
+  if (reportData.loading)
+    return <div className="text-white p-10">Loading Reports...</div>;
 
   return (
     <div className="min-h-screen bg-[#433633] flex flex-col relative">
       <AdminHeader />
 
       <section className="relative pb-2 w-full">
-        {/* Consistent Container Wrapper - Matching your specific proportions */}
         <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
-          {/* Inner Content Wrapper with Padding */}
           <div className="p-6 flex flex-col w-full h-full">
             <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase flex-shrink-0">
               Reports
@@ -127,7 +127,6 @@ const AdminReports = () => {
                 </div>
               </div>
 
-              {/* RIGHT COLUMN - Chart */}
               <div
                 className={`${
                   isMobileView ? "w-full h-[400px]" : "flex-[0.55]"
@@ -137,7 +136,6 @@ const AdminReports = () => {
                   No. of Events
                 </h2>
 
-                {/* The "Container" Fix: relative + flex-1 + min-h-0 */}
                 <div className="relative flex-1 min-h-0 w-full">
                   <ResponsiveContainer
                     width="100%"
