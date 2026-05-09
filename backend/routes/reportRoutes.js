@@ -19,12 +19,12 @@ router.get("/admin-stats", async (req, res) => {
     const ratingsQuery = `
       SELECT 
         COUNT(*) as totalReviews,
-        AVG(rating_value) as avgRating,
-        SUM(CASE WHEN rating_value = 5 THEN 1 ELSE 0 END) as star5,
-        SUM(CASE WHEN rating_value = 4 THEN 1 ELSE 0 END) as star4,
-        SUM(CASE WHEN rating_value = 3 THEN 1 ELSE 0 END) as star3,
-        SUM(CASE WHEN rating_value = 2 THEN 1 ELSE 0 END) as star2,
-        SUM(CASE WHEN rating_value = 1 THEN 1 ELSE 0 END) as star1
+        AVG(rating) as avgRating, -- Changed from rating_value to rating
+        SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as star5, -- Changed to rating
+        SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as star4,
+        SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as star3,
+        SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as star2,
+        SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as star1
       FROM rating
     `;
 
