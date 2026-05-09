@@ -172,49 +172,42 @@ router.post("/create-booking-and-checkout", async (req, res) => {
   }
 });
 
-// 2. Fetch all bookings for User View
+// 2. Fetch all bookings for User View w rate
+router.get("/my-bookings/:user_id", verifyToken, async (req, res) => {
+  const user_id = req.params.user_id;
 
-router.get("/my-bookings/:userId", async (req, res) => {
-  const { userId } = req.params;
+  const sqlQuery = `
+    SELECT 
+      b.*, 
+      CASE WHEN r.rating_id IS NOT NULL THEN 1 ELSE 0 END AS is_rated
+    FROM booking b
+    LEFT JOIN rating r ON b.booking_id = r.booking_id
+    WHERE b.user_id = ?
+    ORDER BY b.event_date DESC 
+  `;
+
   try {
-    const [rows] = await db.query(
-      "SELECT booking_id, event_name, username, email, phone_number, address, event_type, event_duration, ingress_time, egress_time, guests, total_amount, amount_paid, payment_type, status, event_date, event_time FROM booking WHERE user_id = ? ORDER BY event_date DESC",
-      [userId],
-    );
+    const [rows] = await db.query(sqlQuery, [user_id]);
 
     const formatted = rows.map((b) => ({
       booking_id: b.booking_id,
-
       eventName: b.event_name,
-
       userName: b.username,
-
       email: b.email,
-
       contactNo: b.phone_number,
-
       address: b.address,
-
       typeOfEvent: b.event_type,
-
       duration: `${b.event_duration} hrs`,
-
       ingress: `${parseInt(b.ingress_time || 0)} hr`,
-
       egress: `${parseInt(b.egress_time || 0)} hr`,
-
       noOfGuests: b.guests,
-
       total: b.total_amount,
-
       paid: b.amount_paid,
       paymentType: b.payment_type,
-
       bookingStatus: b.status,
-
       date: b.event_date,
-
       time: b.event_time,
+      is_rated: b.is_rated,
     }));
 
     res.json(formatted);
@@ -712,45 +705,4 @@ router.post("/webhook/paymongo", async (req, res) => {
   }
 });
 
-// GET: Fetch all bookings for the logged-in user with rating status
-router.get("/my-bookings/:user_id", verifyToken, async (req, res) => {
-  const user_id = req.user.user_id;
-
-  const sqlQuery = `
-    SELECT 
-      b.*, 
-      CASE WHEN r.rating_id IS NOT NULL THEN 1 ELSE 0 END AS is_rated
-    FROM booking b
-    LEFT JOIN rating r ON b.booking_id = r.booking_id
-    WHERE b.user_id = ?
-    ORDER BY b.event_date DESC 
-  `;
-
-  try {
-    const [rows] = await db.query(sqlQuery, [user_id]);
-
-    // Map the database names to your Frontend names
-    const formatted = rows.map((b) => ({
-      booking_id: b.booking_id,
-      eventName: b.event_name,
-      userName: b.username,
-      email: b.email,
-      contactNo: b.phone_number,
-      address: b.address,
-      typeOfEvent: b.event_type,
-      noOfGuests: b.guests,
-      total: b.total_amount,
-      paid: b.amount_paid,
-      bookingStatus: b.status, // This maps 'status' to 'bookingStatus'
-      date: b.event_date,
-      time: b.event_time,
-      is_rated: b.is_rated, // Pass the rating flag
-    }));
-
-    res.json(formatted);
-  } catch (error) {
-    console.error("Fetch User Bookings Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
 module.exports = router;
