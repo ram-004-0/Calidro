@@ -17,7 +17,6 @@ const API_URL = "https://calidro-production.up.railway.app";
 
 const AdminReports = () => {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
-
   const [reportData, setReportData] = useState({
     barData: [],
     starRatings: [],
@@ -33,6 +32,7 @@ const AdminReports = () => {
         setReportData({ ...res.data, loading: false });
       } catch (err) {
         console.error("Error fetching reports", err);
+        setReportData((prev) => ({ ...prev, loading: false }));
       }
     };
     fetchStats();
@@ -48,7 +48,6 @@ const AdminReports = () => {
   return (
     <div className="min-h-screen bg-[#433633] flex flex-col relative">
       <AdminHeader />
-
       <section className="relative pb-2 w-full">
         <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
           <div className="p-6 flex flex-col w-full h-full">
@@ -57,21 +56,16 @@ const AdminReports = () => {
             </h1>
 
             <div
-              className={`flex flex-1 gap-4 md:gap-6 ${
-                isMobileView
-                  ? "flex-col overflow-y-auto"
-                  : "flex-row overflow-hidden"
-              }`}
+              className={`flex flex-1 gap-4 md:gap-6 ${isMobileView ? "flex-col overflow-y-auto" : "flex-row overflow-hidden"}`}
             >
               {/* LEFT COLUMN */}
               <div
-                className={`${
-                  isMobileView ? "w-full" : "flex-[0.45]"
-                } flex flex-col gap-4 md:gap-6 shrink-0`}
+                className={`${isMobileView ? "w-full" : "flex-[0.45]"} flex flex-col gap-4 md:gap-6 shrink-0`}
               >
                 <div className="bg-white rounded-3xl p-4 md:p-6 flex items-center justify-between shadow-sm border border-white/50">
                   <div className="space-y-1 md:space-y-2">
-                    {starRatings.map((rating, i) => (
+                    {/* FIXED: Using reportData.starRatings */}
+                    {reportData.starRatings.map((rating, i) => (
                       <div key={i} className="flex items-center gap-2 md:gap-3">
                         <div className="flex gap-0.5">
                           {[...Array(5)].map((_, index) => (
@@ -99,12 +93,11 @@ const AdminReports = () => {
                         fill="#facc15"
                         stroke="#facc15"
                       />
+                      {/* FIXED: Using reportData.avgRating */}
                       <span
-                        className={`absolute font-black text-[#4a3733] pb-1 ${
-                          isMobileView ? "text-xl" : "text-2xl"
-                        }`}
+                        className={`absolute font-black text-[#4a3733] pb-1 ${isMobileView ? "text-xl" : "text-2xl"}`}
                       >
-                        4.6
+                        {reportData.avgRating}
                       </span>
                     </div>
                     <p className="text-[10px] md:text-xs font-bold text-[#4a3733] mt-1 md:mt-2 uppercase tracking-wide text-center">
@@ -117,25 +110,22 @@ const AdminReports = () => {
                   <h2 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">
                     Total Reviews
                   </h2>
+                  {/* FIXED: Using reportData.totalReviews */}
                   <span
-                    className={`font-black text-[#4a3733] tracking-tighter ${
-                      isMobileView ? "text-5xl" : "text-7xl"
-                    }`}
+                    className={`font-black text-[#4a3733] tracking-tighter ${isMobileView ? "text-5xl" : "text-7xl"}`}
                   >
-                    1024
+                    {reportData.totalReviews}
                   </span>
                 </div>
               </div>
 
+              {/* RIGHT COLUMN - Chart */}
               <div
-                className={`${
-                  isMobileView ? "w-full h-[400px]" : "flex-[0.55]"
-                } bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 flex flex-col min-w-0`}
+                className={`${isMobileView ? "w-full h-[400px]" : "flex-[0.55]"} bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 flex flex-col min-w-0`}
               >
                 <h2 className="text-xs md:text-sm font-bold text-[#4a3733] mb-6 md:mb-8 uppercase tracking-widest">
                   No. of Events
                 </h2>
-
                 <div className="relative flex-1 min-h-0 w-full">
                   <ResponsiveContainer
                     width="100%"
@@ -143,7 +133,7 @@ const AdminReports = () => {
                     key={isMobileView ? "mobile" : "desktop"}
                   >
                     <BarChart
-                      data={barData}
+                      data={reportData.barData}
                       margin={{ top: 20, right: 10, left: -30, bottom: 20 }}
                     >
                       <CartesianGrid
@@ -163,7 +153,7 @@ const AdminReports = () => {
                         textAnchor="end"
                         interval={0}
                       />
-                      <YAxis hide domain={[0, 25]} />
+                      <YAxis hide />
                       <Tooltip cursor={{ fill: "#f9fafb" }} />
                       <Bar
                         dataKey="value"
@@ -177,7 +167,7 @@ const AdminReports = () => {
                           fontWeight: "bold",
                         }}
                       >
-                        {barData.map((entry, index) => (
+                        {reportData.barData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill="#5a84ae" />
                         ))}
                       </Bar>

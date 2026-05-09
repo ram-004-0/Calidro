@@ -15,12 +15,12 @@ router.get("/admin-stats", async (req, res) => {
       ORDER BY MONTH(event_date) ASC
     `;
 
-    // 2. Get Rating Distribution & Totals
+    // 2. Get Rating Distribution & Totals - Using "rating" column from your table
     const ratingsQuery = `
       SELECT 
         COUNT(*) as totalReviews,
-        AVG(rating) as avgRating, -- Changed from rating_value to rating
-        SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as star5, -- Changed to rating
+        AVG(rating) as avgRating,
+        SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as star5,
         SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as star4,
         SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as star3,
         SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as star2,
@@ -32,15 +32,29 @@ router.get("/admin-stats", async (req, res) => {
     const [ratingStats] = await db.query(ratingsQuery);
 
     const stats = ratingStats[0];
-    const total = stats.totalReviews || 1; // Avoid division by zero
+    const total = stats.totalReviews || 1;
 
-    // Format the star ratings into the percentage array your frontend uses
     const formattedStarRatings = [
-      { stars: 5, percent: `${Math.round((stats.star5 / total) * 100)}%` },
-      { stars: 4, percent: `${Math.round((stats.star4 / total) * 100)}%` },
-      { stars: 3, percent: `${Math.round((stats.star3 / total) * 100)}%` },
-      { stars: 2, percent: `${Math.round((stats.star2 / total) * 100)}%` },
-      { stars: 1, percent: `${Math.round((stats.star1 / total) * 100)}%` },
+      {
+        stars: 5,
+        percent: `${Math.round(((stats.star5 || 0) / total) * 100)}%`,
+      },
+      {
+        stars: 4,
+        percent: `${Math.round(((stats.star4 || 0) / total) * 100)}%`,
+      },
+      {
+        stars: 3,
+        percent: `${Math.round(((stats.star3 || 0) / total) * 100)}%`,
+      },
+      {
+        stars: 2,
+        percent: `${Math.round(((stats.star2 || 0) / total) * 100)}%`,
+      },
+      {
+        stars: 1,
+        percent: `${Math.round(((stats.star1 || 0) / total) * 100)}%`,
+      },
     ];
 
     res.json({
