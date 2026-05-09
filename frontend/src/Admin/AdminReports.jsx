@@ -44,25 +44,22 @@ const AdminReports = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#433633] flex flex-col h-full relative">
+    <div className="min-h-screen bg-[#433633] flex flex-col relative">
       <AdminHeader />
 
       <section className="flex-1 flex flex-col items-center p-4 md:p-6 lg:p-10">
-        {/* Main Dashboard Container */}
-        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 min-h-[600px] flex flex-col overflow-y-auto">
+        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 min-h-[600px] flex flex-col">
           <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 md:mb-6 uppercase">
             Reports
           </h1>
 
-          {/* Conditional Layout: flex-col for mobile, flex-row for desktop */}
           <div
             className={`flex flex-1 gap-4 md:gap-6 ${isMobileView ? "flex-col" : "flex-row"}`}
           >
-            {/* LEFT COLUMN (or Top on Mobile) */}
+            {/* LEFT COLUMN */}
             <div
               className={`${isMobileView ? "w-full" : "flex-[0.45]"} flex flex-col gap-4 md:gap-6`}
             >
-              {/* Star Rating Panel */}
               <div className="bg-white rounded-3xl p-4 md:p-6 flex items-center justify-between shadow-sm border border-white/50">
                 <div className="space-y-1 md:space-y-2">
                   {starRatings.map((rating, i) => (
@@ -105,7 +102,6 @@ const AdminReports = () => {
                 </div>
               </div>
 
-              {/* Total Reviews Panel */}
               <div className="bg-white rounded-3xl p-6 md:p-8 flex-1 flex flex-col items-center justify-center shadow-sm border border-white/50 min-h-[150px]">
                 <h2 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">
                   Total Reviews
@@ -118,14 +114,16 @@ const AdminReports = () => {
               </div>
             </div>
 
-            {/* RIGHT COLUMN - Bar Chart (or Bottom on Mobile) */}
+            {/* RIGHT COLUMN - Fixed Chart Container */}
             <div
-              className={`${isMobileView ? "w-full min-h-[400px]" : "flex-[0.55]"} bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 flex flex-col`}
+              className={`${isMobileView ? "w-full" : "flex-[0.55]"} bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 flex flex-col min-h-[400px]`}
             >
               <h2 className="text-xs md:text-sm font-bold text-[#4a3733] mb-6 md:mb-8 uppercase tracking-widest">
                 No. of Events
               </h2>
-              <div className="flex-1 w-full bg-white rounded-2xl p-2 md:p-4 shadow-inner min-h-[300px]">
+
+              {/* Added min-width: 0 to allow flex child to shrink/grow correctly and a fixed min-height */}
+              <div className="flex-1 w-full min-w-0 min-h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={barData}
@@ -154,11 +152,11 @@ const AdminReports = () => {
                       dataKey="value"
                       fill="#4e79a7"
                       radius={[4, 4, 0, 0]}
-                      barSize={isMobileView ? 20 : 35}
+                      barSize={isMobileView ? 15 : 30}
                       label={{
                         position: "top",
                         fill: "#4a3733",
-                        fontSize: isMobileView ? 10 : 12,
+                        fontSize: 10,
                         fontWeight: "bold",
                       }}
                     >
