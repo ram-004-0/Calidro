@@ -716,7 +716,6 @@ router.post("/webhook/paymongo", async (req, res) => {
 router.get("/user-bookings", verifyToken, async (req, res) => {
   const user_id = req.user.user_id;
 
-  // Changed 'b.date' to 'b.event_date' to match your schema
   const sqlQuery = `
     SELECT 
       b.*, 
@@ -728,15 +727,30 @@ router.get("/user-bookings", verifyToken, async (req, res) => {
   `;
 
   try {
-    // Note: Use db.query since you used it elsewhere in this file
-    const [results] = await db.query(sqlQuery, [user_id]);
-    res.json(results);
+    const [rows] = await db.query(sqlQuery, [user_id]);
+
+    // Map the database names to your Frontend names
+    const formatted = rows.map((b) => ({
+      booking_id: b.booking_id,
+      eventName: b.event_name,
+      userName: b.username,
+      email: b.email,
+      contactNo: b.phone_number,
+      address: b.address,
+      typeOfEvent: b.event_type,
+      noOfGuests: b.guests,
+      total: b.total_amount,
+      paid: b.amount_paid,
+      bookingStatus: b.status, // This maps 'status' to 'bookingStatus'
+      date: b.event_date,
+      time: b.event_time,
+      is_rated: b.is_rated, // Pass the rating flag
+    }));
+
+    res.json(formatted);
   } catch (error) {
     console.error("Fetch User Bookings Error:", error);
-    res.status(500).json({
-      message: "Failed to fetch bookings",
-      error: error.message,
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 module.exports = router;

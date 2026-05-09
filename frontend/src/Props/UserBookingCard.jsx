@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { parseISO } from "date-fns";
 import {
@@ -60,6 +60,10 @@ const UserBookingCard = ({ booking: initialBooking }) => {
   const [booking, setBooking] = useState(initialBooking);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setBooking(initialBooking);
+  }, [initialBooking]);
 
   const hasBeenRated = booking.is_rated === 1 || booking.is_rated === true;
 
