@@ -47,7 +47,7 @@ const AdminReports = () => {
     <div className="min-h-screen bg-[#433633] flex flex-col relative">
       <AdminHeader />
 
-      <section className="flex-1 flex flex-col items-center p-4 md:p-6 lg:p-10">
+      <section className="flex-1 flex flex-col items-center p-4 md:p-6 lg:p-5">
         <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 min-h-[600px] flex flex-col overflow-hidden">
           <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 md:mb-6 uppercase">
             Reports
