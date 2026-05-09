@@ -13,6 +13,15 @@ import {
 } from "recharts";
 
 const AdminReports = () => {
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+
+  // Handle responsiveness
+  useEffect(() => {
+    const handleResize = () => setIsMobileView(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const barData = [
     { name: "January", value: 10 },
     { name: "February", value: 14 },
@@ -35,27 +44,34 @@ const AdminReports = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#433633] flex flex-col">
+    <div className="min-h-screen bg-[#433633] flex flex-col h-full relative">
       <AdminHeader />
-      <section className="relative pb-2 w-full">
-        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] p-6 flex flex-col">
-          <h1 className="text-2xl font-bold text-[#4a3733] mb-3 uppercase">
+
+      <section className="flex-1 flex flex-col items-center p-4 md:p-6 lg:p-10">
+        {/* Main Dashboard Container */}
+        <div className="w-full max-w-[1460px] bg-[#f1f1f1] rounded-3xl shadow-xl p-4 md:p-6 min-h-[600px] flex flex-col overflow-y-auto">
+          <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-4 md:mb-6 uppercase">
             Reports
           </h1>
 
-          <div className="flex flex-1 gap-6">
-            {/* LEFT COLUMN */}
-            <div className="flex-[0.45] flex flex-col gap-6">
+          {/* Conditional Layout: flex-col for mobile, flex-row for desktop */}
+          <div
+            className={`flex flex-1 gap-4 md:gap-6 ${isMobileView ? "flex-col" : "flex-row"}`}
+          >
+            {/* LEFT COLUMN (or Top on Mobile) */}
+            <div
+              className={`${isMobileView ? "w-full" : "flex-[0.45]"} flex flex-col gap-4 md:gap-6`}
+            >
               {/* Star Rating Panel */}
-              <div className="bg-white rounded-3xl p-6 flex items-center justify-between shadow-sm border border-white/50">
-                <div className="space-y-2">
+              <div className="bg-white rounded-3xl p-4 md:p-6 flex items-center justify-between shadow-sm border border-white/50">
+                <div className="space-y-1 md:space-y-2">
                   {starRatings.map((rating, i) => (
-                    <div key={i} className="flex items-center gap-3">
+                    <div key={i} className="flex items-center gap-2 md:gap-3">
                       <div className="flex gap-0.5">
                         {[...Array(5)].map((_, index) => (
                           <Star
                             key={index}
-                            size={16}
+                            size={isMobileView ? 12 : 16}
                             fill={index < rating.stars ? "#facc15" : "none"}
                             stroke={
                               index < rating.stars ? "#facc15" : "#d1d5db"
@@ -63,7 +79,7 @@ const AdminReports = () => {
                           />
                         ))}
                       </div>
-                      <span className="text-xs font-bold text-gray-500 w-8">
+                      <span className="text-[10px] md:text-xs font-bold text-gray-500 w-6 md:w-8">
                         {rating.percent}
                       </span>
                     </div>
@@ -72,38 +88,48 @@ const AdminReports = () => {
 
                 <div className="flex flex-col items-center">
                   <div className="relative flex items-center justify-center">
-                    <Star size={110} fill="#facc15" stroke="#facc15" />
-                    <span className="absolute text-2xl font-black text-[#4a3733] pb-1">
+                    <Star
+                      size={isMobileView ? 80 : 110}
+                      fill="#facc15"
+                      stroke="#facc15"
+                    />
+                    <span
+                      className={`absolute font-black text-[#4a3733] pb-1 ${isMobileView ? "text-xl" : "text-2xl"}`}
+                    >
                       4.6
                     </span>
                   </div>
-                  <p className="text-xs font-bold text-[#4a3733] mt-2 uppercase tracking-wide">
+                  <p className="text-[10px] md:text-xs font-bold text-[#4a3733] mt-1 md:mt-2 uppercase tracking-wide text-center">
                     Avg. Star Rating
                   </p>
                 </div>
               </div>
 
               {/* Total Reviews Panel */}
-              <div className="bg-white rounded-3xl p-8 flex-1 flex flex-col items-center justify-center shadow-sm border border-white/50">
-                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">
+              <div className="bg-white rounded-3xl p-6 md:p-8 flex-1 flex flex-col items-center justify-center shadow-sm border border-white/50 min-h-[150px]">
+                <h2 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">
                   Total Reviews
                 </h2>
-                <span className="text-7xl font-black text-[#4a3733] tracking-tighter">
+                <span
+                  className={`font-black text-[#4a3733] tracking-tighter ${isMobileView ? "text-5xl" : "text-7xl"}`}
+                >
                   1024
                 </span>
               </div>
             </div>
 
-            {/* RIGHT COLUMN - Bar Chart */}
-            <div className="flex-[0.55] bg-white rounded-3xl p-8 shadow-sm border border-white/50 flex flex-col">
-              <h2 className="text-sm font-bold text-[#4a3733] mb-8 uppercase tracking-widest">
+            {/* RIGHT COLUMN - Bar Chart (or Bottom on Mobile) */}
+            <div
+              className={`${isMobileView ? "w-full min-h-[400px]" : "flex-[0.55]"} bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-white/50 flex flex-col`}
+            >
+              <h2 className="text-xs md:text-sm font-bold text-[#4a3733] mb-6 md:mb-8 uppercase tracking-widest">
                 No. of Events
               </h2>
-              <div className="flex-1 w-full bg-white rounded-2xl p-4 shadow-inner">
+              <div className="flex-1 w-full bg-white rounded-2xl p-2 md:p-4 shadow-inner min-h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={barData}
-                    margin={{ top: 20, right: 10, left: -20, bottom: 20 }}
+                    margin={{ top: 20, right: 10, left: -30, bottom: 20 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -114,8 +140,11 @@ const AdminReports = () => {
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#9ca3af", fontSize: 10 }}
-                      angle={-90}
+                      tick={{
+                        fill: "#9ca3af",
+                        fontSize: isMobileView ? 9 : 10,
+                      }}
+                      angle={-45}
                       textAnchor="end"
                       interval={0}
                     />
@@ -125,11 +154,11 @@ const AdminReports = () => {
                       dataKey="value"
                       fill="#4e79a7"
                       radius={[4, 4, 0, 0]}
-                      barSize={35}
+                      barSize={isMobileView ? 20 : 35}
                       label={{
                         position: "top",
                         fill: "#4a3733",
-                        fontSize: 12,
+                        fontSize: isMobileView ? 10 : 12,
                         fontWeight: "bold",
                       }}
                     >
