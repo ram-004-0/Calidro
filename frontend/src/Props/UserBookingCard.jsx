@@ -65,7 +65,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
     setBooking(initialBooking);
   }, [initialBooking]);
 
-  const hasBeenRated = booking.is_rated === 1 || booking.is_rated === true;
+  const hasBeenRated = Number(booking.is_rated) === 1;
 
   const balance = useMemo(() => {
     return (booking.total || 0) - (booking.paid || 0);

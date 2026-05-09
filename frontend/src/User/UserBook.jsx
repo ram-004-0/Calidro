@@ -34,7 +34,7 @@ const UserBook = () => {
       }
     };
     fetchBookings();
-  }, []);
+  }, [location.key]);
 
   const sortedBookings = [...bookings].sort(
     (a, b) => new Date(b.date) - new Date(a.date),
