@@ -107,4 +107,29 @@ router.get("/event-ratings/:bookingId", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+//for the gallery & rating page
+router.get("/gallery-ratings", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        r.rating_id, 
+        u.username, 
+        r.comment, 
+        r.rating,
+        (SELECT image_url FROM rating_images WHERE rating_id = r.rating_id LIMIT 1) as first_image
+      FROM rating r
+      JOIN user u ON r.user_id = u.user_id
+      HAVING first_image IS NOT NULL
+      ORDER BY RAND() 
+      LIMIT 12
+    `;
+
+    const [results] = await db.execute(query);
+    res.json(results);
+  } catch (error) {
+    console.error("Gallery Ratings Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports = router;

@@ -2,12 +2,6 @@ import { useRef, useState, useEffect } from "react";
 import GalleryCard from "../Props/GalleryCard";
 import RatingCard from "../Props/RatingCard";
 
-// Keep rating images as they are static for now
-import image6 from "../assets/Images/review1.JPG";
-import image7 from "../assets/Images/review2.JPG";
-import image8 from "../assets/Images/review3.jpg";
-import image9 from "../assets/Images/review4.JPG";
-
 const API_URL = "https://calidro-production.up.railway.app";
 
 const Gallery = () => {
@@ -16,22 +10,30 @@ const Gallery = () => {
 
   // 1. Setup state for your database cards
   const [dbEvents, setDbEvents] = useState([]);
+  const [dbRatings, setDbRatings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // 2. Fetch the data when the component loads
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchGalleryData = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/settings/event-cards`);
-        const data = await response.json();
-        setDbEvents(data);
+        const [eventsRes, ratingsRes] = await Promise.all([
+          fetch(`${API_URL}/api/settings/event-cards`),
+          fetch(`${API_URL}/api/gallery-ratings`), // Fetch from new route
+        ]);
+
+        const eventsData = await eventsRes.json();
+        const ratingsData = await ratingsRes.json();
+
+        setDbEvents(eventsData);
+        setDbRatings(ratingsData);
       } catch (error) {
-        console.error("Error fetching gallery events:", error);
+        console.error("Error fetching gallery data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchEvents();
+    fetchGalleryData();
   }, []);
 
   const slide = (ref, direction) => {
@@ -42,6 +44,8 @@ const Gallery = () => {
       behavior: "smooth",
     });
   };
+
+  const renderStars = (count) => "★".repeat(count) + "☆".repeat(5 - count);
 
   return (
     <div className="relative bg-[#f1f1f1] space-y-16">
@@ -96,12 +100,11 @@ const Gallery = () => {
         </div>
       </section>
 
-      {/* ================= Ratings (Keep as is) ================= */}
+      {/* ================= Ratings ================= */}
       <section className="relative">
         <h1 className="px-10 text-3xl font-bold text-[#4a3733] mb-4">
           Ratings
         </h1>
-
         <button
           onClick={() => slide(ratingsRef, -1)}
           className="absolute left-2 top-1/2 z-10 -translate-y-1/2 bg-[#4a3733] text-white p-3 rounded-full shadow-lg"
@@ -120,54 +123,27 @@ const Gallery = () => {
             ref={ratingsRef}
             className="flex gap-6 overflow-x-hidden scroll-smooth px-5"
           >
-            <RatingCard
-              image={
-                <img
-                  src={image6}
-                  alt="Rochi"
-                  className="w-full h-full object-cover"
+            {loading ? (
+              <p className="px-5">Loading reviews...</p>
+            ) : dbRatings.length > 0 ? (
+              dbRatings.map((rev) => (
+                <RatingCard
+                  key={rev.rating_id}
+                  image={
+                    <img
+                      src={rev.first_image}
+                      alt={rev.username}
+                      className="w-full h-full object-cover"
+                    />
+                  }
+                  name={rev.username}
+                  comment={rev.comment}
+                  stars={renderStars(rev.rating)}
                 />
-              }
-              name="Rochi"
-              comment="The venue is absolutely stunning. Perfect for our wedding! The staff was very helpful."
-              stars="★★★★★"
-            />
-            <RatingCard
-              image={
-                <img
-                  src={image7}
-                  alt="Mark"
-                  className="w-full h-full object-cover"
-                />
-              }
-              name="Mark"
-              comment="Amazing experience! The virtual tour was exactly like the real thing."
-              stars="★★★★★"
-            />
-            <RatingCard
-              image={
-                <img
-                  src={image8}
-                  alt="Ella"
-                  className="w-full h-full object-cover"
-                />
-              }
-              name="Ella"
-              comment="Great place, but the parking was a bit tight. Overall 10/10 service and beautiful lights."
-              stars="★★★★☆"
-            />
-            <RatingCard
-              image={
-                <img
-                  src={image9}
-                  alt="Bautista"
-                  className="w-full h-full object-cover"
-                />
-              }
-              name="Bautista"
-              comment="The place is okay, but it was a bit hot inside during the afternoon."
-              stars="★★★☆☆"
-            />
+              ))
+            ) : (
+              <p className="px-5 text-gray-500">No photo reviews found.</p>
+            )}
           </div>
         </div>
       </section>
