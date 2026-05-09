@@ -710,4 +710,34 @@ router.post("/webhook/paymongo", async (req, res) => {
     console.error("🔥 WEBHOOK SYSTEM ERROR:", err.message);
   }
 });
+
+// GET: Fetch all bookings for the logged-in user with rating status
+router.get("/user-bookings", verifyToken, async (req, res) => {
+  const user_id = req.user.user_id;
+
+  // This query joins the 'booking' table with the 'rating' table.
+  // 1. It takes all rows from 'booking' (b).
+  // 2. It looks for a matching 'booking_id' in 'rating' (r).
+  // 3. If r.rating_id is NOT NULL, it means the user has already rated it.
+  const query = `
+    SELECT 
+      b.*, 
+      CASE WHEN r.rating_id IS NOT NULL THEN 1 ELSE 0 END AS is_rated
+    FROM booking b
+    LEFT JOIN rating r ON b.booking_id = r.booking_id
+    WHERE b.user_id = ?
+    ORDER BY b.date DESC
+  `;
+
+  try {
+    const [results] = await db.execute(query, [user_id]);
+    res.json(results);
+  } catch (error) {
+    console.error("Fetch User Bookings Error:", error);
+    res.status(500).json({
+      message: "Failed to fetch bookings",
+      error: error.message,
+    });
+  }
+});
 module.exports = router;
