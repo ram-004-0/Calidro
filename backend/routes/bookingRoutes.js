@@ -713,7 +713,7 @@ router.post("/webhook/paymongo", async (req, res) => {
 });
 
 // GET: Fetch all bookings for the logged-in user with rating status
-router.get("/user-bookings", verifyToken, async (req, res) => {
+router.get("/my-bookings/:user_id", verifyToken, async (req, res) => {
   const user_id = req.user.user_id;
 
   const sqlQuery = `
