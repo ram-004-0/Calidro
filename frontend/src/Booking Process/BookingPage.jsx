@@ -445,6 +445,7 @@ export default function BookingPage({ onNext }) {
             </span>
           </div>
         </FormRow>
+        <br />
 
         <div className="pt-2 hidden md:block">
           <button
