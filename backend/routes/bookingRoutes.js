@@ -625,9 +625,9 @@ router.post("/webhook/paymongo", async (req, res) => {
     }
 
     const amountInCents =
-      attributes.amount ||
-      attributes.data?.attributes?.amount ||
-      attributes.payment_intent?.attributes?.amount ||
+      attributes?.amount ||
+      attributes?.data?.attributes?.amount ||
+      attributes?.payment_intent?.attributes?.amount ||
       0;
 
     const paymentAmount = amountInCents / 100;
@@ -655,11 +655,7 @@ router.post("/webhook/paymongo", async (req, res) => {
         "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
         [newTotalPaid, finalStatus, finalPaymentType, bookingId],
       );
-      res.json({
-        success: true,
-        paymentType: finalPaymentType,
-        status: finalStatus,
-      });
+
       console.log(
         `✅ DB UPDATED: Booking ${bookingId} total is now ₱${newTotalPaid}`,
       );

@@ -27,6 +27,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const [amountInput, setAmountInput] = useState("5000");
 
   const totalAmount = useMemo(() => {
+    if (!isMounted) return 0;
     if (isRestricted && amountToPayFromState) return amountToPayFromState;
     const {
       duration = 4,
@@ -40,7 +41,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       Math.max(0, ingress_time - 2) * 1000 +
       Math.max(0, egress_time - 1) * 1000
     );
-  }, [bookingData, isRestricted, amountToPayFromState]);
+  }, [isMounted, bookingData, isRestricted, amountToPayFromState]);
 
   useEffect(() => {
     setIsMounted(true);
