@@ -115,7 +115,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
           address: addr,
           eventName: bookingData?.eventName || "Untitled",
           eventType: bookingData?.eventType,
-          eventDate: bookingData?.date,
+          eventDate: bookingData?.eventDate,
           time: bookingData?.time,
           duration: bookingData?.duration,
           ingress: bookingData?.ingress || 2,
