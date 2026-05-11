@@ -646,7 +646,7 @@ router.post("/webhook/paymongo", async (req, res) => {
       const newTotalPaid = currentPaid + paymentAmount;
 
       const isFullyPaid = newTotalPaid >= totalAmount - 0.01;
-      const newStatus = isFullyPaid ? "confirmed" : "partial";
+      const newStatus = isFullyPaid ? "confirmed" : "pending";
       const newPaymentType = isFullyPaid ? "full" : "partial";
 
       await db.query(

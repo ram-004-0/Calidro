@@ -44,7 +44,11 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    if (user) {
+      setPhone(bookingData?.phone_number || user?.phone_number || "");
+      setAddr(bookingData?.address || user?.address || "");
+    }
+  }, [user, bookingData]);
 
   // --- 2. THE CONDITIONAL RETURN (ONLY AFTER ALL HOOKS) ---
   if (!isMounted) {
