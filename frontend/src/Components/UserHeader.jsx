@@ -154,7 +154,7 @@ const UserHeader = () => {
                 <div className="absolute right-0 mt-4 w-64 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
                   <div className="flex justify-between items-center border-b pb-2 mb-2">
                     <h3 className="font-bold text-sm uppercase tracking-wider">
-                      Admin Alerts
+                      User Alerts
                     </h3>
                     <button
                       onClick={() => setUserNotifications([])}
@@ -164,8 +164,8 @@ const UserHeader = () => {
                     </button>
                   </div>
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
-                    {adminNotifications.length > 0 ? (
-                      adminNotifications.map((n) => (
+                    {userNotifications.length > 0 ? (
+                      userNotifications.map((n) => (
                         <div
                           key={n.id}
                           className="text-xs hover:bg-gray-50 p-2 rounded-lg cursor-default transition border-b border-gray-50 last:border-0"
