@@ -46,6 +46,15 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     setIsMounted(true);
   }, []);
 
+  // --- 2. THE CONDITIONAL RETURN (ONLY AFTER ALL HOOKS) ---
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
   const formatNumber = (val) => Number(val).toLocaleString("en-PH");
 
   const handleUpdateBalance = async (methods) => {
@@ -91,52 +100,36 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     }
   };
 
-  const handleUpdateBalance = async (methods) => {
-    const urlId = searchParams.get("bookingId");
-    const stateId =
-      state?.bookingData?.booking_id || state?.bookingId || state?.id;
-
-    let bId = urlId || stateId;
-
-    if (!bId || bId === "undefined" || bId === "null") {
-      console.error("DEBUG: ID check failed.", { urlId, stateId });
-      alert(
-        "CRITICAL ERROR: No valid Booking ID found. Please go back to 'My Bookings' and try again.",
-      );
-      return;
-    }
-
+  const handlePaymentMethodClick = async (methods) => {
+    if (!user?.user_id) return alert("Please log in.");
+    const numericAmount = parseFloat(amountInput) || 0;
     setLoading(true);
 
     try {
-      // 2. Prepare Payload
       const payload = {
-        bookingId: bId,
-        amount: totalAmount,
+        userId: user.user_id,
+        phone_number: phone,
+        address: addr,
+        eventName: bookingData?.eventName || "Untitled",
+        eventType: bookingData?.eventType,
+        eventDate: bookingData?.eventDate,
+        time: bookingData?.time,
+        duration: bookingData?.duration,
+        totalAmount: totalAmount,
+        amount_paid: paymentType === "full" ? totalAmount : numericAmount,
+        paymentType: paymentType,
         payment_methods: methods,
       };
 
-      console.log("🚀 Initiating Balance Update:", payload);
-
-      const url =
-        "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
-
-      // 3. API Call
-      const response = await axios.post(url, payload);
-
-      // 4. Handle Redirect
-      if (response.data && response.data.checkout_url) {
-        console.log("✅ Checkout Session Created. Redirecting...");
+      const response = await API.post(
+        "/bookings/create-booking-and-checkout",
+        payload,
+      );
+      if (response.data?.checkout_url) {
         window.location.href = response.data.checkout_url;
-      } else {
-        throw new Error("The server didn't return a checkout URL.");
       }
     } catch (err) {
-      // 5. Error Handling
-      const serverMessage =
-        err.response?.data?.details || err.response?.data?.error || err.message;
-      console.error("❌ Payment Initiation Error:", serverMessage);
-      alert("Payment initiation failed: " + serverMessage);
+      alert("Error: " + (err.response?.data?.details || err.message));
     } finally {
       setLoading(false);
     }
