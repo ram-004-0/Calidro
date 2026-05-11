@@ -605,21 +605,26 @@ router.post("/webhook/paymongo", async (req, res) => {
     const attributes = payload.data?.attributes;
     if (!attributes) return;
 
-    // 1. IMPROVED METADATA PATH: PayMongo nests this differently for sessions
+    // FIX 1: Corrected metadata path based on your JSON
     const metadata =
-      attributes.data?.attributes?.metadata ||
       attributes.metadata ||
+      attributes.data?.attributes?.metadata ||
       attributes.data?.attributes?.payload?.checkout_session?.attributes
         ?.metadata;
 
-    const bookingId = attributes?.metadata?.bookingId;
-    if (!bookingId) return;
+    // Use the variable 'metadata' we just defined!
+    const bookingId = metadata?.bookingId;
+    if (!bookingId) {
+      console.log("❌ Webhook: Booking ID not found in metadata");
+      return;
+    }
 
-    // 2. THE FIX FOR ₱0: Digging into the specific PayMongo 'payment' object
+    // FIX 2: Specific amount path from your JSON
     const amountInCents =
-      attributes?.payment_intent?.attributes?.amount ||
-      attributes?.line_items?.[0]?.amount ||
+      attributes.payment_intent?.attributes?.amount ||
+      attributes.data?.attributes?.payload?.payment?.attributes?.amount ||
       0;
+
     const paymentAmount = amountInCents / 100;
 
     const [rows] = await db.query(
@@ -630,12 +635,9 @@ router.post("/webhook/paymongo", async (req, res) => {
     if (rows.length > 0) {
       const currentPaid = parseFloat(rows[0].amount_paid) || 0;
       const totalRequired = parseFloat(rows[0].total_amount) || 0;
-
       const newTotalPaid = currentPaid + paymentAmount;
 
-      // 3. BUFFER CHECK: Added 1 peso buffer for rounding errors
       const isFullyPaid = newTotalPaid >= totalRequired - 1;
-
       const finalStatus = isFullyPaid ? "confirmed" : "pending";
       const finalPaymentType = isFullyPaid ? "full" : "partial";
 

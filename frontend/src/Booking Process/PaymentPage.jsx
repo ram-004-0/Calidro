@@ -8,31 +8,30 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const { state } = useLocation();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-
   const [loading, setLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 1. Initialize state with empty strings to avoid server/client mismatch
+  const [phone, setPhone] = useState("");
+  const [addr, setAddr] = useState("");
+  const [amountInput, setAmountInput] = useState("5000");
+
+  // 2. Single UseEffect for mounting
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const bookingData = propBookingData || state?.bookingData || {};
   const isRestricted = state?.paymentTypeRestriction === "Full";
   const amountToPayFromState = state?.amountToPay;
 
-  //const [phone, setPhone] = useState(bookingData?.phone_number || user?.phone_number || "",);
-  //const [addr, setAddr] = useState(bookingData?.address || user?.address || "");
-  const [phone, setPhone] = useState("");
-  const [addr, setAddr] = useState("");
-
   const [paymentType, setPaymentType] = useState(
     isRestricted ? "full" : "partial",
   );
-  const [amountInput, setAmountInput] = useState("5000");
 
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
+  // 3. Hydration Guard for useMemo
   const totalAmount = useMemo(() => {
-    if (!isMounted) return 0; // Server renders 0, Browser renders 0. Match!
+    if (!isMounted) return 0;
 
     if (isRestricted && amountToPayFromState) return amountToPayFromState;
 
@@ -49,14 +48,22 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       Math.max(0, egress_time - 1) * 1000
     );
   }, [isMounted, bookingData, isRestricted, amountToPayFromState]);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
+  // 4. Fill form only AFTER mounting is confirmed
+  useEffect(() => {
+    if (isMounted && user) {
+      setPhone(bookingData?.phone_number || user?.phone_number || "");
+      setAddr(bookingData?.address || user?.address || "");
+    }
+  }, [isMounted, user, bookingData]);
+
+  // 5. CRITICAL: The return guard
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        Loading...
+        <div className="text-xl font-semibold text-gray-400 animate-pulse">
+          Loading Payment Details...
+        </div>
       </div>
     );
   }
