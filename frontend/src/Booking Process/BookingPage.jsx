@@ -126,6 +126,7 @@ export default function BookingPage({ onNext }) {
         egress_time: payload.egress_time ? Number(payload.egress_time) : null,
         total_amount: Number(payload.total_amount) || 0,
       };
+      console.log("📤 FRONTEND SENDING:", payload);
 
       const url = `${API_URL}/api/bookings/reschedule/${bId}`;
 

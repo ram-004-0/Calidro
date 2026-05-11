@@ -503,6 +503,9 @@ router.put("/edit/:id", async (req, res) => {
 // PUT route to handle rescheduling
 router.put("/reschedule/:id", async (req, res) => {
   const bookingId = req.params.id;
+
+  console.log("📥 RECEIVED PAYLOAD:", req.body);
+
   const {
     event_date,
     event_time,
