@@ -518,7 +518,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
   try {
     const [currentBooking] = await db.query(
-      `SELECT event_duration FROM booking WHERE booking_id = ?`,
+      `SELECT event_duration, user_id FROM booking WHERE booking_id = ?`,
       [bookingId],
     );
 
@@ -578,10 +578,28 @@ router.put("/reschedule/:id", async (req, res) => {
       bookingId,
     ]);
 
-    if (userId) {
-      const notificationMessage = `Your booking for ${event_date} has been successfully rescheduled.`;
-      await createNotification(userId, notificationMessage, bookingId);
+    // --- START OF THE SAFETY NET ---
+    let finalUserId = userId;
+
+    // If userId is null/undefined in the payload, use the one from the database
+    if (!finalUserId) {
+      console.log(
+        "🔍 userId was null in payload. Using user_id from database.",
+      );
+      finalUserId = currentBooking[0].user_id;
     }
+
+    if (finalUserId) {
+      const notificationMessage = `Your booking for ${event_date} has been successfully rescheduled.`;
+      console.log(`🔔 Creating notification for user: ${finalUserId}`);
+      await createNotification(finalUserId, notificationMessage, bookingId);
+    } else {
+      console.log(
+        "⚠️ Notification skipped: No userId found in payload or database.",
+      );
+    }
+    // --- END OF THE SAFETY NET ---
+
     res.status(200).json({
       message: "Reschedule successful!",
       newTotal: total_amount,
