@@ -64,7 +64,6 @@ export default function BookingPage({ onNext }) {
     const baseOptions = [4, 5, 6, 7, 8, 9, 10];
 
     if (isRescheduling && rescheduleData?.event_duration) {
-      // Ensure we treat the existing duration as the floor
       const minDuration = parseInt(rescheduleData.event_duration) || 4;
       return baseOptions.filter((h) => h >= minDuration);
     }
@@ -78,7 +77,7 @@ export default function BookingPage({ onNext }) {
   }, [isRescheduling, rescheduleData, selectedTime, timeSlots]);
 
   const ingressOptions = useMemo(() => {
-    const baseOptions = [1, 2, 3, 4];
+    const baseOptions = [2, 3, 4];
     if (isRescheduling && rescheduleData?.ingress_time) {
       const minIngress = parseInt(rescheduleData.ingress_time);
       return baseOptions.filter((h) => h >= minIngress);
@@ -111,7 +110,6 @@ export default function BookingPage({ onNext }) {
 
   const updateBookingOnly = async (payload) => {
     try {
-      // Change 'id' to 'booking_id' to match your SQL schema
       const bId = rescheduleData.booking_id || rescheduleData.id;
       const url = `${API_URL}/api/bookings/reschedule/${bId}`;
 
@@ -143,7 +141,7 @@ export default function BookingPage({ onNext }) {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
 
-        console.log("RAW DATA FROM DB:", response.data); // Look at this in F12 console!
+        console.log("RAW DATA FROM DB:", response.data);
 
         const formattedDates = response.data
           .map((b) => {
@@ -185,25 +183,20 @@ export default function BookingPage({ onNext }) {
       isBefore(date, startOfToday()) || isSameDay(date, startOfToday());
     const isBooked = bookedDates.includes(dateStr);
 
-    // 1. Outside of current month
     if (!isSameMonth(date, monthStart)) return "text-gray-300";
 
-    // 2. PRIORITY: If it is booked, it MUST be Red (even if it's in the past)
     if (isBooked) {
       return "bg-red-300 cursor-not-allowed text-white";
     }
 
-    // 3. If it is a past date (but NOT booked)
     if (isPastDate) {
       return "bg-gray-100 text-gray-300 cursor-not-allowed";
     }
 
-    // 4. If it is the selected date
     if (selectedDate && isSameDay(date, selectedDate)) {
       return "bg-yellow-300 font-bold";
     }
 
-    // 5. Available
     return "bg-green-200 hover:bg-green-300 cursor-pointer";
   };
 
@@ -215,13 +208,17 @@ export default function BookingPage({ onNext }) {
   };
 
   const allowedIngressDurations = useMemo(() => {
-    const defaultOptions = [1, 2, 3, 4];
+    const defaultOptions = [2, 3, 4];
+
     if (!selectedTime || !selectedDate) return defaultOptions;
     const isSunday = getDay(selectedDate) === 0;
+
     if (!isSunday) return defaultOptions;
     const selectedSlot = timeSlots.find((s) => s.label === selectedTime);
+
     if (!selectedSlot) return defaultOptions;
     const maxAllowedDuration = selectedSlot.hour24 - 13;
+
     return defaultOptions.filter((d) => d <= maxAllowedDuration && d > 0);
   }, [selectedTime, selectedDate, timeSlots]);
 
@@ -237,43 +234,33 @@ export default function BookingPage({ onNext }) {
       return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
     };
 
-    // 1. Check for basic schedule fields (Required for BOTH)
     if (!selectedDate || !selectedTime) {
       alert("Please select a Date and Time.");
       return;
     }
 
-    // 2. Check for event type ONLY if it's a new booking
     if (!isRescheduling && !eventType) {
       alert("Please select an Event Type.");
       return;
     }
-
-    // 3. Determine if they added hours (Upgraded)
     const isUpgraded =
       isRescheduling &&
       (parseInt(duration) > parseInt(rescheduleData.event_duration) ||
         parseInt(ingress) > parseInt(rescheduleData.ingress_time) ||
         parseInt(egress) > parseInt(rescheduleData.egress_time));
 
-    // 4. Create the Payload
     const bookingPayload = {
-      // Shared fields
       event_date: format(selectedDate, "yyyy-MM-dd"),
       event_time: convertTo24Hour(selectedTime),
       event_duration: parseInt(duration),
       ingress_time: parseInt(ingress),
       egress_time: parseInt(egress),
       total_amount: totalAmount,
-
-      // Reschedule specific fields
       isReschedule: isRescheduling,
       isUpgrade: isUpgraded,
       booking_id: isRescheduling
         ? rescheduleData.booking_id || rescheduleData.id
         : null,
-
-      // New Booking specific fields (sent as empty if rescheduling)
       userId: user?.user_id || user?.id,
       username,
       email,
@@ -284,12 +271,9 @@ export default function BookingPage({ onNext }) {
       guests: isRescheduling ? null : guestCount,
     };
 
-    // 5. Route the action
     if (isRescheduling && !isUpgraded) {
-      // Simple reschedule: No extra cost, update DB immediately
       updateBookingOnly(bookingPayload);
     } else {
-      // New booking OR Reschedule with Upgrade: Go to Review/Payment page
       onNext(bookingPayload);
     }
   };
@@ -313,45 +297,31 @@ export default function BookingPage({ onNext }) {
 
             <optgroup label="Social Events">
               <option value="Birthday Party">Birthday Party</option>
-
               <option value="Debut">Debut (18th Birthday)</option>
-
               <option value="Wedding Ceremony">Wedding Ceremony</option>
-
               <option value="Wedding Reception">Wedding Reception</option>
-
               <option value="Anniversary">Anniversary Celebration</option>
             </optgroup>
 
             <optgroup label="Family Milestones">
               <option value="Baby Shower">Baby Shower</option>
-
               <option value="Gender Reveal">Gender Reveal</option>
-
               <option value="Baptism">Baptism / Christening</option>
-
               <option value="Graduation Party">Graduation Party</option>
             </optgroup>
 
             <optgroup label="Corporate Events">
               <option value="Corporate Meeting">Corporate Meeting</option>
-
               <option value="Seminar">Seminar / Workshop</option>
-
               <option value="Conference">Conference</option>
-
               <option value="Team Building">Team Building Event</option>
-
               <option value="Company Party">Company Party</option>
             </optgroup>
 
             <optgroup label="Creative / Others">
               <option value="Exhibit">Exhibit / Art Showcase</option>
-
               <option value="Pop-up Market">Pop-up Market / Bazaar</option>
-
               <option value="Photoshoot">Photoshoot / Studio Rental</option>
-
               <option value="Other">Other</option>
             </optgroup>
           </select>
@@ -378,7 +348,7 @@ export default function BookingPage({ onNext }) {
         </FormRow>
 
         <div
-          className={`grid ${isMobileView ? "grid-cols-1" : "grid-cols-2"} gap-2`} //adjusting the four formrows in mobile view
+          className={`grid ${isMobileView ? "grid-cols-1" : "grid-cols-2"} gap-2`}
         >
           <FormRow label="TIME">
             <select
@@ -414,7 +384,7 @@ export default function BookingPage({ onNext }) {
         </div>
 
         <div
-          className={`grid ${isMobileView ? "grid-cols-1" : "grid-cols-2"} gap-2`} //adjusting the four formrows in mobile view
+          className={`grid ${isMobileView ? "grid-cols-1" : "grid-cols-2"} gap-2`}
         >
           <FormRow label="INGRESS">
             <select
@@ -424,7 +394,7 @@ export default function BookingPage({ onNext }) {
             >
               {ingressOptions.map((h) => (
                 <option key={h} value={h}>
-                  {h} Hour{h > 2 ? "s" : ""}
+                  {h} Hour{h > 1 ? "s" : ""}
                 </option>
               ))}
             </select>
@@ -455,7 +425,7 @@ export default function BookingPage({ onNext }) {
               placeholder="Max 200 pax"
               className={`input-style w-full ${
                 parseInt(guestCount) === 200 ? "border-orange-400" : ""
-              } ${isRescheduling ? "opacity-50 cursor-not-allowed" : ""}`} // <--- ADD THIS VISUAL CUE
+              } ${isRescheduling ? "opacity-50 cursor-not-allowed" : ""}`}
             />
 
             <span className="text-[10px] text-[#4a3733] mt-1 ml-2">
@@ -470,7 +440,7 @@ export default function BookingPage({ onNext }) {
             onClick={handleNextClick}
             className="bg-[#f4dfba] hover:bg-white transition px-10 py-3 rounded-full font-bold uppercase text-sm shadow-md"
           >
-            {isRescheduling ? "Confirm Reschedule >" : "Next >"} &gt;
+            {isRescheduling ? "Confirm Reschedule >" : "Next"} &gt;
           </button>
         </div>
       </div>
@@ -504,8 +474,6 @@ export default function BookingPage({ onNext }) {
             ))}
           </div>
 
-          {/* Reduced gap and py-3 to py-2 to shrink height */}
-
           <div className="grid grid-cols-7 gap-1 text-center">
             {days.map((day) => {
               const dateStr = format(day, "yyyy-MM-dd");
@@ -513,7 +481,6 @@ export default function BookingPage({ onNext }) {
                 isBefore(day, startOfToday()) || isSameDay(day, startOfToday());
               const isBooked = bookedDates.includes(dateStr);
 
-              // A date is disabled if it's in the past OR if it's already booked
               const isDisabled = isPast || isBooked;
 
               return (
