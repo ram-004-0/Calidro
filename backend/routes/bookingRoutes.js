@@ -643,11 +643,11 @@ router.post("/webhook/paymongo", async (req, res) => {
     );
 
     if (rows.length > 0) {
+      const dbTotal = parseFloat(rows[0].total_amount) || 0;
       const currentPaid = parseFloat(rows[0].amount_paid) || 0;
-      const totalAmount = parseFloat(rows[0].total_amount);
       const newTotalPaid = currentPaid + paymentAmount;
 
-      const isFullyPaid = newTotalPaid >= parseFloat(total_amount);
+      const isFullyPaid = newTotalPaid >= dbTotal;
       const finalStatus = isFullyPaid ? "confirmed" : "pending";
       const finalPaymentType = isFullyPaid ? "full" : "partial";
 
