@@ -90,7 +90,9 @@ const UserHeader = () => {
         setUserNotifications(response.data);
 
         // Show the red dot if there are unread notifications
-        const hasUnread = response.data.some((n) => !n.is_read);
+        const hasUnread = response.data.some(
+          (n) => n.is_read === 0 || n.is_read === false,
+        );
         setHasAdminUnread(hasUnread);
       } catch (err) {
         console.error("Error fetching notifications:", err);
@@ -99,7 +101,7 @@ const UserHeader = () => {
 
     fetchMyNotifications();
     // Optional: Check for new alerts every 2 minutes
-    const interval = setInterval(fetchMyNotifications, 120000);
+    const interval = setInterval(fetchMyNotifications, 5000);
     return () => clearInterval(interval);
   }, [setUserNotifications, setHasAdminUnread]);
 
@@ -162,7 +164,10 @@ const UserHeader = () => {
                       User Alerts
                     </h3>
                     <button
-                      onClick={() => setUserNotifications([])}
+                      onClick={() => {
+                        setUserNotifications([]);
+                        setHasAdminUnread(false);
+                      }}
                       className="text-[10px] text-gray-400 hover:text-red-500 font-bold"
                     >
                       CLEAR ALL
