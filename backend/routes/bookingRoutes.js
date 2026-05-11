@@ -502,10 +502,17 @@ router.put("/edit/:id", async (req, res) => {
 // PUT route to handle rescheduling
 router.put("/reschedule/:id", async (req, res) => {
   const bookingId = req.params.id;
-  const { event_date, event_time, event_duration, total_amount } = req.body;
+  const {
+    event_date,
+    event_time,
+    event_duration,
+    total_amount,
+    ingress_time,
+    egress_time,
+  } = req.body;
 
   try {
-    // 1. Fetch current booking to prevent duration decrease
+    // 1. Fetch current booking
     const [currentBooking] = await db.query(
       `SELECT event_duration FROM booking WHERE booking_id = ?`,
       [bookingId],
@@ -515,8 +522,15 @@ router.put("/reschedule/:id", async (req, res) => {
       return res.status(404).json({ error: "Booking not found." });
     }
 
-    const oldDuration = parseInt(currentBooking[0].event_duration);
+    // 2. Parse and Validate Numbers
+    const oldDuration = parseInt(currentBooking[0].event_duration) || 0;
     const newDuration = parseInt(event_duration);
+
+    if (isNaN(newDuration)) {
+      return res
+        .status(400)
+        .json({ error: "Duration must be a valid number." });
+    }
 
     if (newDuration < oldDuration) {
       return res.status(400).json({
@@ -524,7 +538,8 @@ router.put("/reschedule/:id", async (req, res) => {
       });
     }
 
-    // 2. Check for conflicts on the new date/time
+    // 3. Robust Conflict Check (Basic version - checks same start time)
+    // Note: Consider expanding this to check (startTime + duration) overlaps later
     const [conflicts] = await db.query(
       `SELECT * FROM booking 
        WHERE event_date = ? 
@@ -540,7 +555,7 @@ router.put("/reschedule/:id", async (req, res) => {
       });
     }
 
-    // to update the booking table when rescheduling
+    // 4. Update with Fallbacks
     const updateQuery = `
       UPDATE booking 
       SET 
@@ -553,13 +568,13 @@ router.put("/reschedule/:id", async (req, res) => {
       WHERE booking_id = ?
     `;
 
-    const [result] = await db.query(updateQuery, [
+    await db.query(updateQuery, [
       event_date,
       event_time,
       newDuration,
-      req.body.ingress_time,
-      req.body.egress_time,
-      total_amount,
+      parseInt(ingress_time) || 0,
+      parseInt(egress_time) || 0,
+      total_amount || 0,
       bookingId,
     ]);
 

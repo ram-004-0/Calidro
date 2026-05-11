@@ -110,15 +110,38 @@ export default function BookingPage({ onNext }) {
 
   const updateBookingOnly = async (payload) => {
     try {
-      const bId = rescheduleData.booking_id || rescheduleData.id;
+      // 1. Validate ID
+      const bId = rescheduleData?.booking_id || rescheduleData?.id;
+
+      if (!bId) {
+        console.error("No booking ID found in rescheduleData:", rescheduleData);
+        alert("Error: Could not identify the booking to update.");
+        return;
+      }
+
+      // 2. Sanitize Payload (Convert possible NaNs or undefined to numbers/nulls)
+      const sanitizedPayload = {
+        ...payload,
+        event_duration: Number(payload.event_duration) || 0,
+        ingress_time: Number(payload.ingress_time) || 0,
+        egress_time: payload.egress_time ? Number(payload.egress_time) : null,
+        total_amount: Number(payload.total_amount) || 0,
+      };
+
       const url = `${API_URL}/api/bookings/reschedule/${bId}`;
 
-      console.log("Sending PUT to:", url);
-      await axios.put(url, payload);
+      console.log("Sending Sanitized PUT to:", url, sanitizedPayload);
+
+      await axios.put(url, sanitizedPayload);
+
       alert("Booking updated successfully!");
+
+      // Optional: Refresh data or close modal here
     } catch (err) {
-      console.error("Update failed:", err.response?.data || err.message);
-      alert("Failed to update booking. Check console for details.");
+      const errorMsg =
+        err.response?.data?.message || err.response?.data || err.message;
+      console.error("Update failed:", errorMsg);
+      alert(`Failed to update booking: ${errorMsg}`);
     }
   };
 
@@ -144,7 +167,6 @@ export default function BookingPage({ onNext }) {
         const formattedDates = response.data
           .map((b) => {
             if (!b.event_date) return null;
-            // Ensure we handle ISO strings or standard date strings correctly
             return b.event_date.substring(0, 10);
           })
           .filter(Boolean);
@@ -152,14 +174,12 @@ export default function BookingPage({ onNext }) {
         setBookedDates([...formattedDates]);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
-        // Fallback to today if the fetch fails
         setBookedDates([format(new Date(), "yyyy-MM-dd")]);
       }
     };
 
     fetchBookings();
 
-    // --- RESCHEDULE LOGIC: PREVENT DECREASING DURATION ---
     if (isRescheduling && rescheduleData) {
       const origDuration = parseInt(rescheduleData.event_duration);
       const origIngress = parseInt(rescheduleData.ingress_time);
