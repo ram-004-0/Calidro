@@ -538,10 +538,10 @@ router.put("/reschedule/:id", async (req, res) => {
   const { date, time, duration, ingress_time, egress_time } = req.body;
 
   try {
-    // 1. Fetch current booking
-    const [rows] = await db.query("SELECT * FROM booking WHERE user_id = ?", [
-      id,
-    ]);
+    const [rows] = await db.query(
+      "SELECT * FROM booking WHERE booking_id = ?",
+      [id],
+    );
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
@@ -647,15 +647,19 @@ router.post("/webhook/paymongo", async (req, res) => {
       const totalAmount = parseFloat(rows[0].total_amount);
       const newTotalPaid = currentPaid + paymentAmount;
 
-      const isFullyPaid = newTotalPaid >= totalAmount - 0.01;
-      const newStatus = isFullyPaid ? "confirmed" : "pending";
-      const newPaymentType = isFullyPaid ? "full" : "partial";
+      const isFullyPaid = newTotalPaid >= parseFloat(total_amount);
+      const finalStatus = isFullyPaid ? "confirmed" : "pending";
+      const finalPaymentType = isFullyPaid ? "full" : "partial";
 
       await db.query(
         "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
-        [newTotalPaid, newStatus, newPaymentType, bookingId],
+        [newTotalPaid, finalStatus, finalPaymentType, bookingId],
       );
-
+      res.json({
+        success: true,
+        paymentType: finalPaymentType,
+        status: finalStatus,
+      });
       console.log(
         `✅ DB UPDATED: Booking ${bookingId} total is now ₱${newTotalPaid}`,
       );
