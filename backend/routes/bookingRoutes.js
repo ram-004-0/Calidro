@@ -630,7 +630,7 @@ router.post("/webhook/paymongo", async (req, res) => {
 
     const paymentAmount = amountInCents / 100;
 
-    Console.log(
+    console.log(
       `🔍 Webhook Received: Booking ${bookingId} | Paid: ₱${paymentAmount}`,
     );
 
