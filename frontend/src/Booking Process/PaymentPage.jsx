@@ -8,6 +8,14 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const { state } = useLocation();
   const [searchParams] = useSearchParams();
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  if (!isMounted) {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
+
   const bookingData = propBookingData || state?.bookingData || {};
   const isRestricted = state?.paymentTypeRestriction === "Full";
   const amountToPayFromState = state?.amountToPay;
@@ -18,13 +26,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   );
   const [addr, setAddr] = useState(bookingData?.address || user?.address || "");
   const [loading, setLoading] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) return null;
 
   const totalAmount = useMemo(() => {
     if (isRestricted && amountToPayFromState) return amountToPayFromState;
