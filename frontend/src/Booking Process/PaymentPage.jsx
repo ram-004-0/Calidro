@@ -16,7 +16,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const isRestricted = state?.paymentTypeRestriction === "Full";
   const amountToPayFromState = state?.amountToPay;
 
-  // const [phone, setPhone] = useState(bookingData?.phone_number || user?.phone_number || "",);
+  //const [phone, setPhone] = useState(bookingData?.phone_number || user?.phone_number || "",);
   //const [addr, setAddr] = useState(bookingData?.address || user?.address || "");
   const [phone, setPhone] = useState("");
   const [addr, setAddr] = useState("");
@@ -28,6 +28,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
   const totalAmount = useMemo(() => {
     if (!isMounted) return 0;
+
     if (isRestricted && amountToPayFromState) return amountToPayFromState;
     const {
       duration = 4,
@@ -45,11 +46,8 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
   useEffect(() => {
     setIsMounted(true);
-    if (user) {
-      setPhone(bookingData?.phone_number || user?.phone_number || "");
-      setAddr(bookingData?.address || user?.address || "");
-    }
-  }, [user, bookingData]);
+  }, []);
+
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -57,7 +55,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       </div>
     );
   }
-
   const formatNumber = (val) => Number(val).toLocaleString("en-PH");
 
   const handleUpdateBalance = async (methods) => {

@@ -598,34 +598,55 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
+  // 1. ALWAYS respond 200 OK immediately to stop PayMongo from retrying
   res.status(200).send("ok");
+
   try {
     const payload = req.body;
     const attributes = payload.data?.attributes;
     if (!attributes) return;
 
+    // 2. FIXED PATHS: PayMongo nests metadata and amount deeply for Checkout Sessions
+    // We check every possible location so it never returns 'undefined'
     const metadata =
       attributes.data?.attributes?.metadata ||
       attributes.metadata ||
-      attributes.payment_intent?.attributes?.metadata;
+      attributes.payment_intent?.attributes?.metadata ||
+      attributes.data?.attributes?.payload?.checkout_session?.attributes
+        ?.metadata;
+
     const bookingId = metadata?.bookingId;
-    if (!bookingId) return;
+    if (!bookingId) {
+      console.error("❌ Webhook: No Booking ID found in payload");
+      return;
+    }
 
-    const paymentAmount =
-      (attributes.amount ||
-        attributes.data?.attributes?.amount ||
-        attributes.payment_intent?.attributes?.amount ||
-        0) / 100;
+    // 3. FIXED AMOUNT: Looking into the 'payload' object where the actual money is
+    const amountInCents =
+      attributes.data?.attributes?.payload?.payment?.attributes?.amount ||
+      attributes.amount ||
+      attributes.data?.attributes?.amount ||
+      0;
 
+    const paymentAmount = amountInCents / 100;
+
+    // 4. DATABASE SYNC
     const [rows] = await db.query(
       "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
       [bookingId],
     );
 
     if (rows.length > 0) {
-      const newTotalPaid =
-        (parseFloat(rows[0].amount_paid) || 0) + paymentAmount;
-      const isFullyPaid = newTotalPaid >= parseFloat(rows[0].total_amount);
+      const currentPaid = parseFloat(rows[0].amount_paid) || 0;
+      const totalRequired = parseFloat(rows[0].total_amount) || 0;
+
+      // Calculate the new total
+      const newTotalPaid = currentPaid + paymentAmount;
+
+      // 5. MATH BUFFER: Subtract 1 peso to handle decimal rounding issues
+      // This ensures 25000.00 >= 24999.99 is TRUE
+      const isFullyPaid = newTotalPaid >= totalRequired - 1;
+
       const finalStatus = isFullyPaid ? "confirmed" : "pending";
       const finalPaymentType = isFullyPaid ? "full" : "partial";
 
@@ -633,9 +654,13 @@ router.post("/webhook/paymongo", async (req, res) => {
         "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
         [newTotalPaid, finalStatus, finalPaymentType, bookingId],
       );
-      console.log(`✅ DB UPDATED: Booking ${bookingId} now ₱${newTotalPaid}`);
+
+      console.log(
+        `✅ DB UPDATED: Booking ${bookingId} | Added: ₱${paymentAmount} | New Total: ₱${newTotalPaid} | Status: ${finalStatus}`,
+      );
     }
   } catch (err) {
+    // We log the error but don't 'res.send' again because we already sent 200 OK
     console.error("🔥 WEBHOOK SYSTEM ERROR:", err.message);
   }
 });
