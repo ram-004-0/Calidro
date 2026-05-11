@@ -74,7 +74,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       const response = await axios.post(url, payload);
 
       if (response.data.checkout_url) {
-        // Redirect to PayMongo
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
@@ -97,7 +96,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       let response;
 
       if (isRestricted) {
-        // SCENARIO A: Updating balance for an EXISTING booking
         const payload = {
           bookingId: state.bookingId,
           amount_paid: numericAmount,
@@ -124,7 +122,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
           egress: bookingData?.egress || 1,
           guests: bookingData?.guests,
           totalAmount: totalAmount,
-          amount_paid: numericAmount,
+          amount_paid: paymentType === "full" ? totalAmount : numericAmount,
           paymentType: paymentType,
           payment_methods: methods,
         };

@@ -8,7 +8,6 @@ console.log("🔥 FILE LOADED: bookingRoutes.js");
 
 router.use((req, res, next) => {
   // This version tells us EXACTLY what the URL looks like inside this router
-
   console.log(`📍 ROUTER INBOUND: ${req.method} ${req.url}`);
 
   next();
@@ -17,7 +16,6 @@ router.use((req, res, next) => {
 const { sendBookingConfirmation } = require("../services/emailService");
 
 // Helper for SQL Queries
-
 const query = async (sql, params) => {
   try {
     console.log("DEBUG: Executing SQL:", sql);
@@ -35,24 +33,15 @@ const query = async (sql, params) => {
 };
 
 // Helper to format time for MySQL Time column
-
 const formatTimeTo24H = (timeStr) => {
   if (!timeStr) return "00:00:00";
-
   if (/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) return timeStr;
-
   const [time, modifier] = timeStr.split(" ");
-
   let [hours, minutes] = time.split(":");
-
   if (!minutes) minutes = "00";
-
   let hoursNum = parseInt(hours, 10);
-
   if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
-
   if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
-
   return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
 };
 
@@ -63,7 +52,6 @@ router.post("/test-post", (req, res) => {
 });
 
 // 1. Create New Booking and Launch PayMongo
-
 router.post("/create-booking-and-checkout", async (req, res) => {
   console.log("1. Route Triggered. Event:", req.body.eventName);
 
@@ -84,8 +72,6 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       payment_methods,
     } = req.body;
 
-    // --- STEP 1: Fetch User Details from the 'user' table ---
-    // We do this to ensure we have the correct phone, address, and email
     const [userData] = await query(
       "SELECT username, email, phone_number, address FROM user WHERE user_id = ?",
       [userId],
@@ -97,13 +83,12 @@ router.post("/create-booking-and-checkout", async (req, res) => {
         .json({ error: "User not found. Please log in again." });
     }
 
-    // --- STEP 2: Prepare the Booking Data ---
     const bookingData = {
       user_id: userId,
-      username: userData.username, // From 'user' table
-      email: userData.email, // From 'user' table
-      phone_number: userData.phone_number, // From 'user' table
-      address: userData.address, // From 'user' table
+      username: userData.username,
+      email: userData.email,
+      phone_number: userData.phone_number,
+      address: userData.address,
       event_name: eventName,
       event_type: eventType,
       event_date: eventDate,
@@ -122,7 +107,6 @@ router.post("/create-booking-and-checkout", async (req, res) => {
     const result = await query("INSERT INTO booking SET ?", [bookingData]);
     const bookingId = result.insertId;
 
-    // --- STEP 3: PayMongo Integration ---
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
@@ -147,6 +131,13 @@ router.post("/create-booking-and-checkout", async (req, res) => {
             payment_method_types: payment_methods,
             success_url: `https://calidro.vercel.app/ReviewDetails?bookingId=${bookingId}`,
             cancel_url: `https://calidro.vercel.app/userbook`,
+            reference_number: bookingId.toString(),
+
+            metadata: {
+              bookingId: bookingId.toString(),
+              paymentType: paymentType,
+            },
+
             reference_number: bookingId.toString(),
           },
         },
@@ -223,36 +214,21 @@ router.get("/all-bookings", async (req, res) => {
     );
     const formatted = rows.map((b) => ({
       booking_id: b.booking_id,
-
       eventName: b.event_name,
-
       userName: b.username,
-
       email: b.email,
-
       contactNo: b.phone_number,
-
       address: b.address,
-
       typeOfEvent: b.event_type,
-
       duration: `${b.event_duration} hrs`,
-
       ingress: `${parseInt(b.ingress_time || 0)} hr`,
-
       egress: `${parseInt(b.egress_time || 0)} hr`,
-
       noOfGuests: b.guests,
-
       total: b.total_amount,
-
       paid: b.amount_paid,
       paymentType: b.payment_type,
-
       bookingStatus: b.status,
-
       date: b.event_date,
-
       time: b.event_time,
     }));
     res.json(formatted);
@@ -262,7 +238,6 @@ router.get("/all-bookings", async (req, res) => {
 });
 
 // 3. Update Status and Send Email
-
 router.put("/update-status/:id", async (req, res) => {
   const { status } = req.body;
   const { id } = req.params;
@@ -685,19 +660,13 @@ router.post("/webhook/paymongo", async (req, res) => {
       const totalAmount = parseFloat(rows[0].total_amount);
       const newTotalPaid = currentPaid + paymentAmount;
 
-      // Use rounding to avoid float math bugs
-      const isFullyPaid = Math.round(newTotalPaid) >= Math.round(totalAmount);
-
-      const finalStatus = isFullyPaid ? "confirmed" : "partial";
-      const finalPaymentType = isFullyPaid ? "full" : "partial";
-
       await db.query(
-        "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
-        [newTotalPaid, finalStatus, finalPaymentType, bookingId],
+        "UPDATE booking SET amount_paid = ?, status = 'confirmed' WHERE booking_id = ?",
+        [newTotalPaid, "confirmed", bookingId],
       );
 
       console.log(
-        `✅ DB UPDATED: Booking ${bookingId} is now ${finalStatus} (Paid: ₱${newTotalPaid})`,
+        `✅ DB UPDATED: Booking ${bookingId} total is now ₱${newTotalPaid}`,
       );
     } else {
       console.error(

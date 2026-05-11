@@ -232,26 +232,28 @@ export default function BookingPage({ onNext }) {
         parseInt(egress) > parseInt(rescheduleData.egress_time));
 
     const bookingPayload = {
+      userId: user.id,
       username,
       email,
       address,
       phone_number: phoneNumber,
       eventName,
       eventType,
-      date: format(selectedDate, "yyyy-MM-dd"),
+      eventDate: format(selectedDate, "yyyy-MM-dd"),
       time: convertTo24Hour(selectedTime), // Use this unified time format
       duration: parseInt(duration),
       ingress_time: parseInt(ingress),
       egress_time: parseInt(egress),
       guests: guestCount,
+      totalAmount: finalTotal,
+      amount_paid: isFullPayment ? finalTotal : 25000,
+      paymentType: isFullPayment ? "full" : "partial",
+      payment_methods: ["gcash", "paymaya", "card"],
       isReschedule: isRescheduling,
       isUpgrade: isUpgraded,
       originalBookingId: isRescheduling ? rescheduleData.id : null,
     };
 
-    // LOGIC FIX:
-    // If we are just updating a date (no upgrade), call the API directly.
-    // Otherwise, pass everything to onNext to handle the payment flow.
     if (isRescheduling && !isUpgraded) {
       updateBookingOnly(bookingPayload);
     } else {
