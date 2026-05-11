@@ -237,44 +237,62 @@ export default function BookingPage({ onNext }) {
       return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
     };
 
+    // 1. Check for basic schedule fields (Required for BOTH)
+    if (!selectedDate || !selectedTime) {
+      alert("Please select a Date and Time.");
+      return;
+    }
+
+    // 2. Check for event type ONLY if it's a new booking
+    if (!isRescheduling && !eventType) {
+      alert("Please select an Event Type.");
+      return;
+    }
+
+    // 3. Determine if they added hours (Upgraded)
     const isUpgraded =
       isRescheduling &&
-      (parseInt(duration) > parseInt(rescheduleData.duration) ||
+      (parseInt(duration) > parseInt(rescheduleData.event_duration) ||
         parseInt(ingress) > parseInt(rescheduleData.ingress_time) ||
         parseInt(egress) > parseInt(rescheduleData.egress_time));
 
+    // 4. Create the Payload
     const bookingPayload = {
+      // Shared fields
+      event_date: format(selectedDate, "yyyy-MM-dd"),
+      event_time: convertTo24Hour(selectedTime),
+      event_duration: parseInt(duration),
+      ingress_time: parseInt(ingress),
+      egress_time: parseInt(egress),
+      total_amount: totalAmount,
+
+      // Reschedule specific fields
+      isReschedule: isRescheduling,
+      isUpgrade: isUpgraded,
+      booking_id: isRescheduling
+        ? rescheduleData.booking_id || rescheduleData.id
+        : null,
+
+      // New Booking specific fields (sent as empty if rescheduling)
       userId: user?.user_id || user?.id,
       username,
       email,
       address,
       phone_number: phoneNumber,
-      eventName,
-      eventType,
-      eventDate: format(selectedDate, "yyyy-MM-dd"),
-      time: convertTo24Hour(selectedTime), // Use this unified time format
-      duration: parseInt(duration),
-      ingress_time: parseInt(ingress),
-      egress_time: parseInt(egress),
-      guests: guestCount,
-      totalAmount: totalAmount,
-      isReschedule: isRescheduling,
-      isUpgrade: isUpgraded,
-      originalBookingId: isRescheduling ? rescheduleData.id : null,
+      eventName: isRescheduling ? null : eventName,
+      eventType: isRescheduling ? null : eventType,
+      guests: isRescheduling ? null : guestCount,
     };
 
-    if (!selectedDate || !selectedTime || !eventType) {
-      alert("Please fill in the required fields (Date, Time, Event Type)");
-      return;
-    }
-
+    // 5. Route the action
     if (isRescheduling && !isUpgraded) {
+      // Simple reschedule: No extra cost, update DB immediately
       updateBookingOnly(bookingPayload);
     } else {
+      // New booking OR Reschedule with Upgrade: Go to Review/Payment page
       onNext(bookingPayload);
     }
   };
-
   return (
     <div className="bg-[#f1f1f1] w-full max-w-7xl rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-2">
       <div className="space-y-4">
