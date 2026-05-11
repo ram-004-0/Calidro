@@ -85,11 +85,9 @@ const UserHeader = () => {
         if (!uId) return;
 
         const response = await axios.get(`${API_URL}/api/notifications/${uId}`);
-
-        // Update the context state
+        console.log("🔔 Notifications from DB:", response.data); // See what's inside!
         setUserNotifications(response.data);
 
-        // Show the red dot if there are unread notifications
         const hasUnread = response.data.some(
           (n) => n.is_read === 0 || n.is_read === false,
         );
