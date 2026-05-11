@@ -14,3 +14,4 @@ const createNotification = async (userId, message, bookingId) => {
     console.error("Error creating notification:", err);
   }
 };
+module.exports = { createNotification };

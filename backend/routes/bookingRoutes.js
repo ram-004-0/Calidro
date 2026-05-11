@@ -3,8 +3,7 @@ const router = express.Router();
 const axios = require("axios");
 const db = require("../config/db");
 const { verifyToken } = require("../middleware/authMiddleware");
-
-const { createNotification } = require("../utils/notifications");
+const { createNotification } = require("../controllers/notificationController");
 
 console.log("🔥 FILE LOADED: bookingRoutes.js");
 
