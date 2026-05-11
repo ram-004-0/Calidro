@@ -1,4 +1,5 @@
 const db = require("../config/db");
+
 const createNotification = async (userId, message, bookingId) => {
   console.log("🔔 NOTIFICATION TRIGGERED for User:", userId);
   try {
@@ -14,6 +15,19 @@ const createNotification = async (userId, message, bookingId) => {
     );
   } catch (err) {
     console.error("Error creating notification:", err);
+  }
+};
+
+const getNotifications = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const [rows] = await db.query(
+      "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC",
+      [userId],
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 module.exports = { createNotification };

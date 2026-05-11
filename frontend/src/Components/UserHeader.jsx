@@ -81,16 +81,21 @@ const UserHeader = () => {
   useEffect(() => {
     const fetchMyNotifications = async () => {
       try {
-        const uId = localStorage.getItem("userId");
-        if (!uId) return;
+        // Try both common naming conventions
+        const uId =
+          localStorage.getItem("userId") || localStorage.getItem("user_id");
+
+        console.log("🔍 Fetching notifications for UID:", uId); // Check your browser console!
+
+        if (!uId) {
+          console.warn("⚠️ No User ID found in localStorage");
+          return;
+        }
 
         const response = await axios.get(`${API_URL}/api/notifications/${uId}`);
-        console.log("🔔 Notifications from DB:", response.data); // See what's inside!
         setUserNotifications(response.data);
 
-        const hasUnread = response.data.some(
-          (n) => n.is_read === 0 || n.is_read === false,
-        );
+        const hasUnread = response.data.some((n) => !n.is_read);
         setHasAdminUnread(hasUnread);
       } catch (err) {
         console.error("Error fetching notifications:", err);
@@ -98,8 +103,7 @@ const UserHeader = () => {
     };
 
     fetchMyNotifications();
-    // Optional: Check for new alerts every 2 minutes
-    const interval = setInterval(fetchMyNotifications, 5000);
+    const interval = setInterval(fetchMyNotifications, 30000); // Lowered to 30s for testing
     return () => clearInterval(interval);
   }, [setUserNotifications, setHasAdminUnread]);
 
