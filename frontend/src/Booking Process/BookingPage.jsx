@@ -141,26 +141,40 @@ export default function BookingPage({ onNext }) {
       try {
         const response = await axios.get(`${API_URL}/api/bookings/all`);
 
-        console.log("RAW DATA FROM DB:", response.data);
-
         const formattedDates = response.data
           .map((b) => {
             if (!b.event_date) return null;
-            const dateOnly = b.event_date.substring(0, 10);
-            return dateOnly;
+            // Ensure we handle ISO strings or standard date strings correctly
+            return b.event_date.substring(0, 10);
           })
           .filter(Boolean);
 
         setBookedDates([...formattedDates]);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
+        // Fallback to today if the fetch fails
         setBookedDates([format(new Date(), "yyyy-MM-dd")]);
       }
     };
 
     fetchBookings();
+
+    // --- RESCHEDULE LOGIC: PREVENT DECREASING DURATION ---
+    if (isRescheduling && rescheduleData) {
+      const origDuration = parseInt(rescheduleData.event_duration);
+      const origIngress = parseInt(rescheduleData.ingress_time);
+      const origEgress = parseInt(rescheduleData.egress_time);
+
+      // If current state is lower than original, force it up to original
+      if (duration < origDuration) setDuration(origDuration);
+      if (ingress < origIngress) setIngress(origIngress);
+      if (egress < origEgress) setEgress(origEgress);
+    }
+
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    // Added duration, ingress, egress to deps so it checks whenever they change
+    // but only logic-gates them if isRescheduling is true.
+  }, [isRescheduling, rescheduleData, duration, ingress, egress]);
 
   const unavailableDates = [...bookedDates];
   const monthStart = startOfMonth(currentMonth);

@@ -505,8 +505,26 @@ router.put("/reschedule/:id", async (req, res) => {
   const { event_date, event_time, event_duration, total_amount } = req.body;
 
   try {
-    // 1. Conflict Check: Is the venue already booked for this new date/time?
-    // We exclude the current bookingId so it doesn't conflict with itself
+    // 1. Fetch current booking to prevent duration decrease
+    const [currentBooking] = await db.query(
+      `SELECT event_duration FROM booking WHERE booking_id = ?`,
+      [bookingId],
+    );
+
+    if (currentBooking.length === 0) {
+      return res.status(404).json({ error: "Booking not found." });
+    }
+
+    const oldDuration = parseInt(currentBooking[0].event_duration);
+    const newDuration = parseInt(event_duration);
+
+    if (newDuration < oldDuration) {
+      return res.status(400).json({
+        error: `Duration cannot be decreased. Original duration was ${oldDuration} hours.`,
+      });
+    }
+
+    // 2. Check for conflicts on the new date/time
     const [conflicts] = await db.query(
       `SELECT * FROM booking 
        WHERE event_date = ? 
@@ -522,13 +540,15 @@ router.put("/reschedule/:id", async (req, res) => {
       });
     }
 
-    // 2. Update the booking details and the total_amount
+    // to update the booking table when rescheduling
     const updateQuery = `
       UPDATE booking 
       SET 
         event_date = ?, 
         event_time = ?, 
         event_duration = ?, 
+        ingress_time = ?, 
+        egress_time = ?,
         total_amount = ?
       WHERE booking_id = ?
     `;
@@ -536,14 +556,12 @@ router.put("/reschedule/:id", async (req, res) => {
     const [result] = await db.query(updateQuery, [
       event_date,
       event_time,
-      event_duration,
+      newDuration,
+      req.body.ingress_time,
+      req.body.egress_time,
       total_amount,
       bookingId,
     ]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Booking not found." });
-    }
 
     res.status(200).json({
       message: "Reschedule successful!",
