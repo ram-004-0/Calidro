@@ -1,21 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import API from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { useLocation, useSearchParams } from "react-router-dom"; // Updated imports
+import { useLocation, useSearchParams } from "react-router-dom";
 import axios from "axios";
 
 const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const { state } = useLocation();
   const [searchParams] = useSearchParams();
-
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  if (!isMounted) {
-    return <div className="min-h-screen bg-gray-50" />;
-  }
-
   const bookingData = propBookingData || state?.bookingData || {};
   const isRestricted = state?.paymentTypeRestriction === "Full";
   const amountToPayFromState = state?.amountToPay;
@@ -43,6 +35,14 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     );
   }, [bookingData, isRestricted, amountToPayFromState]);
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
+
   const [paymentType, setPaymentType] = useState(
     isRestricted ? "full" : "partial",
   );
@@ -51,7 +51,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const formatNumber = (val) => Number(val).toLocaleString("en-PH");
 
   const handleUpdateBalance = async (methods) => {
-    // 1. Robust ID extraction: Ensure we get the actual value, not a string "undefined"
     const urlId = searchParams.get("bookingId");
     const stateId =
       state?.bookingData?.booking_id || state?.bookingId || state?.id;
@@ -94,64 +93,56 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     }
   };
 
-  // Ensure this function exists in your component to handle partial payments
-  const handlePaymentMethodClick = async (methods) => {
-    if (!user?.user_id) return alert("Please log in.");
-    const numericAmount = parseFloat(amountInput) || 0;
+  const handleUpdateBalance = async (methods) => {
+    // 1. Robust ID Extraction
+    const urlId = searchParams.get("bookingId");
+    const stateId =
+      state?.bookingData?.booking_id || state?.bookingId || state?.id;
+
+    // Prioritize the URL ID, then fallback to state, then check for "undefined" strings
+    let bId = urlId || stateId;
+
+    // Safety check: ensure bId isn't the literal string "undefined" or null
+    if (!bId || bId === "undefined" || bId === "null") {
+      console.error("DEBUG: ID check failed.", { urlId, stateId });
+      alert(
+        "CRITICAL ERROR: No valid Booking ID found. Please go back to 'My Bookings' and try again.",
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
-      let response;
+      // 2. Prepare Payload
+      // Note: We send 'amount' because the backend needs to know how much to charge for the balance
+      const payload = {
+        bookingId: bId,
+        amount: totalAmount,
+        payment_methods: methods,
+      };
 
-      if (isRestricted) {
-        const payload = {
-          bookingId: state.bookingId,
-          amount_paid: numericAmount,
-          payment_methods: methods,
-          isBalanceUpdate: true,
-        };
+      console.log("🚀 Initiating Balance Update:", payload);
 
-        response = await API.post("/bookings/checkout-balance", payload);
-      } else {
-        // SCENARIO B: Creating a BRAND NEW booking
-        const payload = {
-          bookingId: bookingData?.booking_id,
-          userId: user.user_id,
-          username: user.username || "Guest",
-          email: user.email || "",
-          phone_number: phone,
-          address: addr,
-          eventName: bookingData?.eventName || "Untitled",
-          eventType: bookingData?.eventType,
-          eventDate: bookingData?.eventDate,
-          time: bookingData?.time,
-          duration: bookingData?.duration,
-          ingress: bookingData?.ingress || 2,
-          egress: bookingData?.egress || 1,
-          guests: bookingData?.guests,
-          totalAmount: totalAmount,
-          amount_paid: paymentType === "full" ? totalAmount : numericAmount,
-          paymentType: paymentType,
-          payment_methods: methods,
-        };
+      const url =
+        "https://calidro-production.up.railway.app/api/bookings/checkout-balance";
 
-        // We use the 'response' variable defined at the top of the try block
-        response = await API.post(
-          "/bookings/create-booking-and-checkout",
-          payload,
-        );
-        console.log("Backend Response:", response.data);
-      }
+      // 3. API Call
+      const response = await axios.post(url, payload);
 
-      // Handle redirection for either scenario
+      // 4. Handle Redirect
       if (response.data && response.data.checkout_url) {
+        console.log("✅ Checkout Session Created. Redirecting...");
         window.location.href = response.data.checkout_url;
       } else {
-        throw new Error("Checkout URL missing in server response.");
+        throw new Error("The server didn't return a checkout URL.");
       }
     } catch (err) {
-      console.error("PAYMENT ERROR:", err);
-      alert("Payment failed: " + (err.response?.data?.details || err.message));
+      // 5. Error Handling
+      const serverMessage =
+        err.response?.data?.details || err.response?.data?.error || err.message;
+      console.error("❌ Payment Initiation Error:", serverMessage);
+      alert("Payment initiation failed: " + serverMessage);
     } finally {
       setLoading(false);
     }
