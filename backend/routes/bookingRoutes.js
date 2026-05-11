@@ -486,23 +486,19 @@ router.get("/test-cleanup-manual", async (req, res) => {
 // 8. Finalize Payment Type
 router.put("/finalize-payment/:bookingId", async (req, res) => {
   const { bookingId } = req.params;
-
   try {
-    // Fetch the current booking to check real math
     const [rows] = await db.query(
-      "SELECT total_amount, amount_paid FROM booking WHERE user_id = ?",
+      "SELECT total_amount, amount_paid FROM booking WHERE booking_id = ?",
       [bookingId],
     );
-
     if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
 
     const { total_amount, amount_paid } = rows[0];
-
     const paidNow = parseFloat(req.body.amount_paid) || 0;
     const newTotalPaid = parseFloat(amount_paid) + paidNow;
 
-    const isFullyPaid = newTotalPaid >= totalAmount;
+    const isFullyPaid = newTotalPaid >= parseFloat(total_amount);
     const finalStatus = isFullyPaid ? "confirmed" : "pending";
     const finalPaymentType = isFullyPaid ? "full" : "partial";
 
@@ -511,9 +507,12 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
       [newTotalPaid, finalStatus, finalPaymentType, bookingId],
     );
 
-    res.json({ success: true, paymentType: newPaymentType, status: newStatus });
+    res.json({
+      success: true,
+      paymentType: finalPaymentType,
+      status: finalStatus,
+    });
   } catch (err) {
-    console.error("Finalize Payment Error:", err);
     res.status(500).json({ error: "Could not update." });
   }
 });
@@ -600,54 +599,33 @@ router.put("/reschedule/:id", async (req, res) => {
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
   res.status(200).send("ok");
-
   try {
     const payload = req.body;
     const attributes = payload.data?.attributes;
+    if (!attributes) return;
 
-    if (!attributes) {
-      console.error("❌ WEBHOOK ERROR: No attributes found in payload.");
-      return;
-    }
-    const checkoutMetadata = attributes.data?.attributes?.metadata;
-    const topMetadata = attributes.metadata;
-    const piMetadata = attributes.payment_intent?.attributes?.metadata;
-    const metadata = checkoutMetadata || piMetadata || topMetadata;
+    const metadata =
+      attributes.data?.attributes?.metadata ||
+      attributes.metadata ||
+      attributes.payment_intent?.attributes?.metadata;
     const bookingId = metadata?.bookingId;
+    if (!bookingId) return;
 
-    if (!bookingId) {
-      console.error("❌ WEBHOOK ERROR: bookingId missing. Metadata found:", {
-        checkout: checkoutMetadata,
-        pi: piMetadata,
-        top: topMetadata,
-      });
-      return;
-    }
+    const paymentAmount =
+      (attributes.amount ||
+        attributes.data?.attributes?.amount ||
+        attributes.payment_intent?.attributes?.amount ||
+        0) / 100;
 
-    const amountInCents =
-      attributes?.amount ||
-      attributes?.data?.attributes?.amount ||
-      attributes?.payment_intent?.attributes?.amount ||
-      0;
-
-    const paymentAmount = amountInCents / 100;
-
-    console.log(
-      `🔍 Webhook Received: Booking ${bookingId} | Paid: ₱${paymentAmount}`,
-    );
-
-    // Fetch current database values
     const [rows] = await db.query(
-      "SELECT amount_paid, total_amount, status FROM booking WHERE booking_id = ?",
+      "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
       [bookingId],
     );
 
     if (rows.length > 0) {
-      const dbTotal = parseFloat(rows[0].total_amount) || 0;
-      const currentPaid = parseFloat(rows[0].amount_paid) || 0;
-      const newTotalPaid = currentPaid + paymentAmount;
-
-      const isFullyPaid = newTotalPaid >= dbTotal;
+      const newTotalPaid =
+        (parseFloat(rows[0].amount_paid) || 0) + paymentAmount;
+      const isFullyPaid = newTotalPaid >= parseFloat(rows[0].total_amount);
       const finalStatus = isFullyPaid ? "confirmed" : "pending";
       const finalPaymentType = isFullyPaid ? "full" : "partial";
 
@@ -655,14 +633,7 @@ router.post("/webhook/paymongo", async (req, res) => {
         "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
         [newTotalPaid, finalStatus, finalPaymentType, bookingId],
       );
-
-      console.log(
-        `✅ DB UPDATED: Booking ${bookingId} total is now ₱${newTotalPaid}`,
-      );
-    } else {
-      console.error(
-        `❌ DB ERROR: Booking ID ${bookingId} not found in database.`,
-      );
+      console.log(`✅ DB UPDATED: Booking ${bookingId} now ₱${newTotalPaid}`);
     }
   } catch (err) {
     console.error("🔥 WEBHOOK SYSTEM ERROR:", err.message);
