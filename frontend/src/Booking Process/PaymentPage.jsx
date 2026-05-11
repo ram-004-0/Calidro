@@ -18,6 +18,13 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   );
   const [addr, setAddr] = useState(bookingData?.address || user?.address || "");
   const [loading, setLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
 
   const totalAmount = useMemo(() => {
     if (isRestricted && amountToPayFromState) return amountToPayFromState;

@@ -356,8 +356,6 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                   Rate Event
                 </button>
               )}
-
-            {/* 3. OPTIONAL: SHOW A "THANK YOU" OR "RATED" BADGE */}
             {hasBeenRated &&
               booking.bookingStatus?.toLowerCase() === "completed" && (
                 <span className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 italic">
