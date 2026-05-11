@@ -171,13 +171,10 @@ const UserHeader = () => {
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
                     {userNotifications.length > 0 ? (
                       userNotifications.map((n) => (
-                        <div
-                          key={n.id}
-                          className="text-xs hover:bg-gray-50 p-2 rounded-lg cursor-default transition border-b border-gray-50 last:border-0"
-                        >
-                          <p className="font-medium">{n.text}</p>
+                        <div key={n.id} className="...">
+                          <p className="font-medium">{n.message}</p>
                           <p className="text-[10px] text-gray-400 mt-1">
-                            {n.time}
+                            {new Date(n.created_at).toLocaleTimeString()}
                           </p>
                         </div>
                       ))

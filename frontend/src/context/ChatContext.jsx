@@ -31,6 +31,8 @@ export const ChatProvider = ({ children }) => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [activeRoom, setActiveRoom] = useState(null);
   const [userList, setUserList] = useState([]);
+  const [userNotifications, setUserNotifications] = useState([]);
+  const [hasAdminUnread, setHasAdminUnread] = useState(false);
 
   useEffect(() => {
     const handleConnect = () => {
@@ -123,6 +125,10 @@ export const ChatProvider = ({ children }) => {
         activeRoom,
         userList,
         userId,
+        userNotifications,
+        setUserNotifications,
+        hasAdminUnread,
+        setHasAdminUnread,
       }}
     >
       {children}
