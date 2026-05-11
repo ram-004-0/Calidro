@@ -612,16 +612,14 @@ router.post("/webhook/paymongo", async (req, res) => {
       attributes.data?.attributes?.payload?.checkout_session?.attributes
         ?.metadata;
 
-    const bookingId = metadata?.bookingId;
+    const bookingId = attributes?.metadata?.bookingId;
     if (!bookingId) return;
 
     // 2. THE FIX FOR ₱0: Digging into the specific PayMongo 'payment' object
     const amountInCents =
-      attributes.data?.attributes?.payload?.payment?.attributes?.amount ||
-      attributes.amount ||
-      attributes.data?.attributes?.amount ||
+      attributes?.payment_intent?.attributes?.amount ||
+      attributes?.line_items?.[0]?.amount ||
       0;
-
     const paymentAmount = amountInCents / 100;
 
     const [rows] = await db.query(
