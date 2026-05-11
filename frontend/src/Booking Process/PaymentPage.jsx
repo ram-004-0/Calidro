@@ -46,10 +46,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     setIsMounted(true);
   }, []);
 
-  if (!isMounted) {
-    return <div className="min-h-screen bg-gray-50" />;
-  }
-
   const formatNumber = (val) => Number(val).toLocaleString("en-PH");
 
   const handleUpdateBalance = async (methods) => {
@@ -146,6 +142,9 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     }
   };
 
+  if (!isMounted) {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 p-8">
       {/* --- Left Side: Payment Details --- */}
