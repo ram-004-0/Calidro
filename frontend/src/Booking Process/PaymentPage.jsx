@@ -115,6 +115,9 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const handlePaymentMethodClick = async (methods) => {
     if (!user?.user_id) return alert("Please log in.");
     const numericAmount = parseFloat(amountInput) || 0;
+    if (paymentType === "partial" && numericAmount < 5000) {
+      return alert("Minimum downpayment is ₱5,000.");
+    }
     setLoading(true);
 
     try {
@@ -127,6 +130,8 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         eventDate: bookingData?.eventDate,
         time: bookingData?.time,
         duration: bookingData?.duration,
+        ingress: bookingData?.ingress_time,
+        egress: bookingData?.egress_time,
         totalAmount: totalAmount,
         amount_paid: paymentType === "full" ? totalAmount : numericAmount,
         paymentType: paymentType,
