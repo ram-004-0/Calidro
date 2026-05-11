@@ -299,7 +299,7 @@ export default function BookingPage({ onNext }) {
       booking_id: isRescheduling
         ? rescheduleData.booking_id || rescheduleData.id
         : null,
-      userId: user?.user_id || user?.id,
+      userId: user?.user_id || user?.id || localStorage.getItem("userId"),
       username,
       email,
       address,
