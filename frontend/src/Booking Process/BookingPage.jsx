@@ -406,7 +406,7 @@ export default function BookingPage({ onNext }) {
             >
               {ingressOptions.map((h) => (
                 <option key={h} value={h}>
-                  {h} Hour{h > 1 ? "s" : ""}
+                  {h} Hour{h > 2 ? "s" : ""}
                 </option>
               ))}
             </select>
