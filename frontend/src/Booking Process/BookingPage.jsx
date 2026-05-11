@@ -27,8 +27,6 @@ export default function BookingPage({ onNext }) {
   const location = useLocation();
   const rescheduleData = location.state?.rescheduleData;
   const isRescheduling = !!rescheduleData;
-
-  // 1. Unified State Declarations
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(
     isRescheduling ? parseISO(rescheduleData.date) : null,
@@ -36,7 +34,6 @@ export default function BookingPage({ onNext }) {
   const [selectedTime, setSelectedTime] = useState(
     isRescheduling ? rescheduleData.time : "",
   );
-  // Ensure these keys match your database return object
   const [duration, setDuration] = useState(
     isRescheduling ? parseInt(rescheduleData.event_duration) : 4,
   );
@@ -46,6 +43,7 @@ export default function BookingPage({ onNext }) {
   const [egress, setEgress] = useState(
     isRescheduling ? parseInt(rescheduleData.egress_time) : 1,
   );
+  const [isFullPayment, setIsFullPayment] = useState(false);
 
   const timeSlots = useMemo(() => {
     if (!selectedDate) return [];
@@ -96,6 +94,20 @@ export default function BookingPage({ onNext }) {
     }
     return baseOptions;
   }, [isRescheduling, rescheduleData]);
+
+  const totalAmount = useMemo(() => {
+    const BASE_PRICE = 25000;
+    const d = parseInt(duration) || 4;
+    const i = parseInt(ingress) || 2;
+    const e = parseInt(egress) || 1;
+
+    return (
+      BASE_PRICE +
+      (d - 4) * 5000 +
+      Math.max(0, i - 2) * 1000 +
+      Math.max(0, e - 1) * 1000
+    );
+  }, [duration, ingress, egress]);
 
   const updateBookingOnly = async (payload) => {
     try {
@@ -232,7 +244,7 @@ export default function BookingPage({ onNext }) {
         parseInt(egress) > parseInt(rescheduleData.egress_time));
 
     const bookingPayload = {
-      userId: user.id,
+      userId: user?.user_id || user?.id,
       username,
       email,
       address,
@@ -246,13 +258,15 @@ export default function BookingPage({ onNext }) {
       egress_time: parseInt(egress),
       guests: guestCount,
       totalAmount: totalAmount,
-      amount_paid: isFullPayment ? totalAmount : 25000,
-      paymentType: isFullPayment ? "full" : "partial",
-      payment_methods: ["gcash", "paymaya", "card"],
       isReschedule: isRescheduling,
       isUpgrade: isUpgraded,
       originalBookingId: isRescheduling ? rescheduleData.id : null,
     };
+
+    if (!selectedDate || !selectedTime || !eventType) {
+      alert("Please fill in the required fields (Date, Time, Event Type)");
+      return;
+    }
 
     if (isRescheduling && !isUpgraded) {
       updateBookingOnly(bookingPayload);
