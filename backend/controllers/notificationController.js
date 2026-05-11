@@ -1,3 +1,4 @@
+const db = require("../config/db");
 const createNotification = async (userId, message, bookingId) => {
   console.log("🔔 NOTIFICATION TRIGGERED for User:", userId);
   try {
