@@ -81,22 +81,31 @@ const UserHeader = () => {
   useEffect(() => {
     const fetchMyNotifications = async () => {
       try {
-        // 1. Check all common naming variations in localStorage
-        const uId =
-          localStorage.getItem("userId") ||
-          localStorage.getItem("user_id") ||
-          localStorage.getItem("uid");
+        // 1. Get the "user" object string
+        const savedUser = localStorage.getItem("user");
+
+        let uId = null;
+        if (savedUser) {
+          // 2. Parse it and grab the user_id
+          const userObj = JSON.parse(savedUser);
+          uId = userObj.user_id;
+        }
+
+        // 3. Fallback check for the separate key just in case
+        if (!uId) uId = localStorage.getItem("userId");
 
         if (!uId) {
-          console.warn("⚠️ No User ID found. Checking fallback...");
+          console.warn("⚠️ No User ID found. User might not be logged in.");
           return;
         }
 
         console.log("🚀 Fetching notifications for User:", uId);
         const response = await axios.get(`${API_URL}/api/notifications/${uId}`);
 
+        // IMPORTANT: Note that your SQL alias uses 'text' and 'time'
         setUserNotifications(response.data);
 
+        // 4. Update the red dot check (0 is unread in MySQL)
         const hasUnread = response.data.some(
           (n) => n.is_read === 0 || n.is_read === false,
         );
@@ -105,7 +114,6 @@ const UserHeader = () => {
         console.error("Error fetching notifications:", err);
       }
     };
-
     fetchMyNotifications();
     const interval = setInterval(fetchMyNotifications, 30000); // Lowered to 30s for testing
     return () => clearInterval(interval);
@@ -183,14 +191,16 @@ const UserHeader = () => {
                     {userNotifications.length > 0 ? (
                       userNotifications.map((n) => (
                         <div
-                          key={n.id || n.notification_id}
-                          className="p-2 border-b last:border-0"
+                          key={n.id}
+                          className="p-2 border-b last:border-0 hover:bg-gray-50 transition"
                         >
-                          <p className="font-medium text-xs">{n.message}</p>
-                          <p className="text-[10px] text-gray-400 mt-1">
-                            {n.created_at
-                              ? new Date(n.created_at).toLocaleTimeString()
-                              : "Just now"}
+                          {/* USE n.text INSTEAD OF n.message BECAUSE OF YOUR SQL ALIAS */}
+                          <p className="font-medium text-[11px] leading-tight text-[#4a3733]">
+                            {n.text}
+                          </p>
+                          {/* USE n.time INSTEAD OF n.created_at BECAUSE OF YOUR SQL ALIAS */}
+                          <p className="text-[9px] text-gray-400 mt-1">
+                            {n.time}
                           </p>
                         </div>
                       ))
