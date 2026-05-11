@@ -1,4 +1,5 @@
 const createNotification = async (userId, message, bookingId) => {
+  console.log("🔔 NOTIFICATION TRIGGERED for User:", userId);
   try {
     const query = `
       INSERT INTO notifications (user_id, message, type, related_id) 

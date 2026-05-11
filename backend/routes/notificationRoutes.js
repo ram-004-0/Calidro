@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/db"); // Adjust based on your db path
+const db = require("../config/db");
 
-// 1. GET USER NOTIFICATIONS
-// This matches your fetch in the UserHeader
 router.get("/:userId", async (req, res) => {
   const { userId } = req.params;
   try {

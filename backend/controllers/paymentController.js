@@ -1,5 +1,5 @@
 const axios = require("axios");
-const db = require("../config/db"); // Ensure this points to your database connection
+const db = require("../config/db");
 const CLIENT_URL = process.env.CLIENT_URL || "https://calidro.vercel.app";
 
 // 1. CREATE CHECKOUT (What you already have, plus centavo fix)
