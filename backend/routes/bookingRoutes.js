@@ -4,6 +4,8 @@ const axios = require("axios");
 const db = require("../config/db");
 const { verifyToken } = require("../middleware/authMiddleware");
 
+const { createNotification } = require("../utils/notifications");
+
 console.log("🔥 FILE LOADED: bookingRoutes.js");
 
 router.use((req, res, next) => {
@@ -575,11 +577,9 @@ router.put("/reschedule/:id", async (req, res) => {
     ]);
 
     if (userId) {
-      const notificationMessage = `Your booking for ${event_date} at ${event_time} has been successfully rescheduled.`;
+      const notificationMessage = `Your booking for ${event_date} has been successfully rescheduled.`;
       await createNotification(userId, notificationMessage, bookingId);
     }
-
-    await createNotification(userId, message, bookingId);
     res.status(200).json({
       message: "Reschedule successful!",
       newTotal: total_amount,
