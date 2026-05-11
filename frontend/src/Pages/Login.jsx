@@ -24,7 +24,9 @@ const Login = () => {
 
       if (response.ok) {
         localStorage.setItem("token", data.token);
-        login(data.user); // This saves to localStorage "user" and updates state
+        login(data.user);
+
+        localStorage.setItem("userId", data.user.user_id);
 
         const userRole = data.user.role;
         navigate(userRole === "admin" ? "/admin-overview" : "/userhome");

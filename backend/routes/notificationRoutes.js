@@ -6,7 +6,7 @@ router.get("/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
     const [rows] = await db.query(
-      `SELECT id, message AS text, 
+      `SELECT notif_id, message AS text, 
        DATE_FORMAT(created_at, '%b %d, %h:%i %p') AS time,
        is_read 
        FROM notifications 
