@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Bell, CircleUserRound, Headset, Menu, X } from "lucide-react";
 import { useChat } from "../context/ChatContext";
