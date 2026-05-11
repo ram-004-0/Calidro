@@ -131,7 +131,6 @@ router.post("/create-booking-and-checkout", async (req, res) => {
             payment_method_types: payment_methods,
             success_url: `https://calidro.vercel.app/ReviewDetails?bookingId=${bookingId}`,
             cancel_url: `https://calidro.vercel.app/userbook`,
-            reference_number: bookingId.toString(),
 
             metadata: {
               bookingId: bookingId.toString(),
@@ -237,18 +236,16 @@ router.get("/all-bookings", async (req, res) => {
   }
 });
 
-// 3. Update Status and Send Email
+// Email keme
 router.put("/update-status/:id", async (req, res) => {
   const { status } = req.body;
   const { id } = req.params;
 
-  // 1. Safety Check: Is the ID valid?
   if (!id || id === "undefined") {
     return res.status(400).json({ error: "Booking ID is required" });
   }
 
   try {
-    // 2. Get the current booking
     const [rows] = await db.query(
       "SELECT * FROM booking WHERE booking_id = ?",
       [id],
@@ -260,20 +257,17 @@ router.put("/update-status/:id", async (req, res) => {
 
     const booking = rows[0];
 
-    // 3. Update the status
     await db.query("UPDATE booking SET status = ? WHERE booking_id = ?", [
       status,
       id,
     ]);
 
-    // 4. Email Logic (Wrapped in its own try/catch so it doesn't crash the 200 response)
     if (booking.status !== "confirmed" && status === "confirmed") {
       try {
         await sendBookingConfirmation(booking);
         console.log("📧 Email sent successfully");
       } catch (emailErr) {
         console.error("📧 Email failed but DB was updated:", emailErr.message);
-        // We don't return error here because the DB update actually worked!
       }
     }
 
@@ -287,7 +281,6 @@ router.put("/update-status/:id", async (req, res) => {
 });
 
 // 4. Get specific booking details
-
 router.get("/details/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -604,54 +597,46 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
-  // Acknowledge immediately to prevent PayMongo from retrying
   res.status(200).send("ok");
 
   try {
     const payload = req.body;
-
-    // PayMongo webhooks wrap the resource in 'data'
     const attributes = payload.data?.attributes;
 
     if (!attributes) {
       console.error("❌ WEBHOOK ERROR: No attributes found in payload.");
       return;
     }
-
-    // --- THE CRITICAL FIX ---
-    // We check the payment_intent metadata first.
-    // If the top-level metadata is empty {}, we fallback to the nested PI metadata.
+    const checkoutMetadata = attributes.data?.attributes?.metadata;
     const topMetadata = attributes.metadata;
     const piMetadata = attributes.payment_intent?.attributes?.metadata;
-
-    // Select whichever one actually contains our bookingId
-    const metadata =
-      piMetadata && piMetadata.bookingId ? piMetadata : topMetadata;
+    const metadata = checkoutMetadata || piMetadata || topMetadata;
     const bookingId = metadata?.bookingId;
 
     if (!bookingId) {
-      console.error(
-        "❌ WEBHOOK ERROR: bookingId missing in payload. Metadata received:",
-        {
-          top: topMetadata,
-          pi: piMetadata,
-        },
-      );
+      console.error("❌ WEBHOOK ERROR: bookingId missing. Metadata found:", {
+        checkout: checkoutMetadata,
+        pi: piMetadata,
+        top: topMetadata,
+      });
       return;
     }
 
-    // Convert amount: PayMongo sends in cents (e.g., 2000000)
     const amountInCents =
-      attributes.amount || attributes.payment_intent?.attributes?.amount || 0;
+      attributes.amount ||
+      attributes.data?.attributes?.amount ||
+      attributes.payment_intent?.attributes?.amount ||
+      0;
+
     const paymentAmount = amountInCents / 100;
 
-    console.log(
-      `🔍 Processing: Booking ${bookingId} | Incoming Payment: ₱${paymentAmount}`,
+    Console.log(
+      `🔍 Webhook Received: Booking ${bookingId} | Paid: ₱${paymentAmount}`,
     );
 
     // Fetch current database values
     const [rows] = await db.query(
-      "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
+      "SELECT amount_paid, total_amount, status FROM booking WHERE booking_id = ?",
       [bookingId],
     );
 
@@ -660,9 +645,13 @@ router.post("/webhook/paymongo", async (req, res) => {
       const totalAmount = parseFloat(rows[0].total_amount);
       const newTotalPaid = currentPaid + paymentAmount;
 
+      const isFullyPaid = newTotalPaid >= totalAmount - 0.01;
+      const newStatus = isFullyPaid ? "confirmed" : "partial";
+      const newPaymentType = isFullyPaid ? "full" : "partial";
+
       await db.query(
-        "UPDATE booking SET amount_paid = ?, status = 'confirmed' WHERE booking_id = ?",
-        [newTotalPaid, "confirmed", bookingId],
+        "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
+        [newTotalPaid, newStatus, newPaymentType, bookingId],
       );
 
       console.log(
