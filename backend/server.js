@@ -14,6 +14,7 @@ const galleryRoutes = require("./routes/galleryRoutes");
 const previousEventRoutes = require("./routes/previousEventRoutes");
 const ratingRoutes = require("./routes/ratingRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
 // Place this ABOVE your route definitions
@@ -54,6 +55,7 @@ app.use("/api/gallery", galleryRoutes);
 app.use("/api/previous-events", previousEventRoutes);
 app.use("/api", ratingRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
 

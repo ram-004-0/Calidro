@@ -15,7 +15,6 @@ const UserHeader = () => {
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Form State
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -23,22 +22,18 @@ const UserHeader = () => {
     address: "",
   });
 
-  // Pulling Notification and Chat state from Context
   const {
     setIsChatOpen,
     isChatOpen,
-    // Assuming these are in your ChatContext. If not, we define them below.
-    adminNotifications = [],
-    setAdminNotifications,
+    userNotifications = [],
+    setUserNotifications,
     hasAdminUnread,
     setHasAdminUnread,
   } = useChat();
 
-  // Handle opening/closing notifications
   const handleToggleNotifications = () => {
     setIsNotifyOpen(!isNotifyOpen);
     if (!isNotifyOpen) {
-      // Mark as read when opening the panel
       setHasAdminUnread(false);
     }
   };
@@ -82,6 +77,26 @@ const UserHeader = () => {
       alert("Update failed.");
     }
   };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const userId = localStorage.getItem("userId"); // Or get from your Auth context
+        const res = await axios.get(`${API_URL}/api/notifications/${userId}`);
+
+        // Update your context/state
+        setUserNotifications(res.data);
+
+        // If there are unread items, show the red dot
+        const hasUnread = res.data.some((n) => !n.is_read);
+        setHasAdminUnread(hasUnread);
+      } catch (err) {
+        console.error("Error fetching notifications", err);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   const baseStyle =
     "block rounded-2xl px-3 py-2 text-base uppercase font-medium whitespace-nowrap transition-colors";
@@ -142,7 +157,7 @@ const UserHeader = () => {
                       Admin Alerts
                     </h3>
                     <button
-                      onClick={() => setAdminNotifications([])}
+                      onClick={() => setUserNotifications([])}
                       className="text-[10px] text-gray-400 hover:text-red-500 font-bold"
                     >
                       CLEAR ALL
@@ -171,7 +186,6 @@ const UserHeader = () => {
               )}
             </div>
 
-            {/* --- ACCOUNT ICON --- */}
             <div className="relative">
               <CircleUserRound
                 className="cursor-pointer transition-transform hover:scale-110"
@@ -221,7 +235,6 @@ const UserHeader = () => {
         )}
       </div>
 
-      {/* --- EDIT PROFILE MODAL --- */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div

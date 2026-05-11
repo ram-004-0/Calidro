@@ -578,6 +578,9 @@ router.put("/reschedule/:id", async (req, res) => {
       bookingId,
     ]);
 
+    const notificationMessage = `Your booking for ${event_date} at ${event_time} has been successfully rescheduled.`;
+    await createNotification(userId, notificationMessage, "booking_update");
+
     res.status(200).json({
       message: "Reschedule successful!",
       newTotal: total_amount,
