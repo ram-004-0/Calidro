@@ -598,60 +598,76 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
+  // 1. Tell PayMongo we got the message immediately
   res.status(200).send("ok");
 
   try {
     const payload = req.body;
-    const attributes = payload.data?.attributes;
-    if (!attributes) return;
+    const data = payload.data;
+    if (!data) return;
 
-    // FIX 1: Corrected metadata path based on your JSON
-    const metadata =
-      attributes.metadata ||
-      attributes.data?.attributes?.metadata ||
-      attributes.data?.attributes?.payload?.checkout_session?.attributes
-        ?.metadata;
+    const attr = data.attributes;
 
-    // Use the variable 'metadata' we just defined!
-    const bookingId = metadata?.bookingId;
-    if (!bookingId) {
-      console.log("❌ Webhook: Booking ID not found in metadata");
+    // --- FIND THE BOOKING ID ---
+    // We check the top-level metadata first, then look inside the payment_intent
+    const bookingId =
+      attr.metadata?.bookingId ||
+      attr.payment_intent?.attributes?.metadata?.bookingId;
+
+    // --- FIND THE AMOUNT ---
+    // PayMongo sends amount in Cents (e.g., 2000000).
+    // We check the payment_intent first (most reliable for successful payments)
+    const amountInCents =
+      attr.payment_intent?.attributes?.amount ||
+      attr.line_items?.[0]?.amount ||
+      0;
+
+    const paymentAmount = Number(amountInCents) / 100;
+
+    console.log(
+      `[WEBHOOK] Processing: Booking ${bookingId} | Amount: ₱${paymentAmount}`,
+    );
+
+    if (!bookingId || paymentAmount <= 0) {
+      console.log("⚠️ Webhook ignored: Missing ID or Amount is 0.");
       return;
     }
 
-    // FIX 2: Specific amount path from your JSON
-    const amountInCents =
-      attributes.payment_intent?.attributes?.amount ||
-      attributes.data?.attributes?.payload?.payment?.attributes?.amount ||
-      0;
+    // --- UPDATE DATABASE ---
+    // We use a single query to add the payment to the existing amount_paid
+    const updateSql = `
+      UPDATE booking 
+      SET 
+        amount_paid = amount_paid + ?,
+        status = CASE 
+          WHEN (amount_paid + ?) >= (total_amount - 5) THEN 'confirmed' 
+          ELSE 'pending' 
+        END,
+        payment_type = CASE 
+          WHEN (amount_paid + ?) >= (total_amount - 5) THEN 'full' 
+          ELSE 'partial' 
+        END
+      WHERE booking_id = ?
+    `;
 
-    const paymentAmount = amountInCents / 100;
+    const [result] = await db.query(updateSql, [
+      paymentAmount,
+      paymentAmount,
+      paymentAmount,
+      bookingId,
+    ]);
 
-    const [rows] = await db.query(
-      "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
-      [bookingId],
-    );
-
-    if (rows.length > 0) {
-      const currentPaid = parseFloat(rows[0].amount_paid) || 0;
-      const totalRequired = parseFloat(rows[0].total_amount) || 0;
-      const newTotalPaid = currentPaid + paymentAmount;
-
-      const isFullyPaid = newTotalPaid >= totalRequired - 1;
-      const finalStatus = isFullyPaid ? "confirmed" : "pending";
-      const finalPaymentType = isFullyPaid ? "full" : "partial";
-
-      await db.query(
-        "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
-        [newTotalPaid, finalStatus, finalPaymentType, bookingId],
-      );
-
+    if (result.affectedRows > 0) {
       console.log(
-        `✅ DB UPDATED: Booking ${bookingId} | Added: ₱${paymentAmount} | New Total: ₱${newTotalPaid} | Status: ${finalStatus}`,
+        `✅ DATABASE UPDATED: Booking ${bookingId} now has +₱${paymentAmount}`,
+      );
+    } else {
+      console.log(
+        `❌ DATABASE FAILURE: Booking ID ${bookingId} not found in table.`,
       );
     }
   } catch (err) {
-    console.error("🔥 WEBHOOK ERROR:", err.message);
+    console.error("🔥 WEBHOOK CRITICAL ERROR:", err.message);
   }
 });
 
