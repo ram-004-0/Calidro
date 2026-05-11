@@ -79,24 +79,29 @@ const UserHeader = () => {
   };
 
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchMyNotifications = async () => {
       try {
-        const userId = localStorage.getItem("userId"); // Or get from your Auth context
-        const res = await axios.get(`${API_URL}/api/notifications/${userId}`);
+        const uId = localStorage.getItem("userId");
+        if (!uId) return;
 
-        // Update your context/state
-        setUserNotifications(res.data);
+        const response = await axios.get(`${API_URL}/api/notifications/${uId}`);
 
-        // If there are unread items, show the red dot
-        const hasUnread = res.data.some((n) => !n.is_read);
+        // Update the context state
+        setUserNotifications(response.data);
+
+        // Show the red dot if there are unread notifications
+        const hasUnread = response.data.some((n) => !n.is_read);
         setHasAdminUnread(hasUnread);
       } catch (err) {
-        console.error("Error fetching notifications", err);
+        console.error("Error fetching notifications:", err);
       }
     };
 
-    fetchNotifications();
-  }, []);
+    fetchMyNotifications();
+    // Optional: Check for new alerts every 2 minutes
+    const interval = setInterval(fetchMyNotifications, 120000);
+    return () => clearInterval(interval);
+  }, [setUserNotifications, setHasAdminUnread]);
 
   const baseStyle =
     "block rounded-2xl px-3 py-2 text-base uppercase font-medium whitespace-nowrap transition-colors";

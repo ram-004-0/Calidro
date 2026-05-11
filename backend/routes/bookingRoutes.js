@@ -509,10 +509,10 @@ router.put("/reschedule/:id", async (req, res) => {
     total_amount,
     ingress_time,
     egress_time,
+    userId,
   } = req.body;
 
   try {
-    // 1. Fetch current booking
     const [currentBooking] = await db.query(
       `SELECT event_duration FROM booking WHERE booking_id = ?`,
       [bookingId],
@@ -522,7 +522,6 @@ router.put("/reschedule/:id", async (req, res) => {
       return res.status(404).json({ error: "Booking not found." });
     }
 
-    // 2. Parse and Validate Numbers
     const oldDuration = parseInt(currentBooking[0].event_duration) || 0;
     const newDuration = parseInt(event_duration);
 
@@ -538,8 +537,6 @@ router.put("/reschedule/:id", async (req, res) => {
       });
     }
 
-    // 3. Robust Conflict Check (Basic version - checks same start time)
-    // Note: Consider expanding this to check (startTime + duration) overlaps later
     const [conflicts] = await db.query(
       `SELECT * FROM booking 
        WHERE event_date = ? 
@@ -555,7 +552,6 @@ router.put("/reschedule/:id", async (req, res) => {
       });
     }
 
-    // 4. Update with Fallbacks
     const updateQuery = `
       UPDATE booking 
       SET 
@@ -578,8 +574,12 @@ router.put("/reschedule/:id", async (req, res) => {
       bookingId,
     ]);
 
-    const notificationMessage = `Your booking for ${event_date} at ${event_time} has been successfully rescheduled.`;
-    await createNotification(userId, notificationMessage, "booking_update");
+    if (userId) {
+      const notificationMessage = `Your booking for ${event_date} at ${event_time} has been successfully rescheduled.`;
+
+      // Pass userId, the message, and the bookingId (as related_id)
+      await createNotification(userId, notificationMessage, bookingId);
+    }
 
     res.status(200).json({
       message: "Reschedule successful!",

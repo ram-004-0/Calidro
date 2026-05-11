@@ -110,7 +110,6 @@ export default function BookingPage({ onNext }) {
 
   const updateBookingOnly = async (payload) => {
     try {
-      // 1. Validate ID
       const bId = rescheduleData?.booking_id || rescheduleData?.id;
 
       if (!bId) {
@@ -119,9 +118,9 @@ export default function BookingPage({ onNext }) {
         return;
       }
 
-      // 2. Sanitize Payload (Convert possible NaNs or undefined to numbers/nulls)
       const sanitizedPayload = {
         ...payload,
+        userId: localStorage.getItem("userId"),
         event_duration: Number(payload.event_duration) || 0,
         ingress_time: Number(payload.ingress_time) || 0,
         egress_time: payload.egress_time ? Number(payload.egress_time) : null,
@@ -135,12 +134,16 @@ export default function BookingPage({ onNext }) {
       await axios.put(url, sanitizedPayload);
 
       alert("Booking updated successfully!");
-
-      // Optional: Refresh data or close modal here
     } catch (err) {
       const errorMsg =
-        err.response?.data?.message || err.response?.data || err.message;
-      console.error("Update failed:", errorMsg);
+        err.response?.data?.error || // Check for { error: "..." }
+        err.response?.data?.message || // Check for { message: "..." }
+        err.response?.data || // fallback to raw data
+        err.message; // fallback to axios message
+
+      console.error("Update failed:", err.response?.data || err.message);
+
+      // Use the extracted string
       alert(`Failed to update booking: ${errorMsg}`);
     }
   };
