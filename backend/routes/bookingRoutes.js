@@ -339,7 +339,7 @@ router.put("/:id/update-payment", async (req, res) => {
     const remainingBalance = booking.total_amount - newTotalPaid;
 
     // 2. Logic: Status is 'confirmed' ONLY if fully paid, else 'partial'
-    const newStatus = remainingBalance <= 0 ? "confirmed" : "partial";
+    const newStatus = remainingBalance <= 0 ? "confirmed" : "pending";
     const newPaymentType = remainingBalance <= 0 ? "full" : "partial";
 
     await db.query(
@@ -501,7 +501,7 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
 
     // Only set to 'full' if the amount paid covers the total
     const isFullyPaid = newTotalPaid >= totalAmount;
-    const finalStatus = isFullyPaid ? "confirmed" : "partial";
+    const finalStatus = isFullyPaid ? "confirmed" : "pending";
     const finalPaymentType = isFullyPaid ? "full" : "partial";
 
     await db.query(

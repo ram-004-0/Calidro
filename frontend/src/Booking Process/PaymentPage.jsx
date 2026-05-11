@@ -16,10 +16,10 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const isRestricted = state?.paymentTypeRestriction === "Full";
   const amountToPayFromState = state?.amountToPay;
 
-  const [phone, setPhone] = useState(
-    bookingData?.phone_number || user?.phone_number || "",
-  );
-  const [addr, setAddr] = useState(bookingData?.address || user?.address || "");
+  // const [phone, setPhone] = useState(bookingData?.phone_number || user?.phone_number || "",);
+  //const [addr, setAddr] = useState(bookingData?.address || user?.address || "");
+  const [phone, setPhone] = useState("");
+  const [addr, setAddr] = useState("");
 
   const [paymentType, setPaymentType] = useState(
     isRestricted ? "full" : "partial",
