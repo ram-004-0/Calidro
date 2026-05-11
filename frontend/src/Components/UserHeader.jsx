@@ -81,21 +81,25 @@ const UserHeader = () => {
   useEffect(() => {
     const fetchMyNotifications = async () => {
       try {
-        // Try both common naming conventions
+        // 1. Check all common naming variations in localStorage
         const uId =
-          localStorage.getItem("userId") || localStorage.getItem("user_id");
-
-        console.log("🔍 Fetching notifications for UID:", uId); // Check your browser console!
+          localStorage.getItem("userId") ||
+          localStorage.getItem("user_id") ||
+          localStorage.getItem("uid");
 
         if (!uId) {
-          console.warn("⚠️ No User ID found in localStorage");
+          console.warn("⚠️ No User ID found. Checking fallback...");
           return;
         }
 
+        console.log("🚀 Fetching notifications for User:", uId);
         const response = await axios.get(`${API_URL}/api/notifications/${uId}`);
+
         setUserNotifications(response.data);
 
-        const hasUnread = response.data.some((n) => !n.is_read);
+        const hasUnread = response.data.some(
+          (n) => n.is_read === 0 || n.is_read === false,
+        );
         setHasAdminUnread(hasUnread);
       } catch (err) {
         console.error("Error fetching notifications:", err);
@@ -178,10 +182,15 @@ const UserHeader = () => {
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
                     {userNotifications.length > 0 ? (
                       userNotifications.map((n) => (
-                        <div key={n.id} className="...">
-                          <p className="font-medium">{n.message}</p>
+                        <div
+                          key={n.id || n.notification_id}
+                          className="p-2 border-b last:border-0"
+                        >
+                          <p className="font-medium text-xs">{n.message}</p>
                           <p className="text-[10px] text-gray-400 mt-1">
-                            {new Date(n.created_at).toLocaleTimeString()}
+                            {n.created_at
+                              ? new Date(n.created_at).toLocaleTimeString()
+                              : "Just now"}
                           </p>
                         </div>
                       ))
