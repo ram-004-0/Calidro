@@ -499,7 +499,9 @@ router.put("/finalize-payment/:bookingId", async (req, res) => {
 
     const { total_amount, amount_paid } = rows[0];
 
-    // Only set to 'full' if the amount paid covers the total
+    const paidNow = parseFloat(req.body.amount_paid) || 0;
+    const newTotalPaid = parseFloat(amount_paid) + paidNow;
+
     const isFullyPaid = newTotalPaid >= totalAmount;
     const finalStatus = isFullyPaid ? "confirmed" : "pending";
     const finalPaymentType = isFullyPaid ? "full" : "partial";
@@ -580,7 +582,7 @@ router.put("/reschedule/:id", async (req, res) => {
        SET event_date = ?, event_time = ?, event_duration = ?, 
            ingress_time = ?, egress_time = ?, total_amount = ?, 
            payment_type = ? 
-       WHERE id = ?`,
+       WHERE booking_id = ?`,
       [date, time, dur.toString(), ing, eg, newTotal, newPaymentType, id],
     );
 
