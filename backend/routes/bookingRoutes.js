@@ -498,67 +498,60 @@ router.put("/edit/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// PUT route to handle rescheduling
 router.put("/reschedule/:id", async (req, res) => {
-  const { id } = req.params;
-  const { date, time, duration, ingress_time, egress_time } = req.body;
+  const bookingId = req.params.id;
+  const { event_date, event_time, event_duration, total_amount } = req.body;
 
   try {
-    const [rows] = await db.query(
-      "SELECT * FROM booking WHERE booking_id = ?",
-      [id],
-    );
-    if (rows.length === 0)
-      return res.status(404).json({ error: "Booking not found" });
-
-    const old = rows[0];
-    const dur = parseInt(duration) || 0;
-    const ing = parseInt(ingress_time) || 0;
-    const eg = parseInt(egress_time) || 0;
-
-    // 2. Strict Enforcement: Prevent decreasing original values
-    if (
-      dur < parseInt(old.event_duration) ||
-      ing < parseInt(old.ingress_time) ||
-      eg < parseInt(old.egress_time)
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Cannot decrease duration or logistics time." });
-    }
-
-    // 3. Recalculate Total
-    const BASE_PRICE = 25000;
-    const newTotal =
-      BASE_PRICE +
-      (dur - 4) * 5000 +
-      Math.max(0, ing - 2) * 1000 +
-      Math.max(0, eg - 1) * 1000;
-
-    // 4. Determine Payment Type (Map to ENUM 'partial' or 'full')
-    const amountPaid = parseFloat(old.amount_paid) || 0;
-    let newPaymentType = "partial";
-    if (amountPaid >= newTotal) {
-      newPaymentType = "full";
-    }
-
-    // 5. Update Database
-    await db.query(
-      `UPDATE booking 
-       SET event_date = ?, event_time = ?, event_duration = ?, 
-           ingress_time = ?, egress_time = ?, total_amount = ?, 
-           payment_type = ? 
-       WHERE booking_id = ?`,
-      [date, time, dur.toString(), ing, eg, newTotal, newPaymentType, id],
+    // 1. Conflict Check: Is the venue already booked for this new date/time?
+    // We exclude the current bookingId so it doesn't conflict with itself
+    const [conflicts] = await db.query(
+      `SELECT * FROM booking 
+       WHERE event_date = ? 
+       AND event_time = ? 
+       AND status = 'confirmed' 
+       AND booking_id != ?`,
+      [event_date, event_time, bookingId],
     );
 
-    res.json({
-      message: "Reschedule successful",
-      newTotal,
-      paymentType: newPaymentType,
+    if (conflicts.length > 0) {
+      return res.status(400).json({
+        error: "This schedule is already taken. Please pick another time.",
+      });
+    }
+
+    // 2. Update the booking details and the total_amount
+    const updateQuery = `
+      UPDATE booking 
+      SET 
+        event_date = ?, 
+        event_time = ?, 
+        event_duration = ?, 
+        total_amount = ?
+      WHERE booking_id = ?
+    `;
+
+    const [result] = await db.query(updateQuery, [
+      event_date,
+      event_time,
+      event_duration,
+      total_amount,
+      bookingId,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Booking not found." });
+    }
+
+    res.status(200).json({
+      message: "Reschedule successful!",
+      newTotal: total_amount,
     });
   } catch (error) {
-    console.error("Reschedule Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Backend Reschedule Error:", error);
+    res.status(500).json({ error: "Server error during rescheduling." });
   }
 });
 
