@@ -7,17 +7,24 @@ import axios from "axios";
 const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const { state } = useLocation();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+
   const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const bookingData = propBookingData || state?.bookingData || {};
   const isRestricted = state?.paymentTypeRestriction === "Full";
   const amountToPayFromState = state?.amountToPay;
-  const { user } = useAuth();
 
   const [phone, setPhone] = useState(
     bookingData?.phone_number || user?.phone_number || "",
   );
   const [addr, setAddr] = useState(bookingData?.address || user?.address || "");
-  const [loading, setLoading] = useState(false);
+
+  const [paymentType, setPaymentType] = useState(
+    isRestricted ? "full" : "partial",
+  );
+  const [amountInput, setAmountInput] = useState("5000");
 
   const totalAmount = useMemo(() => {
     if (isRestricted && amountToPayFromState) return amountToPayFromState;
@@ -42,11 +49,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   if (!isMounted) {
     return <div className="min-h-screen bg-gray-50" />;
   }
-
-  const [paymentType, setPaymentType] = useState(
-    isRestricted ? "full" : "partial",
-  );
-  const [amountInput, setAmountInput] = useState("5000");
 
   const formatNumber = (val) => Number(val).toLocaleString("en-PH");
 
@@ -94,15 +96,12 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   };
 
   const handleUpdateBalance = async (methods) => {
-    // 1. Robust ID Extraction
     const urlId = searchParams.get("bookingId");
     const stateId =
       state?.bookingData?.booking_id || state?.bookingId || state?.id;
 
-    // Prioritize the URL ID, then fallback to state, then check for "undefined" strings
     let bId = urlId || stateId;
 
-    // Safety check: ensure bId isn't the literal string "undefined" or null
     if (!bId || bId === "undefined" || bId === "null") {
       console.error("DEBUG: ID check failed.", { urlId, stateId });
       alert(
@@ -115,7 +114,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
     try {
       // 2. Prepare Payload
-      // Note: We send 'amount' because the backend needs to know how much to charge for the balance
       const payload = {
         bookingId: bId,
         amount: totalAmount,
