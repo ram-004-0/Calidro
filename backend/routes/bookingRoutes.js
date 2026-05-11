@@ -598,7 +598,6 @@ router.put("/reschedule/:id", async (req, res) => {
 
 // 9. PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
-  // 1. ALWAYS respond 200 OK immediately to stop PayMongo from retrying
   res.status(200).send("ok");
 
   try {
@@ -606,22 +605,17 @@ router.post("/webhook/paymongo", async (req, res) => {
     const attributes = payload.data?.attributes;
     if (!attributes) return;
 
-    // 2. FIXED PATHS: PayMongo nests metadata and amount deeply for Checkout Sessions
-    // We check every possible location so it never returns 'undefined'
+    // 1. IMPROVED METADATA PATH: PayMongo nests this differently for sessions
     const metadata =
       attributes.data?.attributes?.metadata ||
       attributes.metadata ||
-      attributes.payment_intent?.attributes?.metadata ||
       attributes.data?.attributes?.payload?.checkout_session?.attributes
         ?.metadata;
 
     const bookingId = metadata?.bookingId;
-    if (!bookingId) {
-      console.error("❌ Webhook: No Booking ID found in payload");
-      return;
-    }
+    if (!bookingId) return;
 
-    // 3. FIXED AMOUNT: Looking into the 'payload' object where the actual money is
+    // 2. THE FIX FOR ₱0: Digging into the specific PayMongo 'payment' object
     const amountInCents =
       attributes.data?.attributes?.payload?.payment?.attributes?.amount ||
       attributes.amount ||
@@ -630,7 +624,6 @@ router.post("/webhook/paymongo", async (req, res) => {
 
     const paymentAmount = amountInCents / 100;
 
-    // 4. DATABASE SYNC
     const [rows] = await db.query(
       "SELECT amount_paid, total_amount FROM booking WHERE booking_id = ?",
       [bookingId],
@@ -640,11 +633,9 @@ router.post("/webhook/paymongo", async (req, res) => {
       const currentPaid = parseFloat(rows[0].amount_paid) || 0;
       const totalRequired = parseFloat(rows[0].total_amount) || 0;
 
-      // Calculate the new total
       const newTotalPaid = currentPaid + paymentAmount;
 
-      // 5. MATH BUFFER: Subtract 1 peso to handle decimal rounding issues
-      // This ensures 25000.00 >= 24999.99 is TRUE
+      // 3. BUFFER CHECK: Added 1 peso buffer for rounding errors
       const isFullyPaid = newTotalPaid >= totalRequired - 1;
 
       const finalStatus = isFullyPaid ? "confirmed" : "pending";
@@ -660,8 +651,7 @@ router.post("/webhook/paymongo", async (req, res) => {
       );
     }
   } catch (err) {
-    // We log the error but don't 'res.send' again because we already sent 200 OK
-    console.error("🔥 WEBHOOK SYSTEM ERROR:", err.message);
+    console.error("🔥 WEBHOOK ERROR:", err.message);
   }
 });
 

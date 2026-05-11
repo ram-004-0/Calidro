@@ -9,7 +9,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
-  const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const bookingData = propBookingData || state?.bookingData || {};
@@ -26,10 +25,17 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   );
   const [amountInput, setAmountInput] = useState("5000");
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const totalAmount = useMemo(() => {
-    if (!isMounted) return 0;
+    if (!isMounted) return 0; // Server renders 0, Browser renders 0. Match!
 
     if (isRestricted && amountToPayFromState) return amountToPayFromState;
+
     const {
       duration = 4,
       ingress_time = 2,
@@ -43,7 +49,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
       Math.max(0, egress_time - 1) * 1000
     );
   }, [isMounted, bookingData, isRestricted, amountToPayFromState]);
-
   useEffect(() => {
     setIsMounted(true);
   }, []);
