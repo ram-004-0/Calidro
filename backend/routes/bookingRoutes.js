@@ -98,7 +98,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       egress_time: egress ? `${egress}:00:00` : "01:00:00",
       guests: guests || 0,
       total_amount: totalAmount,
-      amount_paid: amount_paid || 0,
+      amount_paid: 0,
       payment_type: paymentType,
       status: "pending",
     };

@@ -47,5 +47,3 @@ exports.createCheckout = async (req, res) => {
     res.status(500).json({ error: "Failed to connect to PayMongo" });
   }
 };
-
-// 2. WEBHOOK HANDLER (This fixes the "Data truncated" error)
