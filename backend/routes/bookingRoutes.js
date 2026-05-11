@@ -483,40 +483,6 @@ router.get("/test-cleanup-manual", async (req, res) => {
   }
 });
 
-// 8. Finalize Payment Type
-router.put("/finalize-payment/:bookingId", async (req, res) => {
-  const { bookingId } = req.params;
-  try {
-    const [rows] = await db.query(
-      "SELECT total_amount, amount_paid FROM booking WHERE booking_id = ?",
-      [bookingId],
-    );
-    if (rows.length === 0)
-      return res.status(404).json({ error: "Booking not found" });
-
-    const { total_amount, amount_paid } = rows[0];
-    const paidNow = parseFloat(req.body.amount_paid) || 0;
-    const newTotalPaid = parseFloat(amount_paid) + paidNow;
-
-    const isFullyPaid = newTotalPaid >= parseFloat(total_amount);
-    const finalStatus = isFullyPaid ? "confirmed" : "pending";
-    const finalPaymentType = isFullyPaid ? "full" : "partial";
-
-    await db.query(
-      "UPDATE booking SET amount_paid = ?, status = ?, payment_type = ? WHERE booking_id = ?",
-      [newTotalPaid, finalStatus, finalPaymentType, bookingId],
-    );
-
-    res.json({
-      success: true,
-      paymentType: finalPaymentType,
-      status: finalStatus,
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Could not update." });
-  }
-});
-
 router.put("/edit/:id", async (req, res) => {
   const { typeOfEvent, eventName, noOfGuests } = req.body;
   try {
@@ -637,7 +603,6 @@ router.post("/webhook/paymongo", async (req, res) => {
       return;
     }
 
-    // --- DATABASE UPDATE ---
     const updateSql = `
       UPDATE booking 
       SET 
