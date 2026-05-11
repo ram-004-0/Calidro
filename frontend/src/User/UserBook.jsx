@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import UserHeader from "../Components/UserHeader";
 import UserBookingCard from "../Props/UserBookingCard";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
 // Using the environment variable defined in your Vercel/Railway setup
@@ -10,29 +10,43 @@ const API_URL = "https://calidro-production.up.railway.app";
 const UserBook = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     const fetchBookings = async () => {
-      const storedUser = localStorage.getItem("user");
-      const token = localStorage.getItem("token"); // added
-      const user = storedUser ? JSON.parse(storedUser) : null;
-
       try {
+        const storedUser = localStorage.getItem("user");
+        const token = localStorage.getItem("token");
+        const user = storedUser ? JSON.parse(storedUser) : null;
+
+        // Safety Check: If no user or token, don't even try the request
+        if (!user?.user_id || !token) {
+          console.warn("No user ID or token found in localStorage");
+          setLoading(false);
+          return;
+        }
+
         const response = await axios.get(
           `${API_URL}/api/bookings/my-bookings/${user.user_id}`,
           {
             headers: {
-              Authorization: `Bearer ${token}`, // <--- ADD THIS LINE
+              Authorization: `Bearer ${token}`,
             },
           },
         );
         setBookings(response.data);
       } catch (err) {
+        // If the error is 401, it means the token is expired or invalid
+        if (err.response?.status === 401) {
+          console.error("Session expired. Please log in again.");
+          // Optional: localStorage.clear(); window.location.href = "/login";
+        }
         console.error("Error fetching bookings:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchBookings();
   }, [location.key]);
 
