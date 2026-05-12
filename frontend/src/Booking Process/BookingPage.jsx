@@ -187,7 +187,7 @@ export default function BookingPage({ onNext }) {
         ? rescheduleData.typeOfEvent || rescheduleData.event_type
         : eventType,
       guests: isRescheduling
-        ? parseInt(rescheduleData.noOfGuests, 10)
+        ? parseInt(rescheduleData.noOfGuests || rescheduleData.guests, 10)
         : parseInt(guestCount, 10),
     };
 

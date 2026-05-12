@@ -65,6 +65,8 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       time,
       duration,
       guests,
+      guestCount, // Fallback 1
+      noOfGuests,
       ingress,
       egress,
       totalAmount,
@@ -84,7 +86,11 @@ router.post("/create-booking-and-checkout", async (req, res) => {
         .json({ error: "User not found. Please log in again." });
     }
 
-    const guestValue = parseInt(guests, 10);
+    const finalGuestCount = parseInt(
+      guests || guestCount || noOfGuests || 0,
+      10,
+    );
+
     const bookingData = {
       user_id: userId,
       username: userData.username,
@@ -98,7 +104,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       event_duration: duration,
       ingress_time: ingress ? `${ingress}:00:00` : "02:00:00",
       egress_time: egress ? `${egress}:00:00` : "01:00:00",
-      guests: isNaN(guestValue) ? 0 : guestValue,
+      guests: finalGuestCount,
       total_amount: totalAmount,
       amount_paid: 0,
       payment_type: paymentType,
