@@ -124,7 +124,7 @@ export default function BookingPage({ onNext }) {
         userId: localStorage.getItem("userId"),
         event_date: payload.eventDate, // from handleNextClick's eventDate
         event_time: convertTo24Hour(payload.time), // ensuring 24h format
-        event_duration: Number(payload.duration) || 0, // mapping 'duration' to 'event_duration'
+        event_duration: Number(payload.duration), // mapping 'duration' to 'event_duration'
         ingress_time: Number(payload.ingress) || 0, // mapping 'ingress' to 'ingress_time'
         egress_time: Number(payload.egress) || 0, // mapping 'egress' to 'egress_time'
         total_amount: Number(payload.totalAmount) || 0, // mapping 'totalAmount' to 'total_amount'
