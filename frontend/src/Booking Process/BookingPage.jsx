@@ -168,6 +168,11 @@ export default function BookingPage({ onNext }) {
         curIngress > Number(rescheduleData.ingress_time) ||
         curEgress > Number(rescheduleData.egress_time));
 
+    // CRITICAL FIX: Ensure guest data is explicitly mapped for the backend
+    const finalGuestCount = isRescheduling
+      ? parseInt(rescheduleData.noOfGuests || rescheduleData.guests || 0, 10)
+      : parseInt(guestCount || 0, 10);
+
     const bookingPayload = {
       userId:
         user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
@@ -182,21 +187,27 @@ export default function BookingPage({ onNext }) {
       booking_id: isRescheduling
         ? rescheduleData.booking_id || rescheduleData.id
         : null,
-      eventName: isRescheduling ? rescheduleData.eventName : eventName,
+      eventName: isRescheduling
+        ? rescheduleData.eventName || rescheduleData.event_name
+        : eventName,
       eventType: isRescheduling
         ? rescheduleData.typeOfEvent || rescheduleData.event_type
         : eventType,
-      noOfGuests: isRescheduling
-        ? parseInt(rescheduleData.noOfGuests, 10)
-        : parseInt(guestCount, 10),
-      guests: isRescheduling
-        ? parseInt(rescheduleData.noOfGuests, 10)
-        : parseInt(guestCount, 10),
+
+      // We send all three to be 100% safe with the backend destructuring
+      noOfGuests: finalGuestCount,
+      guests: finalGuestCount,
+      guestCount: finalGuestCount,
+
+      // Also ensuring phone and address are passed if available
+      phone_number: user?.phone_number || phoneNumber,
+      address: user?.address || address,
     };
 
     if (isRescheduling && !isUpgraded) {
       updateBookingOnly(bookingPayload);
     } else {
+      // This passes the payload to your Review/Checkout component
       onNext(bookingPayload);
     }
   };
