@@ -110,41 +110,40 @@ export default function BookingPage({ onNext }) {
 
   const updateBookingOnly = async (payload) => {
     try {
-      const bId = rescheduleData?.booking_id || rescheduleData?.id;
+      const bId =
+        rescheduleData?.booking_id || rescheduleData?.id || payload.booking_id;
 
       if (!bId) {
-        console.error("No booking ID found in rescheduleData:", rescheduleData);
+        console.error("No booking ID found:", rescheduleData);
         alert("Error: Could not identify the booking to update.");
         return;
       }
 
+      // MAP FRONTEND NAMES TO BACKEND NAMES
       const sanitizedPayload = {
-        ...payload,
         userId: localStorage.getItem("userId"),
-        event_duration: Number(payload.event_duration) || 0,
-        ingress_time: Number(payload.ingress_time) || 0,
-        egress_time: payload.egress_time ? Number(payload.egress_time) : null,
-        total_amount: Number(payload.total_amount) || 0,
+        event_date: payload.eventDate, // from handleNextClick's eventDate
+        event_time: convertTo24Hour(payload.time), // ensuring 24h format
+        event_duration: Number(payload.duration) || 0, // mapping 'duration' to 'event_duration'
+        ingress_time: Number(payload.ingress) || 0, // mapping 'ingress' to 'ingress_time'
+        egress_time: Number(payload.egress) || 0, // mapping 'egress' to 'egress_time'
+        total_amount: Number(payload.totalAmount) || 0, // mapping 'totalAmount' to 'total_amount'
       };
-      console.log("📤 FRONTEND SENDING:", payload);
+
+      console.log("📤 FRONTEND SENDING TO BACKEND:", sanitizedPayload);
 
       const url = `${API_URL}/api/bookings/reschedule/${bId}`;
-
-      console.log("Sending Sanitized PUT to:", url, sanitizedPayload);
 
       await axios.put(url, sanitizedPayload);
 
       alert("Booking updated successfully!");
+      // Optional: Refresh data or redirect
+      window.location.reload();
     } catch (err) {
       const errorMsg =
-        err.response?.data?.error || // Check for { error: "..." }
-        err.response?.data?.message || // Check for { message: "..." }
-        err.response?.data || // fallback to raw data
-        err.message; // fallback to axios message
+        err.response?.data?.error || err.response?.data?.message || err.message;
 
-      console.error("Update failed:", err.response?.data || err.message);
-
-      // Use the extracted string
+      console.error("Update failed:", err.response?.data);
       alert(`Failed to update booking: ${errorMsg}`);
     }
   };
