@@ -100,7 +100,12 @@ const UserHeader = () => {
         }
 
         console.log("🚀 Fetching notifications for User:", uId);
-        const response = await axios.get(`${API_URL}/api/notifications/${uId}`);
+        const response = await axios.get(
+          `${API_URL}/api/notifications/${uId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }, // Add this!
+          },
+        );
 
         // IMPORTANT: Note that your SQL alias uses 'text' and 'time'
         setUserNotifications(response.data);
