@@ -191,17 +191,34 @@ const UserHeader = () => {
                     {userNotifications.length > 0 ? (
                       userNotifications.map((n) => (
                         <div
-                          key={n.id}
-                          className="p-2 border-b last:border-0 hover:bg-gray-50 transition"
+                          key={n.notif_id}
+                          className={`p-3 border-b last:border-0 transition ${
+                            n.is_read ? "bg-white" : "bg-blue-50/50"
+                          }`}
                         >
-                          {/* USE n.text INSTEAD OF n.message BECAUSE OF YOUR SQL ALIAS */}
-                          <p className="font-medium text-[11px] leading-tight text-[#4a3733]">
-                            {n.text}
-                          </p>
-                          {/* USE n.time INSTEAD OF n.created_at BECAUSE OF YOUR SQL ALIAS */}
-                          <p className="text-[9px] text-gray-400 mt-1">
-                            {n.time}
-                          </p>
+                          <div className="flex items-start gap-2">
+                            {/* Indicator for unread notifications */}
+                            {!n.is_read && (
+                              <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0" />
+                            )}
+
+                            <div>
+                              <p className="font-medium text-[11px] leading-tight text-[#4a3733]">
+                                {n.text}
+                              </p>
+                              <div className="flex justify-between items-center mt-1">
+                                <p className="text-[9px] text-gray-400">
+                                  {n.time}
+                                </p>
+                                {/* Show a 'Balance' tag if applicable */}
+                                {n.text.includes("balance") && (
+                                  <span className="text-[8px] font-bold text-red-500 bg-red-50 px-1 rounded">
+                                    PAYMENT
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ))
                     ) : (

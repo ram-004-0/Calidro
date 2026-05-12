@@ -363,14 +363,7 @@ app.use((req, res) => {
 });
 
 //cron job
-cron.schedule(
-  "0 8 * * *",
-  () => {
-    generateDailyReminders()
-      .then(() => console.log("✅ Daily reminders sent."))
-      .catch((err) => console.error("❌ Cron failed:", err));
-  },
-  {
-    timezone: "Asia/Manila",
-  },
-);
+cron.schedule("0 8 * * *", async () => {
+  console.log("System: Running scheduled reminders...");
+  await generateDailyReminders();
+});

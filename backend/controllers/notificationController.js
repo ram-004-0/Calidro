@@ -32,60 +32,47 @@ const getNotifications = async (req, res) => {
 };
 
 const generateDailyReminders = async () => {
-  console.log("⏰ Starting Notification Logic...");
+  console.log("⏰ Running Daily Reminder Logic...");
   try {
-    const [upcoming] = await query(`
-  SELECT *, DATEDIFF(DATE(event_date), CURDATE()) as days_left 
-  FROM booking 
-  WHERE status = 'confirmed' 
-  AND DATE(event_date) IN (
-    DATE_ADD(CURDATE(), INTERVAL 1 DAY), 
-    DATE_ADD(CURDATE(), INTERVAL 3 DAY), 
-    DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-  )
-`);
+    // 1. Fetch bookings that are 7, 3, or 1 day away
+    const [upcoming] = await db.query(`
+      SELECT *, DATEDIFF(event_date, CURDATE()) as days_left 
+      FROM booking 
+      WHERE status = 'confirmed' 
+      AND DATEDIFF(event_date, CURDATE()) IN (1, 3, 7)
+    `);
 
     for (const b of upcoming) {
-      const remainingBalance = b.total_amount - b.amount_paid;
+      const remainingBalance =
+        parseFloat(b.total_amount) - parseFloat(b.amount_paid);
+      const dayText = b.days_left === 1 ? "tomorrow" : `in ${b.days_left} days`;
 
-      // Balance Reminder
+      // Combined Message: Balance + Proximity
+      let message = `Your event "${b.event_name}" is happening ${dayText}!`;
+
       if (remainingBalance > 0) {
-        await query(
-          "INSERT INTO notifications (user_id, message, type) VALUES (?, ?, ?)",
-          [
-            b.user_id,
-            `Reminder: ₱${remainingBalance.toLocaleString()} balance due for your event "${b.event_name}" on ${b.event_date}.`,
-            "payment",
-          ],
-        );
+        message += ` Just a reminder, you have a remaining balance of ₱${remainingBalance.toLocaleString()}.`;
       }
 
-      // Proximity Reminder
-      const dayText = b.days_left === 1 ? "tomorrow" : `in ${b.days_left} days`;
-      await query(
-        "INSERT INTO notifications (user_id, message, type) VALUES (?, ?, ?)",
-        [
-          b.user_id,
-          `Your event "${b.event_name}" is happening ${dayText}!`,
-          "reminder",
-        ],
+      // Insert the notification
+      await db.query(
+        "INSERT INTO notifications (user_id, message, type, related_id) VALUES (?, ?, ?, ?)",
+        [b.user_id, message, "reminder", b.booking_id],
       );
     }
 
-    // 2. DAY OF EVENT REMINDER
-    await query(`
-      INSERT INTO notifications (user_id, message, type)
-      SELECT user_id, CONCAT('Today is the day! See you at Calidro for "', event_name, '".'), 'reminder'
+    // 2. DAY OF EVENT REMINDER (Run once at the start of the day)
+    await db.query(`
+      INSERT INTO notifications (user_id, message, type, related_id)
+      SELECT user_id, CONCAT('Today is the day! See you at Calidro for "', event_name, '".'), 'reminder', booking_id
       FROM booking 
       WHERE event_date = CURDATE() AND status = 'confirmed'
-    `);
-
-    // 3. LEAVE A REVIEW (Events that finished yesterday)
-    await query(`
-      INSERT INTO notifications (user_id, message, type)
-      SELECT user_id, CONCAT('How was your event "', event_name, '"? Leave a review now!'), 'review'
-      FROM booking 
-      WHERE event_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status = 'completed'
+      AND NOT EXISTS (
+        SELECT 1 FROM notifications 
+        WHERE user_id = booking.user_id 
+        AND message LIKE '%Today is the day%' 
+        AND DATE(created_at) = CURDATE()
+      )
     `);
 
     return { success: true, count: upcoming.length };

@@ -89,7 +89,6 @@ const ReviewDetails = () => {
       </h2>
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl justify-center">
-        {/* Booking Info Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex-1">
           <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest border-b pb-2">
             Booking Info
