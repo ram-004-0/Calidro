@@ -132,6 +132,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         duration: bookingData?.duration,
         ingress: bookingData?.ingress_time,
         egress: bookingData?.egress_time,
+        guests: bookingData?.noOfGuests || bookingData?.guests || 0,
         totalAmount: totalAmount,
         amount_paid: paymentType === "full" ? totalAmount : numericAmount,
         paymentType: paymentType,

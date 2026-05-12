@@ -66,7 +66,6 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       duration,
       ingress,
       egress,
-      guests,
       totalAmount,
       amount_paid,
       paymentType,
