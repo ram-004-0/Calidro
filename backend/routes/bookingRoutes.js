@@ -54,7 +54,6 @@ router.post("/test-post", (req, res) => {
 
 // 1. Create New Booking and Launch PayMongo
 router.post("/create-booking-and-checkout", async (req, res) => {
-  // This log is your best friend. Check your terminal to see if 'noOfGuests' is actually there!
   console.log("Full Payload Received:", req.body);
 
   try {
@@ -65,26 +64,24 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       eventDate,
       time,
       duration,
-      noOfGuests, // <--- This MUST match your frontend state
       ingress,
       egress,
       totalAmount,
       amount_paid,
       paymentType,
       payment_methods,
+      // REMOVE noOfGuests from here to avoid naming confusion
     } = req.body;
+
+    // 1. ROBUST GUEST CHECK: Check every possible name the frontend might send
+    const rawGuests =
+      req.body.noOfGuests || req.body.guests || req.body.guestCount || 0;
+    const finalGuestCount = parseInt(rawGuests, 10);
 
     const [userData] = await query(
       "SELECT username, email, phone_number, address FROM user WHERE user_id = ?",
       [userId],
     );
-
-    if (!userData) {
-      return res.status(404).json({ error: "User not found." });
-    }
-
-    // Capture the guest count. If the frontend sent 'guests' or 'noOfGuests', it works.
-    const finalGuestCount = parseInt(noOfGuests || req.body.guests || 0, 10);
 
     const bookingData = {
       user_id: userId,
@@ -99,12 +96,17 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       event_duration: duration,
       ingress_time: ingress ? `${ingress}:00:00` : "02:00:00",
       egress_time: egress ? `${egress}:00:00` : "01:00:00",
-      guests: finalGuestCount, // Maps to your 'guests' INT column
+
+      // 2. THIS IS THE KEY: Ensure it maps to the exact column name in your DB
+      guests: finalGuestCount,
+
       total_amount: totalAmount,
       amount_paid: 0,
       payment_type: paymentType,
       status: "pending",
     };
+
+    console.log("DEBUG: Final Object being INSERTED:", bookingData);
 
     const result = await query("INSERT INTO booking SET ?", [bookingData]);
     const bookingId = result.insertId;
