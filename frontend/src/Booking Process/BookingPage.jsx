@@ -189,7 +189,6 @@ export default function BookingPage({ onNext }) {
       noOfGuests: isRescheduling
         ? parseInt(rescheduleData.noOfGuests, 10)
         : parseInt(guestCount, 10),
-      // Keep this as a backup
       guests: isRescheduling
         ? parseInt(rescheduleData.noOfGuests, 10)
         : parseInt(guestCount, 10),

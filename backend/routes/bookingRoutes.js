@@ -54,7 +54,7 @@ router.post("/test-post", (req, res) => {
 
 // 1. Create New Booking and Launch PayMongo
 router.post("/create-booking-and-checkout", async (req, res) => {
-  console.log("1. Route Triggered. Event:", req.body.eventName);
+  // This log is your best friend. Check your terminal to see if 'noOfGuests' is actually there!
   console.log("Full Payload Received:", req.body);
 
   try {
@@ -65,10 +65,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       eventDate,
       time,
       duration,
-      // Destructure all possible names the frontend might send
-      guests,
-      guestCount,
-      noOfGuests,
+      noOfGuests, // <--- This MUST match your frontend state
       ingress,
       egress,
       totalAmount,
@@ -83,18 +80,11 @@ router.post("/create-booking-and-checkout", async (req, res) => {
     );
 
     if (!userData) {
-      return res
-        .status(404)
-        .json({ error: "User not found. Please log in again." });
+      return res.status(404).json({ error: "User not found." });
     }
 
-    // This checks noOfGuests first since that's what your UserBookingCard uses
-    const finalGuestCount = parseInt(
-      noOfGuests || guests || guestCount || 0,
-      10,
-    );
-
-    console.log("DEBUG: Final Guest Count for DB:", finalGuestCount);
+    // Capture the guest count. If the frontend sent 'guests' or 'noOfGuests', it works.
+    const finalGuestCount = parseInt(noOfGuests || req.body.guests || 0, 10);
 
     const bookingData = {
       user_id: userId,
@@ -116,10 +106,10 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       status: "pending",
     };
 
-    console.log("2. Attempting Database Insert for User:", userData.username);
     const result = await query("INSERT INTO booking SET ?", [bookingData]);
     const bookingId = result.insertId;
 
+    // PayMongo Integration
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
@@ -166,13 +156,9 @@ router.post("/create-booking-and-checkout", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ FINAL ROUTE ERROR:", error.message);
-    res.status(500).json({
-      error: "Process failed",
-      details: error.response?.data?.details || error.message,
-    });
+    res.status(500).json({ error: "Process failed", details: error.message });
   }
 });
-
 // 2. Fetch all bookings for User View w rate
 router.get("/my-bookings/:user_id", verifyToken, async (req, res) => {
   const user_id = req.params.user_id;
