@@ -288,25 +288,24 @@ export default function BookingPage({ onNext }) {
         parseInt(egress) > parseInt(rescheduleData.egress_time));
 
     const bookingPayload = {
-      event_date: format(selectedDate, "yyyy-MM-dd"),
-      event_time: convertTo24Hour(selectedTime),
-      event_duration: parseInt(duration),
-      ingress_time: parseInt(ingress),
-      egress_time: parseInt(egress),
-      total_amount: totalAmount,
+      userId: user?.user_id || user?.id || localStorage.getItem("userId"),
+      // Change these to match the backend destructuring names
+      eventName: isRescheduling ? null : eventName,
+      eventType: isRescheduling ? null : eventType,
+      eventDate: format(selectedDate, "yyyy-MM-dd"), // Was event_date
+      time: selectedTime, // Was event_time
+      duration: parseInt(duration), // Was event_duration
+      ingress: parseInt(ingress), // Was ingress_time
+      egress: parseInt(egress), // Was egress_time
+      guests: isRescheduling ? null : guestCount,
+      totalAmount: totalAmount, // Was total_amount
+
+      // Keep these for your rescheduling logic
       isReschedule: isRescheduling,
       isUpgrade: isUpgraded,
       booking_id: isRescheduling
         ? rescheduleData.booking_id || rescheduleData.id
         : null,
-      userId: user?.user_id || user?.id || localStorage.getItem("userId"),
-      username,
-      email,
-      address,
-      phone_number: phoneNumber,
-      eventName: isRescheduling ? null : eventName,
-      eventType: isRescheduling ? null : eventType,
-      guests: isRescheduling ? null : guestCount,
     };
 
     if (isRescheduling && !isUpgraded) {
