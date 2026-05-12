@@ -66,11 +66,11 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       duration,
       ingress,
       egress,
+      guests,
       totalAmount,
       amount_paid,
       paymentType,
       payment_methods,
-      // REMOVE noOfGuests from here to avoid naming confusion
     } = req.body;
 
     // 1. ROBUST GUEST CHECK: Check every possible name the frontend might send
@@ -96,10 +96,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       event_duration: duration,
       ingress_time: ingress ? `${ingress}:00:00` : "02:00:00",
       egress_time: egress ? `${egress}:00:00` : "01:00:00",
-
-      // 2. THIS IS THE KEY: Ensure it maps to the exact column name in your DB
       guests: finalGuestCount,
-
       total_amount: totalAmount,
       amount_paid: 0,
       payment_type: paymentType,
