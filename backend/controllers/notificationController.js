@@ -34,15 +34,20 @@ const getNotifications = async (req, res) => {
 const generateDailyReminders = async () => {
   console.log("⏰ Starting Notification Logic...");
   try {
-    // 1. BALANCE & EVENT NEAR (7, 3, and 1 day before)
     const [upcoming] = await query(`
-      SELECT *, DATEDIFF(event_date, CURDATE()) as days_left 
-      FROM booking 
-      WHERE status = 'confirmed' 
-      AND event_date IN (DATE_ADD(CURDATE(), INTERVAL 1 DAY), 
-                         DATE_ADD(CURDATE(), INTERVAL 3 DAY), 
-                         DATE_ADD(CURDATE(), INTERVAL 7 DAY))
-    `);
+  SELECT *, DATEDIFF(event_date, CURDATE()) as days_left 
+  FROM booking 
+  WHERE status = 'confirmed'
+`);
+    // 1. BALANCE & EVENT NEAR (7, 3, and 1 day before)
+    // const [upcoming] = await query(`
+    //   SELECT *, DATEDIFF(event_date, CURDATE()) as days_left
+    //   FROM booking
+    //   WHERE status = 'confirmed'
+    //   AND event_date IN (DATE_ADD(CURDATE(), INTERVAL 1 DAY),
+    //                      DATE_ADD(CURDATE(), INTERVAL 3 DAY),
+    //                      DATE_ADD(CURDATE(), INTERVAL 7 DAY))
+    // `);
 
     for (const b of upcoming) {
       const remainingBalance = b.total_amount - b.amount_paid;
