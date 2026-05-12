@@ -119,9 +119,7 @@ export default function BookingPage({ onNext }) {
         return;
       }
 
-      // MAP FRONTEND NAMES TO BACKEND NAMES
       const sanitizedPayload = {
-        // Robust userId check
         userId: Number(
           payload.userId ||
             user?.user_id ||
@@ -130,12 +128,11 @@ export default function BookingPage({ onNext }) {
         ),
         event_date: payload.eventDate,
         event_time: convertTo24Hour(payload.time),
-
-        // CRITICAL FIX: Ensure these match req.body in your backend
-        event_duration: Number(payload.duration),
-        ingress_time: Number(payload.ingress),
-        egress_time: Number(payload.egress),
-        total_amount: Number(payload.totalAmount),
+        // Use the payload values, but fallback to current state if they are null/0
+        event_duration: Number(payload.duration || duration),
+        ingress_time: Number(payload.ingress || ingress),
+        egress_time: Number(payload.egress || egress),
+        total_amount: Number(payload.totalAmount || totalAmount),
       };
 
       console.log("🚀 Sending Reschedule Payload:", sanitizedPayload);
@@ -145,13 +142,13 @@ export default function BookingPage({ onNext }) {
 
       if (response.status === 200 || response.status === 204) {
         alert("Booking updated successfully!");
-        navigate("/my-bookings"); // Cleaner than reload
+        navigate("/my-bookings");
       }
     } catch (err) {
-      const errorMsg =
-        err.response?.data?.error || err.response?.data?.message || err.message;
       console.error("Update failed:", err.response?.data);
-      alert(`Failed to update booking: ${errorMsg}`);
+      alert(
+        `Failed to update booking: ${err.response?.data?.error || "Server Error"}`,
+      );
     }
   };
 
@@ -161,25 +158,25 @@ export default function BookingPage({ onNext }) {
       return;
     }
 
-    // Use Number() to ensure we aren't comparing strings
-    const currentDuration = Number(duration);
-    const currentIngress = Number(ingress);
-    const currentEgress = Number(egress);
+    // Forces everything to a clean number
+    const curDuration = Number(duration);
+    const curIngress = Number(ingress);
+    const curEgress = Number(egress);
 
     const isUpgraded =
       isRescheduling &&
-      (currentDuration > Number(rescheduleData.event_duration) ||
-        currentIngress > Number(rescheduleData.ingress_time) ||
-        currentEgress > Number(rescheduleData.egress_time));
+      (curDuration > Number(rescheduleData.event_duration) ||
+        curIngress > Number(rescheduleData.ingress_time) ||
+        curEgress > Number(rescheduleData.egress_time));
 
     const bookingPayload = {
       userId:
         user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
       eventDate: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
-      duration: currentDuration, // Ensure this is not 0
-      ingress: currentIngress,
-      egress: currentEgress,
+      duration: curDuration,
+      ingress: curIngress,
+      egress: curEgress,
       totalAmount: totalAmount,
       isReschedule: isRescheduling,
       isUpgrade: isUpgraded,
@@ -187,7 +184,9 @@ export default function BookingPage({ onNext }) {
         ? rescheduleData.booking_id || rescheduleData.id
         : null,
       eventName: isRescheduling ? rescheduleData.eventName : eventName,
-      eventType: isRescheduling ? rescheduleData.typeOfEvent : eventType,
+      eventType: isRescheduling
+        ? rescheduleData.typeOfEvent || rescheduleData.event_type
+        : eventType,
       guests: isRescheduling ? rescheduleData.noOfGuests : guestCount,
     };
 
