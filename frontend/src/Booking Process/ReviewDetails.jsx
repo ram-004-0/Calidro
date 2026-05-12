@@ -94,7 +94,6 @@ const ReviewDetails = () => {
           <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest border-b pb-2">
             Booking Info
           </h3>
-          // ... (inside ReviewDetails return)
           <div className="space-y-4 text-[#4a3733]">
             <p>
               <strong>Event:</strong> {details.event_name}
