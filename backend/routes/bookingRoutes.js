@@ -517,6 +517,7 @@ router.put("/reschedule/:id", async (req, res) => {
   } = req.body;
 
   try {
+    // 1. Get current booking
     const [currentBooking] = await db.query(
       `SELECT event_duration, user_id FROM booking WHERE booking_id = ?`,
       [bookingId],
@@ -529,6 +530,12 @@ router.put("/reschedule/:id", async (req, res) => {
     const oldDuration = parseInt(currentBooking[0].event_duration) || 0;
     const newDuration = parseInt(event_duration);
 
+    // DEBUG LOG: Check terminal to see why comparison fails
+    console.log(
+      `DEBUG: Comparing New(${newDuration}) against Old(${oldDuration})`,
+    );
+
+    // 2. Validate Duration
     if (isNaN(newDuration)) {
       return res
         .status(400)
@@ -541,6 +548,7 @@ router.put("/reschedule/:id", async (req, res) => {
       });
     }
 
+    // 3. Conflict Check
     const [conflicts] = await db.query(
       `SELECT * FROM booking 
        WHERE event_date = ? 
@@ -556,6 +564,7 @@ router.put("/reschedule/:id", async (req, res) => {
       });
     }
 
+    // 4. Execute Update
     const updateQuery = `
       UPDATE booking 
       SET 
@@ -578,27 +587,13 @@ router.put("/reschedule/:id", async (req, res) => {
       bookingId,
     ]);
 
-    // --- START OF THE SAFETY NET ---
-    let finalUserId = userId;
-
-    // If userId is null/undefined in the payload, use the one from the database
-    if (!finalUserId) {
-      console.log(
-        "🔍 userId was null in payload. Using user_id from database.",
-      );
-      finalUserId = currentBooking[0].user_id;
-    }
+    // 5. Notification Logic
+    let finalUserId = userId || currentBooking[0].user_id;
 
     if (finalUserId) {
       const notificationMessage = `Your booking for ${event_date} has been successfully rescheduled.`;
-      console.log(`🔔 Creating notification for user: ${finalUserId}`);
       await createNotification(finalUserId, notificationMessage, bookingId);
-    } else {
-      console.log(
-        "⚠️ Notification skipped: No userId found in payload or database.",
-      );
     }
-    // --- END OF THE SAFETY NET ---
 
     res.status(200).json({
       message: "Reschedule successful!",

@@ -114,50 +114,83 @@ export default function BookingPage({ onNext }) {
         rescheduleData?.booking_id || rescheduleData?.id || payload.booking_id;
 
       if (!bId) {
-        console.error(
-          "No booking ID found. Current rescheduleData:",
-          rescheduleData,
-        );
         alert("Error: Could not identify the booking to update.");
         return;
       }
 
+      // MAP FRONTEND NAMES TO BACKEND NAMES
       const sanitizedPayload = {
+        // Robust userId check
         userId: Number(
           payload.userId ||
             user?.user_id ||
             user?.id ||
             localStorage.getItem("userId"),
         ),
-
         event_date: payload.eventDate,
-
         event_time: convertTo24Hour(payload.time),
 
-        event_duration: Number(payload.duration) || 0,
-        ingress_time: Number(payload.ingress) || 0,
-        egress_time: Number(payload.egress) || 0,
-        total_amount: Number(payload.totalAmount) || 0,
+        // CRITICAL FIX: Ensure these match req.body in your backend
+        event_duration: Number(payload.duration),
+        ingress_time: Number(payload.ingress),
+        egress_time: Number(payload.egress),
+        total_amount: Number(payload.totalAmount),
       };
 
-      console.log("📤 Sending Sanitized Payload to Backend:", sanitizedPayload);
+      console.log("🚀 Sending Reschedule Payload:", sanitizedPayload);
 
       const url = `${API_URL}/api/bookings/reschedule/${bId}`;
-
-      // 3. Execute the update
       const response = await axios.put(url, sanitizedPayload);
 
       if (response.status === 200 || response.status === 204) {
         alert("Booking updated successfully!");
-        // Redirecting to home or refreshing ensures the UI updates with new data
-        window.location.href = "/";
+        window.location.href = "/"; // Cleaner than reload
       }
     } catch (err) {
       const errorMsg =
         err.response?.data?.error || err.response?.data?.message || err.message;
-
-      console.error("Update failed. Backend says:", err.response?.data);
+      console.error("Update failed:", err.response?.data);
       alert(`Failed to update booking: ${errorMsg}`);
+    }
+  };
+
+  const handleNextClick = () => {
+    if (!selectedDate || !selectedTime) {
+      alert("Please select a Date and Time.");
+      return;
+    }
+
+    // Use the state values directly to check for upgrades
+    const isUpgraded =
+      isRescheduling &&
+      (Number(duration) > Number(rescheduleData.event_duration) ||
+        Number(ingress) > Number(rescheduleData.ingress_time) ||
+        Number(egress) > Number(rescheduleData.egress_time));
+
+    const bookingPayload = {
+      userId:
+        user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
+      eventDate: format(selectedDate, "yyyy-MM-dd"),
+      time: selectedTime,
+      duration: Number(duration),
+      ingress: Number(ingress),
+      egress: Number(egress),
+      totalAmount: totalAmount,
+      isReschedule: isRescheduling,
+      isUpgrade: isUpgraded,
+      booking_id: isRescheduling
+        ? rescheduleData.booking_id || rescheduleData.id
+        : null,
+      // Add these for normal booking flow
+      eventName: isRescheduling ? null : eventName,
+      eventType: isRescheduling ? null : eventType,
+      guests: isRescheduling ? null : guestCount,
+    };
+
+    if (isRescheduling && !isUpgraded) {
+      updateBookingOnly(bookingPayload);
+    } else {
+      onNext(bookingPayload);
     }
   };
 
