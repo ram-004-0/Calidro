@@ -23,8 +23,8 @@ import { useAuth } from "../context/AuthContext";
 const API_URL =
   "https://calidro-production.up.railway.app" || "http://localhost:5000";
 export default function BookingPage({ onNext }) {
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const rescheduleData = location.state?.rescheduleData;
   const isRescheduling = !!rescheduleData;
@@ -119,9 +119,7 @@ export default function BookingPage({ onNext }) {
         return;
       }
 
-      // MAP FRONTEND NAMES TO BACKEND NAMES
       const sanitizedPayload = {
-        // Robust userId check
         userId: Number(
           payload.userId ||
             user?.user_id ||
@@ -130,8 +128,6 @@ export default function BookingPage({ onNext }) {
         ),
         event_date: payload.eventDate,
         event_time: convertTo24Hour(payload.time),
-
-        // CRITICAL FIX: Ensure these match req.body in your backend
         event_duration: Number(payload.duration),
         ingress_time: Number(payload.ingress),
         egress_time: Number(payload.egress),
@@ -145,13 +141,55 @@ export default function BookingPage({ onNext }) {
 
       if (response.status === 200 || response.status === 204) {
         alert("Booking updated successfully!");
-        navigate("/userbook");
+        navigate("/my-bookings");
       }
     } catch (err) {
       const errorMsg =
         err.response?.data?.error || err.response?.data?.message || err.message;
       console.error("Update failed:", err.response?.data);
       alert(`Failed to update booking: ${errorMsg}`);
+    }
+  };
+
+  const handleNextClick = () => {
+    if (!selectedDate || !selectedTime) {
+      alert("Please select a Date and Time.");
+      return;
+    }
+
+    const currentDuration = Number(duration);
+    const currentIngress = Number(ingress);
+    const currentEgress = Number(egress);
+
+    const isUpgraded =
+      isRescheduling &&
+      (currentDuration > Number(rescheduleData.event_duration) ||
+        currentIngress > Number(rescheduleData.ingress_time) ||
+        currentEgress > Number(rescheduleData.egress_time));
+
+    const bookingPayload = {
+      userId:
+        user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
+      eventDate: format(selectedDate, "yyyy-MM-dd"),
+      time: selectedTime,
+      duration: currentDuration,
+      ingress: currentIngress,
+      egress: currentEgress,
+      totalAmount: totalAmount,
+      isReschedule: isRescheduling,
+      isUpgrade: isUpgraded,
+      booking_id: isRescheduling
+        ? rescheduleData.booking_id || rescheduleData.id
+        : null,
+      eventName: isRescheduling ? rescheduleData.eventName : eventName,
+      eventType: isRescheduling ? rescheduleData.typeOfEvent : eventType,
+      guests: isRescheduling ? rescheduleData.noOfGuests : guestCount,
+    };
+
+    if (isRescheduling && !isUpgraded) {
+      updateBookingOnly(bookingPayload);
+    } else {
+      onNext(bookingPayload);
     }
   };
 
@@ -275,48 +313,6 @@ export default function BookingPage({ onNext }) {
     if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
     if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
     return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
-  };
-  const handleNextClick = () => {
-    if (!selectedDate || !selectedTime) {
-      alert("Please select a Date and Time.");
-      return;
-    }
-
-    // Use Number() to ensure we aren't comparing strings
-    const currentDuration = Number(duration);
-    const currentIngress = Number(ingress);
-    const currentEgress = Number(egress);
-
-    const isUpgraded =
-      isRescheduling &&
-      (currentDuration > Number(rescheduleData.event_duration) ||
-        currentIngress > Number(rescheduleData.ingress_time) ||
-        currentEgress > Number(rescheduleData.egress_time));
-
-    const bookingPayload = {
-      userId:
-        user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
-      eventDate: format(selectedDate, "yyyy-MM-dd"),
-      time: selectedTime,
-      duration: currentDuration, // Ensure this is not 0
-      ingress: currentIngress,
-      egress: currentEgress,
-      totalAmount: totalAmount,
-      isReschedule: isRescheduling,
-      isUpgrade: isUpgraded,
-      booking_id: isRescheduling
-        ? rescheduleData.booking_id || rescheduleData.id
-        : null,
-      eventName: isRescheduling ? rescheduleData.eventName : eventName,
-      eventType: isRescheduling ? rescheduleData.typeOfEvent : eventType,
-      guests: isRescheduling ? rescheduleData.noOfGuests : guestCount,
-    };
-
-    if (isRescheduling && !isUpgraded) {
-      updateBookingOnly(bookingPayload);
-    } else {
-      onNext(bookingPayload);
-    }
   };
   return (
     <div className="bg-[#f1f1f1] w-full max-w-7xl rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-2">
