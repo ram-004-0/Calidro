@@ -564,16 +564,16 @@ router.put("/reschedule/:id", async (req, res) => {
 
     // 4. Execute Update
     const updateQuery = `
-      UPDATE booking 
-      SET 
-        event_date = ?, 
-        event_time = ?, 
-        event_duration = ?, 
-        ingress_time = ?, 
-        egress_time = ?,
-        total_amount = ?
-      WHERE booking_id = ?
-    `;
+  UPDATE booking 
+  SET 
+    event_date = ?, 
+    event_time = ?, 
+    event_duration = ?, 
+    ingress_time = ?, 
+    egress_time = ?,
+    total_amount = GREATEST(total_amount, ?) 
+  WHERE booking_id = ?
+`;
 
     await db.query(updateQuery, [
       event_date,

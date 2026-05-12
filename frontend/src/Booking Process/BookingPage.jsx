@@ -23,6 +23,7 @@ import { useAuth } from "../context/AuthContext";
 const API_URL =
   "https://calidro-production.up.railway.app" || "http://localhost:5000";
 export default function BookingPage({ onNext }) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const location = useLocation();
   const rescheduleData = location.state?.rescheduleData;
@@ -144,53 +145,13 @@ export default function BookingPage({ onNext }) {
 
       if (response.status === 200 || response.status === 204) {
         alert("Booking updated successfully!");
-        window.location.href = "/"; // Cleaner than reload
+        navigate("/userbook");
       }
     } catch (err) {
       const errorMsg =
         err.response?.data?.error || err.response?.data?.message || err.message;
       console.error("Update failed:", err.response?.data);
       alert(`Failed to update booking: ${errorMsg}`);
-    }
-  };
-
-  const handleNextClick = () => {
-    if (!selectedDate || !selectedTime) {
-      alert("Please select a Date and Time.");
-      return;
-    }
-
-    // Use the state values directly to check for upgrades
-    const isUpgraded =
-      isRescheduling &&
-      (Number(duration) > Number(rescheduleData.event_duration) ||
-        Number(ingress) > Number(rescheduleData.ingress_time) ||
-        Number(egress) > Number(rescheduleData.egress_time));
-
-    const bookingPayload = {
-      userId:
-        user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
-      eventDate: format(selectedDate, "yyyy-MM-dd"),
-      time: selectedTime,
-      duration: Number(duration),
-      ingress: Number(ingress),
-      egress: Number(egress),
-      totalAmount: totalAmount,
-      isReschedule: isRescheduling,
-      isUpgrade: isUpgraded,
-      booking_id: isRescheduling
-        ? rescheduleData.booking_id || rescheduleData.id
-        : null,
-      // Add these for normal booking flow
-      eventName: isRescheduling ? null : eventName,
-      eventType: isRescheduling ? null : eventType,
-      guests: isRescheduling ? null : guestCount,
-    };
-
-    if (isRescheduling && !isUpgraded) {
-      updateBookingOnly(bookingPayload);
-    } else {
-      onNext(bookingPayload);
     }
   };
 
