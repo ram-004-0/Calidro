@@ -114,40 +114,49 @@ export default function BookingPage({ onNext }) {
         rescheduleData?.booking_id || rescheduleData?.id || payload.booking_id;
 
       if (!bId) {
-        console.error("No booking ID found:", rescheduleData);
+        console.error(
+          "No booking ID found. Current rescheduleData:",
+          rescheduleData,
+        );
         alert("Error: Could not identify the booking to update.");
         return;
       }
 
-      // MAP FRONTEND NAMES TO BACKEND NAMES
       const sanitizedPayload = {
-        // Priority: 1. Payload, 2. Auth Context, 3. LocalStorage
         userId: Number(
-          payload.userId || user?.id || localStorage.getItem("userId"),
+          payload.userId ||
+            user?.user_id ||
+            user?.id ||
+            localStorage.getItem("userId"),
         ),
 
         event_date: payload.eventDate,
+
         event_time: convertTo24Hour(payload.time),
+
         event_duration: Number(payload.duration) || 0,
         ingress_time: Number(payload.ingress) || 0,
         egress_time: Number(payload.egress) || 0,
         total_amount: Number(payload.totalAmount) || 0,
       };
 
-      console.log("Final Sanitized Payload:", sanitizedPayload);
+      console.log("📤 Sending Sanitized Payload to Backend:", sanitizedPayload);
 
       const url = `${API_URL}/api/bookings/reschedule/${bId}`;
 
-      await axios.put(url, sanitizedPayload);
+      // 3. Execute the update
+      const response = await axios.put(url, sanitizedPayload);
 
-      alert("Booking updated successfully!");
-      // Optional: Refresh data or redirect
-      window.location.reload();
+      if (response.status === 200 || response.status === 204) {
+        alert("Booking updated successfully!");
+        // Redirecting to home or refreshing ensures the UI updates with new data
+        window.location.href = "/";
+      }
     } catch (err) {
       const errorMsg =
         err.response?.data?.error || err.response?.data?.message || err.message;
 
-      console.error("Update failed:", err.response?.data);
+      console.error("Update failed. Backend says:", err.response?.data);
       alert(`Failed to update booking: ${errorMsg}`);
     }
   };
