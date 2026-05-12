@@ -197,7 +197,6 @@ const UserHeader = () => {
                           }`}
                         >
                           <div className="flex items-start gap-2">
-                            {/* Indicator for unread notifications */}
                             {!n.is_read && (
                               <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0" />
                             )}
@@ -210,7 +209,6 @@ const UserHeader = () => {
                                 <p className="text-[9px] text-gray-400">
                                   {n.time}
                                 </p>
-                                {/* Show a 'Balance' tag if applicable */}
                                 {n.text.includes("balance") && (
                                   <span className="text-[8px] font-bold text-red-500 bg-red-50 px-1 rounded">
                                     PAYMENT

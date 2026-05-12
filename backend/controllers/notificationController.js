@@ -81,4 +81,4 @@ const generateDailyReminders = async () => {
     throw err;
   }
 };
-module.exports = { createNotification };
+module.exports = { createNotification, generateDailyReminders };
