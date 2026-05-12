@@ -52,13 +52,10 @@ router.delete("/clear/:userId", async (req, res) => {
 router.get("/trigger-reminders", async (req, res) => {
   try {
     const result = await generateDailyReminders();
-    res
-      .status(200)
-      .json({ message: "Reminders processed successfully", result });
+    console.log("Reminders found:", result.count); // See this in your terminal
+    res.status(200).json(result);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to trigger reminders", details: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 module.exports = router;
