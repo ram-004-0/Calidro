@@ -321,33 +321,34 @@ export default function BookingPage({ onNext }) {
       return;
     }
 
-    if (!isRescheduling && !eventType) {
-      alert("Please select an Event Type.");
-      return;
-    }
+    // Use Number() to ensure we aren't comparing strings
+    const currentDuration = Number(duration);
+    const currentIngress = Number(ingress);
+    const currentEgress = Number(egress);
+
     const isUpgraded =
       isRescheduling &&
-      (parseInt(duration) > parseInt(rescheduleData.event_duration) ||
-        parseInt(ingress) > parseInt(rescheduleData.ingress_time) ||
-        parseInt(egress) > parseInt(rescheduleData.egress_time));
+      (currentDuration > Number(rescheduleData.event_duration) ||
+        currentIngress > Number(rescheduleData.ingress_time) ||
+        currentEgress > Number(rescheduleData.egress_time));
 
     const bookingPayload = {
       userId:
         user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
-      eventName: isRescheduling ? null : eventName,
-      eventType: isRescheduling ? null : eventType,
       eventDate: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
-      duration: parseInt(duration) || 0,
-      ingress: parseInt(ingress) || 0,
-      egress: parseInt(egress) || 0,
-      guests: isRescheduling ? null : guestCount,
+      duration: currentDuration, // Ensure this is not 0
+      ingress: currentIngress,
+      egress: currentEgress,
       totalAmount: totalAmount,
       isReschedule: isRescheduling,
       isUpgrade: isUpgraded,
       booking_id: isRescheduling
         ? rescheduleData.booking_id || rescheduleData.id
         : null,
+      eventName: isRescheduling ? rescheduleData.eventName : eventName,
+      eventType: isRescheduling ? rescheduleData.typeOfEvent : eventType,
+      guests: isRescheduling ? rescheduleData.noOfGuests : guestCount,
     };
 
     if (isRescheduling && !isUpgraded) {

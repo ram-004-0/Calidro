@@ -528,18 +528,17 @@ router.put("/reschedule/:id", async (req, res) => {
     }
 
     const oldDuration = parseInt(currentBooking[0].event_duration) || 0;
-    const newDuration = parseInt(event_duration);
+    const newDuration =
+      req.body.event_duration === undefined || req.body.event_duration === 0
+        ? oldDuration
+        : parseInt(req.body.event_duration);
 
-    // DEBUG LOG: Check terminal to see why comparison fails
     console.log(
       `DEBUG: Comparing New(${newDuration}) against Old(${oldDuration})`,
     );
 
-    // 2. Validate Duration
-    if (isNaN(newDuration)) {
-      return res
-        .status(400)
-        .json({ error: "Duration must be a valid number." });
+    if (isNaN(newDuration) || newDuration === 0) {
+      return res.status(400).json({ error: "Invalid duration provided." });
     }
 
     if (newDuration < oldDuration) {
@@ -547,7 +546,6 @@ router.put("/reschedule/:id", async (req, res) => {
         error: `Duration cannot be decreased. Original duration was ${oldDuration} hours.`,
       });
     }
-
     // 3. Conflict Check
     const [conflicts] = await db.query(
       `SELECT * FROM booking 
