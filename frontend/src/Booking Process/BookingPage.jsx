@@ -193,13 +193,10 @@ export default function BookingPage({ onNext }) {
       eventType: isRescheduling
         ? rescheduleData.typeOfEvent || rescheduleData.event_type
         : eventType,
-
-      // We send all three to be 100% safe with the backend destructuring
       noOfGuests: finalGuestCount,
       guests: finalGuestCount,
       guestCount: finalGuestCount,
 
-      // Also ensuring phone and address are passed if available
       phone_number: user?.phone_number || phoneNumber,
       address: user?.address || address,
     };
@@ -207,7 +204,6 @@ export default function BookingPage({ onNext }) {
     if (isRescheduling && !isUpgraded) {
       updateBookingOnly(bookingPayload);
     } else {
-      // This passes the payload to your Review/Checkout component
       onNext(bookingPayload);
     }
   };

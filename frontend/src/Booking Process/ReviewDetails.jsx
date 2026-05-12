@@ -118,7 +118,7 @@ const ReviewDetails = () => {
                 : "0 Hours"}
             </p>
             <p>
-              <strong>Guests:</strong> {details.guests}
+              <strong>Guests:</strong> {details.guests || 0}
             </p>
           </div>
         </div>

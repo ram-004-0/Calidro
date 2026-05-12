@@ -37,6 +37,7 @@ exports.createBooking = async (req, res) => {
     ingress_time,
     egress_time,
     guests,
+    noOfGuests,
     totalAmount,
     amount_paid,
     paymentType,
@@ -55,7 +56,7 @@ exports.createBooking = async (req, res) => {
     event_duration: duration,
     ingress: ingress_time,
     egress: egress_time,
-    guests: guests,
+    guests: guests || noOfGuests || 0,
     total_amount: totalAmount, // Changed from totalAmount
     amount_paid: amount_paid || 0,
     payment_type: paymentType, // Changed from paymentType
