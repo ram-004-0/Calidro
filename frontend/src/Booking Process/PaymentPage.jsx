@@ -33,19 +33,22 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const totalAmount = useMemo(() => {
     if (!isMounted) return 0;
 
-    if (isRestricted && amountToPayFromState) return amountToPayFromState;
+    if (isRestricted && amountToPayFromState !== undefined) {
+      return parseFloat(amountToPayFromState);
+    }
 
-    const {
-      duration = 4,
-      ingress_time = 2,
-      egress_time = 1,
-    } = bookingData || {};
+    const d = parseInt(
+      bookingData?.duration || bookingData?.event_duration || 4,
+    );
+    const i = parseInt(bookingData?.ingress || bookingData?.ingress_time || 2);
+    const e = parseInt(bookingData?.egress || bookingData?.egress_time || 1);
+
     const BASE_PRICE = 25000;
     return (
       BASE_PRICE +
-      (duration - 4) * 5000 +
-      Math.max(0, ingress_time - 2) * 1000 +
-      Math.max(0, egress_time - 1) * 1000
+      (d - 4) * 5000 +
+      Math.max(0, i - 2) * 1000 +
+      Math.max(0, e - 1) * 1000
     );
   }, [isMounted, bookingData, isRestricted, amountToPayFromState]);
 

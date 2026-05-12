@@ -94,7 +94,7 @@ const ReviewDetails = () => {
           <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest border-b pb-2">
             Booking Info
           </h3>
-
+          // ... (inside ReviewDetails return)
           <div className="space-y-4 text-[#4a3733]">
             <p>
               <strong>Event:</strong> {details.event_name}
@@ -109,27 +109,27 @@ const ReviewDetails = () => {
               <strong>Time:</strong> {formatTime(details.event_time)}
             </p>
             <p>
-              <strong>Duration:</strong> {details.event_duration}
+              <strong>Duration:</strong> {details.event_duration} Hour(s)
             </p>
 
-            {/* Updated Ingress Section */}
             <p>
               <strong>Ingress:</strong>{" "}
-              {details.ingress_time
-                ? `${parseInt(details.ingress_time, 10)} Hour(s)`
+              {/* Handle both possible key names from your state/DB */}
+              {details.ingress_time || details.ingress
+                ? `${parseInt(details.ingress_time || details.ingress, 10)} Hour(s)`
                 : "0 Hours"}
             </p>
 
-            {/* Added Egress Section */}
             <p>
               <strong>Egress:</strong>{" "}
-              {details.egress_time
-                ? `${parseInt(details.egress_time, 10)} Hour(s)`
+              {details.egress_time || details.egress
+                ? `${parseInt(details.egress_time || details.egress, 10)} Hour(s)`
                 : "0 Hours"}
             </p>
 
             <p>
-              <strong>Guests:</strong> {details.guests || 0}
+              <strong>Guests:</strong>{" "}
+              {details.guests || details.noOfGuests || 0}
             </p>
           </div>
         </div>
