@@ -259,18 +259,17 @@ export default function BookingPage({ onNext }) {
     return defaultOptions.filter((d) => d <= maxAllowedDuration && d > 0);
   }, [selectedTime, selectedDate, timeSlots]);
 
+  const convertTo24Hour = (timeStr) => {
+    if (!timeStr) return "00:00:00";
+    const [time, modifier] = timeStr.split(" ");
+    let [hours, minutes] = time.split(":");
+    if (!minutes) minutes = "00";
+    let hoursNum = parseInt(hours, 10);
+    if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
+    if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
+    return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
+  };
   const handleNextClick = () => {
-    const convertTo24Hour = (timeStr) => {
-      if (!timeStr) return "00:00:00";
-      const [time, modifier] = timeStr.split(" ");
-      let [hours, minutes] = time.split(":");
-      if (!minutes) minutes = "00";
-      let hoursNum = parseInt(hours, 10);
-      if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
-      if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
-      return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
-    };
-
     if (!selectedDate || !selectedTime) {
       alert("Please select a Date and Time.");
       return;
