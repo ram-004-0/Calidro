@@ -36,10 +36,10 @@ const generateDailyReminders = async () => {
   try {
     // 1. Fetch bookings that are 7, 3, or 1 day away
     const [upcoming] = await db.query(`
-      SELECT *, DATEDIFF(event_date, CURDATE()) as days_left 
-      FROM booking 
-      WHERE status = 'confirmed' 
-      AND DATEDIFF(event_date, CURDATE()) IN (1, 3, 7)
+      SELECT *, DATEDIFF(DATE(event_date), CURDATE()) as days_left 
+  FROM booking 
+  WHERE status = 'confirmed' 
+  AND DATEDIFF(DATE(event_date), CURDATE()) IN (1, 3, 7)
     `);
 
     for (const b of upcoming) {
