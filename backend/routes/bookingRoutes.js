@@ -56,6 +56,7 @@ router.post("/test-post", (req, res) => {
 router.post("/create-booking-and-checkout", async (req, res) => {
   console.log("1. Route Triggered. Event:", req.body.eventName);
   console.log("Full Payload Received:", req.body);
+
   try {
     const {
       userId,
@@ -64,8 +65,9 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       eventDate,
       time,
       duration,
+      // Destructure all possible names the frontend might send
       guests,
-      guestCount, // Fallback 1
+      guestCount,
       noOfGuests,
       ingress,
       egress,
@@ -86,10 +88,13 @@ router.post("/create-booking-and-checkout", async (req, res) => {
         .json({ error: "User not found. Please log in again." });
     }
 
+    // This checks noOfGuests first since that's what your UserBookingCard uses
     const finalGuestCount = parseInt(
-      guests || guestCount || noOfGuests || 0,
+      noOfGuests || guests || guestCount || 0,
       10,
     );
+
+    console.log("DEBUG: Final Guest Count for DB:", finalGuestCount);
 
     const bookingData = {
       user_id: userId,
@@ -104,7 +109,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       event_duration: duration,
       ingress_time: ingress ? `${ingress}:00:00` : "02:00:00",
       egress_time: egress ? `${egress}:00:00` : "01:00:00",
-      guests: finalGuestCount,
+      guests: finalGuestCount, // Maps to your 'guests' INT column
       total_amount: totalAmount,
       amount_paid: 0,
       payment_type: paymentType,
@@ -139,12 +144,10 @@ router.post("/create-booking-and-checkout", async (req, res) => {
             payment_method_types: payment_methods,
             success_url: `https://calidro.vercel.app/ReviewDetails?bookingId=${bookingId}`,
             cancel_url: `https://calidro.vercel.app/userbook`,
-
             metadata: {
               bookingId: bookingId.toString(),
               paymentType: paymentType,
             },
-
             reference_number: bookingId.toString(),
           },
         },
@@ -314,7 +317,6 @@ router.get("/details/:id", async (req, res) => {
 });
 
 // 5. Get confirmed dates only (for calendar blocking)
-
 router.get("/all", async (req, res) => {
   try {
     const [results] = await db.query(
@@ -494,8 +496,6 @@ router.get("/test-cleanup-manual", async (req, res) => {
 router.put("/edit/:id", async (req, res) => {
   const { typeOfEvent, eventName, noOfGuests } = req.body;
   try {
-    // 1. Changed table name from 'bookings' to 'booking'
-    // 2. Changed column names to match your database schema
     await db.query(
       "UPDATE booking SET event_type = ?, event_name = ?, guests = ? WHERE booking_id = ?",
       [typeOfEvent, eventName, noOfGuests, req.params.id],

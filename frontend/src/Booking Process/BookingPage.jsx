@@ -186,8 +186,12 @@ export default function BookingPage({ onNext }) {
       eventType: isRescheduling
         ? rescheduleData.typeOfEvent || rescheduleData.event_type
         : eventType,
+      noOfGuests: isRescheduling
+        ? parseInt(rescheduleData.noOfGuests, 10)
+        : parseInt(guestCount, 10),
+      // Keep this as a backup
       guests: isRescheduling
-        ? parseInt(rescheduleData.noOfGuests || rescheduleData.guests, 10)
+        ? parseInt(rescheduleData.noOfGuests, 10)
         : parseInt(guestCount, 10),
     };
 
