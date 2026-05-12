@@ -111,12 +111,23 @@ const ReviewDetails = () => {
             <p>
               <strong>Duration:</strong> {details.event_duration}
             </p>
+
+            {/* Updated Ingress Section */}
             <p>
-              <strong>Setup Time:</strong>{" "}
+              <strong>Ingress:</strong>{" "}
               {details.ingress_time
-                ? `${parseInt(details.ingress_time)} Hour(s)`
+                ? `${parseInt(details.ingress_time, 10)} Hour(s)`
                 : "0 Hours"}
             </p>
+
+            {/* Added Egress Section */}
+            <p>
+              <strong>Egress:</strong>{" "}
+              {details.egress_time
+                ? `${parseInt(details.egress_time, 10)} Hour(s)`
+                : "0 Hours"}
+            </p>
+
             <p>
               <strong>Guests:</strong> {details.guests || 0}
             </p>
@@ -125,6 +136,7 @@ const ReviewDetails = () => {
 
         {/* Payment Summary Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex-1">
+          {/* ... keep your existing Payment Summary Section code here ... */}
           <h3 className="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest border-b pb-2">
             Payment Summary
           </h3>
