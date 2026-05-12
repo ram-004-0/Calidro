@@ -142,7 +142,7 @@ export default function BookingPage({ onNext }) {
 
       if (response.status === 200 || response.status === 204) {
         alert("Booking updated successfully!");
-        navigate("/my-bookings");
+        navigate("/userbook");
       }
     } catch (err) {
       console.error("Update failed:", err.response?.data);
