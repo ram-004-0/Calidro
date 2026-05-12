@@ -288,7 +288,7 @@ export default function BookingPage({ onNext }) {
         parseInt(egress) > parseInt(rescheduleData.egress_time));
 
     const bookingPayload = {
-      userId: user?.user_id || localStorage.getItem("userId"),
+      userId: user?.user_id || user?.id || localStorage.getItem("userId"),
       eventName: isRescheduling ? null : eventName,
       eventType: isRescheduling ? null : eventType,
       eventDate: format(selectedDate, "yyyy-MM-dd"),

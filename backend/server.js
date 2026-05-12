@@ -15,6 +15,9 @@ const previousEventRoutes = require("./routes/previousEventRoutes");
 const ratingRoutes = require("./routes/ratingRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const {
+  generateDailyReminders,
+} = require("./controllers/notificationController");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
 // Place this ABOVE your route definitions
@@ -106,8 +109,8 @@ app.post("/api/settings/virtual-tour", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-// --- BOOK ASSET ROUTES ---
 
+// --- BOOK ASSET ROUTES ---
 // GET: Fetch Book Image
 app.get("/api/settings/book-asset", async (req, res) => {
   try {
@@ -358,3 +361,16 @@ app.use((req, res) => {
     .status(404)
     .json({ error: `Route ${req.method} ${req.originalUrl} not found.` });
 });
+
+//cron job
+cron.schedule(
+  "0 8 * * *",
+  () => {
+    generateDailyReminders()
+      .then(() => console.log("✅ Daily reminders sent."))
+      .catch((err) => console.error("❌ Cron failed:", err));
+  },
+  {
+    timezone: "Asia/Manila",
+  },
+);

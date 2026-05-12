@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
+const {
+  generateDailyReminders,
+} = require("../controllers/notificationController");
 
 router.get("/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -46,4 +49,16 @@ router.delete("/clear/:userId", async (req, res) => {
   }
 });
 
+router.get("/trigger-reminders", async (req, res) => {
+  try {
+    const result = await generateDailyReminders();
+    res
+      .status(200)
+      .json({ message: "Reminders processed successfully", result });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to trigger reminders", details: error.message });
+  }
+});
 module.exports = router;
