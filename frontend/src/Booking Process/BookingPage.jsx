@@ -119,7 +119,9 @@ export default function BookingPage({ onNext }) {
         return;
       }
 
+      // MAP FRONTEND NAMES TO BACKEND NAMES
       const sanitizedPayload = {
+        // Robust userId check
         userId: Number(
           payload.userId ||
             user?.user_id ||
@@ -128,6 +130,8 @@ export default function BookingPage({ onNext }) {
         ),
         event_date: payload.eventDate,
         event_time: convertTo24Hour(payload.time),
+
+        // CRITICAL FIX: Ensure these match req.body in your backend
         event_duration: Number(payload.duration),
         ingress_time: Number(payload.ingress),
         egress_time: Number(payload.egress),
@@ -141,7 +145,7 @@ export default function BookingPage({ onNext }) {
 
       if (response.status === 200 || response.status === 204) {
         alert("Booking updated successfully!");
-        navigate("/my-bookings");
+        navigate("/my-bookings"); // Cleaner than reload
       }
     } catch (err) {
       const errorMsg =
@@ -157,6 +161,7 @@ export default function BookingPage({ onNext }) {
       return;
     }
 
+    // Use Number() to ensure we aren't comparing strings
     const currentDuration = Number(duration);
     const currentIngress = Number(ingress);
     const currentEgress = Number(egress);
@@ -172,7 +177,7 @@ export default function BookingPage({ onNext }) {
         user?.user_id || user?.id || parseInt(localStorage.getItem("userId")),
       eventDate: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
-      duration: currentDuration,
+      duration: currentDuration, // Ensure this is not 0
       ingress: currentIngress,
       egress: currentEgress,
       totalAmount: totalAmount,
@@ -314,6 +319,7 @@ export default function BookingPage({ onNext }) {
     if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
     return `${hoursNum.toString().padStart(2, "0")}:${minutes}:00`;
   };
+
   return (
     <div className="bg-[#f1f1f1] w-full max-w-7xl rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-2">
       <div className="space-y-4">
