@@ -158,7 +158,6 @@ export default function BookingPage({ onNext }) {
       return;
     }
 
-    // Forces everything to a clean number
     const curDuration = Number(duration);
     const curIngress = Number(ingress);
     const curEgress = Number(egress);
@@ -188,8 +187,8 @@ export default function BookingPage({ onNext }) {
         ? rescheduleData.typeOfEvent || rescheduleData.event_type
         : eventType,
       guests: isRescheduling
-        ? Number(rescheduleData.noOfGuests)
-        : Number(guestCount),
+        ? parseInt(rescheduleData.noOfGuests, 10)
+        : parseInt(guestCount, 10),
     };
 
     if (isRescheduling && !isUpgraded) {
@@ -239,15 +238,12 @@ export default function BookingPage({ onNext }) {
       const origIngress = parseInt(rescheduleData.ingress_time);
       const origEgress = parseInt(rescheduleData.egress_time);
 
-      // If current state is lower than original, force it up to original
       if (duration < origDuration) setDuration(origDuration);
       if (ingress < origIngress) setIngress(origIngress);
       if (egress < origEgress) setEgress(origEgress);
     }
 
     return () => window.removeEventListener("resize", handleResize);
-    // Added duration, ingress, egress to deps so it checks whenever they change
-    // but only logic-gates them if isRescheduling is true.
   }, [isRescheduling, rescheduleData, duration, ingress, egress]);
 
   const unavailableDates = [...bookedDates];
