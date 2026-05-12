@@ -121,16 +121,20 @@ export default function BookingPage({ onNext }) {
 
       // MAP FRONTEND NAMES TO BACKEND NAMES
       const sanitizedPayload = {
-        userId: localStorage.getItem("userId"),
-        event_date: payload.eventDate, // from handleNextClick's eventDate
-        event_time: convertTo24Hour(payload.time), // ensuring 24h format
-        event_duration: Number(payload.duration), // mapping 'duration' to 'event_duration'
-        ingress_time: Number(payload.ingress) || 0, // mapping 'ingress' to 'ingress_time'
-        egress_time: Number(payload.egress) || 0, // mapping 'egress' to 'egress_time'
-        total_amount: Number(payload.totalAmount) || 0, // mapping 'totalAmount' to 'total_amount'
+        // Priority: 1. Payload, 2. Auth Context, 3. LocalStorage
+        userId: Number(
+          payload.userId || user?.id || localStorage.getItem("userId"),
+        ),
+
+        event_date: payload.eventDate,
+        event_time: convertTo24Hour(payload.time),
+        event_duration: Number(payload.duration) || 0,
+        ingress_time: Number(payload.ingress) || 0,
+        egress_time: Number(payload.egress) || 0,
+        total_amount: Number(payload.totalAmount) || 0,
       };
 
-      console.log("📤 FRONTEND SENDING TO BACKEND:", sanitizedPayload);
+      console.log("Final Sanitized Payload:", sanitizedPayload);
 
       const url = `${API_URL}/api/bookings/reschedule/${bId}`;
 
