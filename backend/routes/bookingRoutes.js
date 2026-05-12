@@ -415,11 +415,8 @@ router.post("/checkout-balance", async (req, res) => {
                 quantity: 1,
               },
             ],
-            // Use provided methods or default to GCash/PayMaya
             payment_method_types: payment_methods || ["gcash", "paymaya"],
 
-            // --- CRITICAL: HANDSHAKE METADATA ---
-            // This is what your Webhook looks for to update the DB!
             metadata: {
               bookingId: bookingId.toString(),
               type: "balance_update",
@@ -519,16 +516,17 @@ router.put("/reschedule/:id", async (req, res) => {
     }
 
     const oldDuration = parseInt(currentBooking[0].event_duration) || 0;
+    const rawIncoming = req.body.event_duration;
     const newDuration =
-      req.body.event_duration === undefined || req.body.event_duration === 0
+      rawIncoming === undefined || rawIncoming === null || rawIncoming === 0
         ? oldDuration
-        : parseInt(req.body.event_duration);
+        : parseInt(rawIncoming);
 
     console.log(
       `DEBUG: Comparing New(${newDuration}) against Old(${oldDuration})`,
     );
 
-    if (isNaN(newDuration) || newDuration === 0) {
+    if (isNaN(newDuration)) {
       return res.status(400).json({ error: "Invalid duration provided." });
     }
 
@@ -600,9 +598,6 @@ router.post("/webhook/paymongo", async (req, res) => {
 
   try {
     const payload = req.body;
-
-    // PayMongo webhooks wrap the object in data.attributes.data.attributes
-    // We check both the shallow and deep paths just to be safe
     const resource = payload.data?.attributes?.data || payload.data;
     const attr = resource?.attributes || payload.data?.attributes;
 
@@ -611,13 +606,11 @@ router.post("/webhook/paymongo", async (req, res) => {
       return;
     }
 
-    // --- FIND BOOKING ID ---
     const bookingId =
       attr.metadata?.bookingId ||
       attr.payment_intent?.attributes?.metadata?.bookingId ||
       payload.data?.attributes?.metadata?.bookingId;
 
-    // --- FIND AMOUNT ---
     const amountInCents =
       attr.payment_intent?.attributes?.amount ||
       attr.amount ||

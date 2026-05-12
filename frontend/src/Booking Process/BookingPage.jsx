@@ -128,11 +128,10 @@ export default function BookingPage({ onNext }) {
         ),
         event_date: payload.eventDate,
         event_time: convertTo24Hour(payload.time),
-        // Use the payload values, but fallback to current state if they are null/0
-        event_duration: Number(payload.duration || duration),
-        ingress_time: Number(payload.ingress || ingress),
-        egress_time: Number(payload.egress || egress),
-        total_amount: Number(payload.totalAmount || totalAmount),
+        event_duration: Number(payload.duration || duration || 4),
+        ingress_time: Number(payload.ingress || ingress || 2),
+        egress_time: Number(payload.egress || egress || 1),
+        total_amount: Number(totalAmount),
       };
 
       console.log("🚀 Sending Reschedule Payload:", sanitizedPayload);
