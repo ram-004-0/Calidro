@@ -81,17 +81,15 @@ const UserHeader = () => {
   useEffect(() => {
     const fetchMyNotifications = async () => {
       try {
-        // 1. Get the "user" object string
         const savedUser = localStorage.getItem("user");
+        const token = localStorage.getItem("token"); // DEFINED TOKEN HERE
 
         let uId = null;
         if (savedUser) {
-          // 2. Parse it and grab the user_id
           const userObj = JSON.parse(savedUser);
           uId = userObj.user_id;
         }
 
-        // 3. Fallback check for the separate key just in case
         if (!uId) uId = localStorage.getItem("userId");
 
         if (!uId) {
@@ -103,15 +101,15 @@ const UserHeader = () => {
         const response = await axios.get(
           `${API_URL}/api/notifications/${uId}`,
           {
-            headers: { Authorization: `Bearer ${token}` }, // Add this!
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
 
-        // IMPORTANT: Note that your SQL alias uses 'text' and 'time'
-        setUserNotifications(response.data);
+        // Standardize the response to an array
+        const data = Array.isArray(response.data) ? response.data : [];
+        setUserNotifications(data);
 
-        // 4. Update the red dot check (0 is unread in MySQL)
-        const hasUnread = response.data.some(
+        const hasUnread = data.some(
           (n) => n.is_read === 0 || n.is_read === false,
         );
         setHasAdminUnread(hasUnread);
@@ -119,8 +117,9 @@ const UserHeader = () => {
         console.error("Error fetching notifications:", err);
       }
     };
+
     fetchMyNotifications();
-    const interval = setInterval(fetchMyNotifications, 30000); // Lowered to 30s for testing
+    const interval = setInterval(fetchMyNotifications, 30000);
     return () => clearInterval(interval);
   }, [setUserNotifications, setHasAdminUnread]);
 
@@ -164,7 +163,6 @@ const UserHeader = () => {
               className={`cursor-pointer transition-transform hover:scale-110 ${isChatOpen ? "text-white" : ""}`}
             />
 
-            {/* --- NOTIFICATION BELL --- */}
             <div className="relative">
               <div
                 className="relative cursor-pointer transition-transform hover:scale-110"
@@ -208,13 +206,20 @@ const UserHeader = () => {
 
                             <div>
                               <p className="font-medium text-[11px] leading-tight text-[#4a3733]">
-                                {n.text}
+                                {/* Mapping to .message instead of .text */}
+                                {n.message || n.text}
                               </p>
                               <div className="flex justify-between items-center mt-1">
                                 <p className="text-[9px] text-gray-400">
-                                  {n.time}
+                                  {/* Mapping to .created_at instead of .time */}
+                                  {n.created_at
+                                    ? new Date(
+                                        n.created_at,
+                                      ).toLocaleDateString()
+                                    : n.time}
                                 </p>
-                                {n.text.includes("balance") && (
+                                {(n.message?.includes("balance") ||
+                                  n.text?.includes("balance")) && (
                                   <span className="text-[8px] font-bold text-red-500 bg-red-50 px-1 rounded">
                                     PAYMENT
                                   </span>
@@ -250,7 +255,10 @@ const UserHeader = () => {
                   </button>
                   <button
                     className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-lg transition font-medium text-red-600"
-                    onClick={() => navigate("/login")}
+                    onClick={() => {
+                      localStorage.clear();
+                      navigate("/login");
+                    }}
                   >
                     Logout
                   </button>
