@@ -95,7 +95,7 @@ const AdminHeader = () => {
                 <div className="absolute right-0 mt-4 w-64 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
                   <div className="flex justify-between items-center border-b pb-2 mb-2">
                     <h3 className="font-bold text-sm uppercase tracking-wider">
-                      Admin Alerts
+                      Notifications
                     </h3>
                     <button
                       onClick={() => setAdminNotifications([])}
