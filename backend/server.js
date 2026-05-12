@@ -15,9 +15,6 @@ const previousEventRoutes = require("./routes/previousEventRoutes");
 const ratingRoutes = require("./routes/ratingRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-const {
-  generateDailyReminders,
-} = require("./controllers/notificationController");
 
 const allowedOrigins = ["https://calidro.vercel.app"];
 // Place this ABOVE your route definitions
@@ -360,10 +357,4 @@ app.use((req, res) => {
   res
     .status(404)
     .json({ error: `Route ${req.method} ${req.originalUrl} not found.` });
-});
-
-//cron job
-cron.schedule("0 8 * * *", async () => {
-  console.log("System: Running scheduled reminders...");
-  await generateDailyReminders();
 });

@@ -1,9 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
-const {
-  generateDailyReminders,
-} = require("../controllers/notificationController");
 
 router.get("/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -50,11 +47,56 @@ router.delete("/clear/:userId", async (req, res) => {
 });
 
 router.get("/trigger-reminders", async (req, res) => {
+  console.log("⏰ Incoming request to /trigger-reminders...");
+
   try {
-    const result = await generateDailyReminders();
-    console.log("Reminders found:", result.count);
-    res.status(200).json(result);
+    // 1. Fetch bookings that are 7, 3, or 1 day away
+    const [upcoming] = await db.query(`
+      SELECT *, DATEDIFF(DATE(event_date), CURDATE()) as days_left 
+      FROM booking 
+      WHERE status = 'confirmed' 
+      AND DATEDIFF(DATE(event_date), CURDATE()) IN (1, 3, 7)
+    `);
+
+    console.log(
+      `Found ${upcoming.length} bookings matching the time criteria.`,
+    );
+
+    for (const b of upcoming) {
+      const remainingBalance =
+        parseFloat(b.total_amount) - parseFloat(b.amount_paid);
+      const dayText = b.days_left === 1 ? "tomorrow" : `in ${b.days_left} days`;
+
+      let message = `Your event "${b.event_name}" is happening ${dayText}!`;
+
+      if (remainingBalance > 0) {
+        message += ` Just a reminder, you have a remaining balance of ₱${remainingBalance.toLocaleString()}.`;
+      }
+
+      // Insert the notification
+      await db.query(
+        "INSERT INTO notifications (user_id, message, type, related_id) VALUES (?, ?, ?, ?)",
+        [b.user_id, message, "reminder", b.booking_id],
+      );
+    }
+
+    // 2. DAY OF EVENT REMINDER
+    await db.query(`
+      INSERT INTO notifications (user_id, message, type, related_id)
+      SELECT user_id, CONCAT('Today is the day! See you at Calidro for "', event_name, '".'), 'reminder', booking_id
+      FROM booking 
+      WHERE event_date = CURDATE() AND status = 'confirmed'
+      AND NOT EXISTS (
+        SELECT 1 FROM notifications 
+        WHERE user_id = booking.user_id 
+        AND message LIKE '%Today is the day%' 
+        AND DATE(created_at) = CURDATE()
+      )
+    `);
+
+    res.status(200).json({ success: true, count: upcoming.length });
   } catch (error) {
+    console.error("Route Error:", error);
     res.status(500).json({ error: error.message });
   }
 });
