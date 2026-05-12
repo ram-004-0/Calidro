@@ -97,7 +97,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       event_duration: duration,
       ingress_time: ingress ? `${ingress}:00:00` : "02:00:00",
       egress_time: egress ? `${egress}:00:00` : "01:00:00",
-      guests: guests || 0,
+      guests: Number(guests) || 0,
       total_amount: totalAmount,
       amount_paid: 0,
       payment_type: paymentType,

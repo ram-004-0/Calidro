@@ -65,6 +65,7 @@ const router = createBrowserRouter(
       <Route path="user-virtual-tour" element={<UserVirtualTour />} />
       <Route path="usergallery" element={<UserGallery />} />
       <Route path="userbook" element={<UserBook />} />
+
       <Route path="booking" element={<Booking />} />
       <Route path="admin-overview" element={<AdminOverview />} />
       <Route path="admin-home" element={<AdminHome />} />

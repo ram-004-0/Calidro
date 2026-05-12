@@ -187,7 +187,9 @@ export default function BookingPage({ onNext }) {
       eventType: isRescheduling
         ? rescheduleData.typeOfEvent || rescheduleData.event_type
         : eventType,
-      guests: isRescheduling ? rescheduleData.noOfGuests : guestCount,
+      guests: isRescheduling
+        ? Number(rescheduleData.noOfGuests)
+        : Number(guestCount),
     };
 
     if (isRescheduling && !isUpgraded) {
