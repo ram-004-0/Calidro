@@ -68,46 +68,37 @@ const Login = () => {
       style={{ backgroundImage: `url(${LoginBg})` }}
     >
       <div className="w-full max-w-lg bg-white/70 backdrop-blur-md shadow-xl p-8 rounded-2xl lg:ml-30 mx-auto">
-        <div className="flex justify-between mb-8">
+        {/* Header Section: Preserved as requested */}
+        <div className="flex justify-between mb-12">
           <button
             onClick={() => navigate("/")}
             className="text-sm font-bold text-gray-600 hover:text-black transition-colors"
           >
             ← BACK
           </button>
-          <button
-            onClick={handleLogin}
-            className="text-lg font-semibold border-b-2 border-black pb-2"
-          >
+          <button className="text-lg font-semibold border-b-2 border-black pb-2 cursor-default">
             LOGIN
           </button>
         </div>
 
-        <div className="space-y-6">
-          <div>
-            <label className="text-sm font-semibold text-[#c79a63]">
-              USERNAME
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-transparent border-b-2 border-[#c79a63] focus:outline-none py-2"
-            />
+        {/* Main Content Section */}
+        <div className="space-y-10 pb-6">
+          {/* Welcome Text Replacement */}
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
+              Welcome to Calidro
+            </h2>
+            <p className="text-[#c79a63] font-medium">
+              Securely access your venue bookings
+            </p>
+            <div className="pt-2">
+              <p className="text-sm text-gray-500 italic">
+                Please use your authorized Google account to continue.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-semibold text-[#c79a63]">
-              PASSWORD
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-transparent border-b-2 border-[#c79a63] focus:outline-none py-2"
-            />
-          </div>
-
+          {/* Google Login Section: handleGoogleSuccess remains unchanged */}
           <div className="flex justify-center">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
