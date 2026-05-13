@@ -408,7 +408,7 @@ const UserChatbot = () => {
   const [hasGreeted, setHasGreeted] = useState(false);
 
   useEffect(() => {
-    if (isChatOpen && !hasSeenGreeting) {
+    if (isChatOpen && !hasGreeted) {
       const welcomeText =
         "Hi, I’m Calidro Bot! Feel free to ask me a question.\n\nIf ever I can’t help with your concern, you may also request a live agent during office hours (8:00 AM - 5:00 PM) by typing “admin”.";
 
