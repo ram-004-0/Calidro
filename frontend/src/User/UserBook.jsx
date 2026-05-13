@@ -4,7 +4,6 @@ import UserBookingCard from "../Props/UserBookingCard";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
-// Using the environment variable defined in your Vercel/Railway setup
 const API_URL = "https://calidro-production.up.railway.app";
 
 const UserBook = () => {
@@ -36,10 +35,8 @@ const UserBook = () => {
         );
         setBookings(response.data);
       } catch (err) {
-        // If the error is 401, it means the token is expired or invalid
         if (err.response?.status === 401) {
           console.error("Session expired. Please log in again.");
-          // Optional: localStorage.clear(); window.location.href = "/login";
         }
         console.error("Error fetching bookings:", err);
       } finally {
