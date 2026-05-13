@@ -15,38 +15,58 @@ const UserChatbot = () => {
   const [input, setInput] = useState("");
   const scrollRef = useRef(null);
 
+  // EXPANDED FAQS BASED ON YOUR C# DATA
   const faqs = [
     {
+      id: "edit_profile",
       keys: [
         "edit",
+        "change",
+        "update",
+        "magpalit",
+        "palit",
+        "palitan",
         "profile",
         "name",
         "pangalan",
         "number",
         "num",
         "address",
-        "iedit",
         "personal",
         "details",
+        "information",
+        "info",
+        "account",
+        "modify",
+        "baguhin",
       ],
       ans: "Click the icon on the upper right corner then click edit profile. You will be able to change your personal details such as your name, number, and address.",
     },
     {
+      id: "ocular_view",
       keys: [
         "view",
         "viewing",
         "ocular",
-        "makita",
-        "visit",
         "site",
-        "check",
-        "in-person",
+        "visit",
+        "makita",
+        "booking",
+        "inspect",
+        "schedule",
         "venue",
+        "pwede",
+        "see",
+        "place",
+        "check",
+        "personally",
         "tour",
+        "first",
       ],
-      ans: "Our website offers a 360 virtual tour in the 'Virtual' section. If you prefer to see the venue physically, you're very welcome to schedule an ocular visit! Just let me know and I'll escalate you to a live agent.",
+      ans: "Our website offers a 360 virtual tour showcasing the events place. This feature lets you explore the venue online as if you're physically there.\n\nClick the Virtual section and navigate around the area.\n\nIf you prefer to see the venue physically, you're very welcome to schedule an ocular visit with us. Just let us know and I'll escalate you to a live agent.",
     },
     {
+      id: "previous_events",
       keys: [
         "setup",
         "sample",
@@ -61,23 +81,43 @@ const UserChatbot = () => {
         "previous",
         "actual",
         "real",
+        "where",
+        "see",
+        "view",
+        "venue",
+        "portfolio",
       ],
-      ans: "You can browse photos of our previous events in the Gallery section of our website. It showcases different events held at the venue with actual photos.",
+      ans: "You can browse photos of our previous events in the Gallery section of our website.\n\nOur gallery showcases different events held at the venue, including a short description and actual photos.",
     },
     {
+      id: "booking_process",
       keys: [
+        "how",
         "book",
         "magbook",
         "booking",
+        "bookings",
         "reserve",
         "reservation",
+        "reservations",
         "procedure",
-        "how",
         "steps",
+        "process",
+        "check",
+        "see",
+        "make",
+        "event",
+        "place",
+        "instruction",
+        "instructions",
+        "secure",
+        "venue",
+        "slot",
       ],
-      ans: "To book an event, simply go to the 'Book' section and fill out Step 1 (Booking Details) and Step 2 (Payment Details). Our team will review your request and guide you through the next steps.",
+      ans: "To book an event with us, simply go to the Book section, click create new booking, and fill out the Booking (Step 1) and Payment Details (Step 2).\n\nOnce submitted, the date is automatically reserved for you.\n\nGo back to the Book section to check your reservations made.",
     },
     {
+      id: "pricing_inquiry",
       keys: [
         "hm",
         "much",
@@ -88,13 +128,23 @@ const UserChatbot = () => {
         "fee",
         "downpayment",
         "payment",
+        "bayad",
+        "cost",
+        "rates",
+        "quotation",
+        "budget",
+        "starting",
+        "package",
       ],
-      ans: "Our standard package is ₱25,000 (4h event + 2h ingress + 1h egress). Extensions: Ingress/Egress is ₱1,000/hr, Event proper is ₱5,000/hr. A non-refundable ₱5,000 downpayment is required to confirm.",
+      ans: "Our standard event package is ₱25,000, which includes a 4-hour event proper, plus 2 hours free ingress and 1 hour free egress.\n\nExtensions:\nIngress/Egress: ₱1,000/hr\nEvent proper: ₱5,000/hr\n\nPlease note that a ₱5,000 non-refundable downpayment is required to confirm.",
     },
     {
+      id: "payment_process",
       keys: [
+        "how",
         "pay",
         "magbayad",
+        "payment",
         "method",
         "mop",
         "card",
@@ -106,22 +156,57 @@ const UserChatbot = () => {
         "settle",
         "installment",
         "full",
+        "steps",
+        "process",
+        "complete",
+        "make",
+        "bayaran",
+        "bayad",
+        "dp",
       ],
-      ans: "We use PayMongo for e-wallets and cards. Cash is accepted for the remaining balance but NOT for downpayments. Note: Bank transfers are unavailable 2 weeks before the event.",
+      ans: "Go to the Book section and accomplish the steps. We use PayMongo (E-wallets, cards, online banking). We accept cash for the remaining balance, but NOT for downpayments.\n\nNote: Online banking is unavailable 2 weeks before the event. After successful payment, the date is automatically reserved.",
     },
     {
-      keys: ["rembal", "remaining", "balance", "bal"],
-      ans: "Go to the 'Book' section, click your reservation, and select 'Update Payment' to see your balance. Please settle this before the event date!",
+      id: "remaining_balance",
+      keys: ["rembal", "remaining", "balance", "bal", "magkano", "babayaran"],
+      ans: "Go to the Book section, find your reservation, and select 'Update Payment'. The system will show the remaining balance.\n\nPlease settle this before your event!",
     },
     {
-      keys: ["cancel", "cancellation", "policy", "refundable", "dp"],
+      id: "cancellation_policy",
+      keys: [
+        "cancel",
+        "cancellation",
+        "policy",
+        "refundable",
+        "dp",
+        "remove",
+        "delete",
+        "void",
+      ],
       ans: "Cancellations must be made 2 weeks before the event. The ₱5,000 reservation fee is non-refundable, but any amount paid beyond that can be refunded.",
     },
     {
-      keys: ["resched", "palipat", "date", "move", "reschedule"],
-      ans: "Rescheduling is allowed up to 2 weeks before your event, depending on venue availability. You can do this in the 'Book' section under your reservation details.",
+      id: "reschedule_event",
+      keys: [
+        "resched",
+        "iresched",
+        "palipat",
+        "ipalipat",
+        "date",
+        "move",
+        "imove",
+        "reschedule",
+        "change",
+        "schedule",
+        "time",
+        "duration",
+        "transfer",
+        "shift",
+      ],
+      ans: "Rescheduling is allowed up to 2 weeks before the event, depending on availability. You can do this in the Book section under your reservation.",
     },
     {
+      id: "capacity_setup",
       keys: [
         "max",
         "maximum",
@@ -131,11 +216,21 @@ const UserChatbot = () => {
         "ilan",
         "banquet",
         "standing",
+        "seating",
         "cocktail",
+        "capacity",
+        "setup",
+        "accommodate",
+        "people",
+        "hold",
+        "limit",
+        "attend",
+        "occupancy",
       ],
-      ans: "Capacity: Up to 180 guests for banquet-style (tables/chairs) and up to 250 guests for standing/cocktail setups.",
+      ans: "Capacity:\nBanquet-style: Up to 180 guests\nStanding/Cocktail: Up to 250 guests",
     },
     {
+      id: "dimensions",
       keys: [
         "kalaki",
         "sqm",
@@ -147,12 +242,22 @@ const UserChatbot = () => {
         "dimensions",
         "width",
         "length",
+        "venue",
+        "gaano",
+        "gano",
+        "big",
+        "small",
+        "area",
+        "space",
+        "coverage",
       ],
-      ans: "The indoor area is approx 338 sqm. Overall dimensions are 58.7 ft x 62 ft, with the main hall measuring 43 ft x 62 ft.",
+      ans: "The indoor area is approx 338 sqm. Overall dimensions: 58.7 ft x 62 ft. Main hall: 43 ft x 62 ft.",
     },
     {
+      id: "areas_available",
       keys: [
         "area",
+        "areas",
         "parking",
         "slots",
         "cr",
@@ -165,39 +270,119 @@ const UserChatbot = () => {
         "floor",
         "prep",
         "bridal",
+        "sections",
+        "parts",
+        "locations",
       ],
-      ans: "Venue Areas: Fountain entrance, Ground floor parking (15 cars), Service area, Restrooms (both floors), Reception area, Celebrant’s room, Main hall, and Emergency exit.",
+      ans: "Areas: Fountain entrance, Parking (15 cars), Service area, Restrooms, Reception, Celebrant's room, Main hall, and Emergency exit.",
     },
     {
-      keys: ["submit", "review", "rate", "stars"],
-      ans: "You can submit a 5-star review, write about your experience, and upload photos once your event is completed!",
-    },
-    {
-      keys: ["loc", "san", "location", "saan", "pasig", "landmark", "address"],
-      ans: "We are located at 375 F. Antonio St, Malinao, Pasig City, Philippines, near St. Gerrard and Pasig City Hall.",
-    },
-    {
-      keys: ["num", "number", "contact", "phone", "email", "gmail"],
-      ans: "Contact us at (02) 7500 3014 or calidro.reservations@gmail.com. You can also request a live agent right here!",
-    },
-    {
-      keys: ["time", "working", "hours", "office", "oras", "bukas", "sara"],
-      ans: "Office Hours: Mon-Sat (8am-5pm) and Sunday (1pm-5pm).",
-    },
-    {
+      id: "location",
       keys: [
-        "duration",
-        "venue",
-        "open",
-        "start",
-        "earliest",
-        "latest",
-        "end",
-        "extend",
+        "loc",
+        "location",
+        "saan",
+        "pasig",
+        "landmark",
+        "address",
+        "located",
+        "where",
+        "exact",
+        "find",
+        "situated",
+        "san",
+        "banda",
+        "pumunta",
+        "directions",
       ],
-      ans: "Earliest start: 8am (Mon-Sat) / 1pm (Sun). Latest start: 8pm. Standard duration is 4 hours proper + 3 hours for ingress/egress.",
+      ans: "We are located at 375 F. Antonio St, Malinao, Pasig City, near St. Gerrard and Pasig City Hall.",
+    },
+    {
+      id: "contacts",
+      keys: [
+        "num",
+        "contact",
+        "phone",
+        "number",
+        "email",
+        "gmail",
+        "message",
+        "call",
+        "talk",
+        "your",
+        "niyo",
+      ],
+      ans: "Contact: 02 7500 3014\nEmail: calidro.reservations@gmail.com\n\nYou can also request a live agent here!",
+    },
+    {
+      id: "working_hrs",
+      keys: [
+        "time",
+        "working",
+        "hours",
+        "office",
+        "oras",
+        "bukas",
+        "sara",
+        "business",
+        "opening",
+        "open",
+        "weekdays",
+        "weekends",
+        "hrs",
+        "operating",
+      ],
+      ans: "Office Hours:\nMon-Sat: 8am - 5pm\nSunday: 1pm - 5pm",
     },
   ];
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = () => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return;
+
+    sendMessage(trimmedInput, "user");
+    setInput("");
+
+    if (!isAdminMode) {
+      const lowerInput = trimmedInput.toLowerCase();
+
+      // IMPLEMENTING THE SCORING LOGIC FROM YOUR C# EXAMPLE
+      let bestMatch = null;
+      let highestScore = 0;
+
+      faqs.forEach((faq) => {
+        let score = 0;
+        faq.keys.forEach((key) => {
+          if (lowerInput.includes(key.toLowerCase())) {
+            score++;
+          }
+        });
+
+        if (score > highestScore) {
+          highestScore = score;
+          bestMatch = faq;
+        }
+      });
+
+      setTimeout(() => {
+        if (!isAdminMode) {
+          if (bestMatch && highestScore > 0) {
+            sendMessage(bestMatch.ans, "bot");
+          } else {
+            sendMessage(
+              "I'm sorry, I don't quite understand that. Would you like to talk to a live Admin?",
+              "bot",
+              true,
+            );
+          }
+        }
+      }, 600);
+    }
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
