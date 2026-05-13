@@ -70,7 +70,7 @@ const Login = () => {
       <div className="w-full max-w-lg bg-white/70 backdrop-blur-md shadow-xl p-8 rounded-2xl lg:ml-30 mx-auto">
         <div className="flex justify-between mb-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="text-sm font-bold text-gray-600 hover:text-black transition-colors"
           >
             ← BACK
