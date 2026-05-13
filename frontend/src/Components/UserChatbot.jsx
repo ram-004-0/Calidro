@@ -421,13 +421,6 @@ const UserChatbot = () => {
     const trimmedInput = input.trim();
     if (!trimmedInput) return;
 
-    if (trimmedInput.toLowerCase() === "admin") {
-      sendMessage(trimmedInput, "user");
-      setInput("");
-      startLiveChat();
-      return;
-    }
-
     sendMessage(trimmedInput, "user");
     setInput("");
 
