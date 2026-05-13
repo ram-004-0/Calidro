@@ -87,21 +87,16 @@ const Login = () => {
           {/* Welcome Text Section + Logo */}
           <div className="text-center space-y-4">
             {" "}
-            {/* Increased space-y to 4 for better breathing */}
-            {/* Calidro Logo Implementation */}
             <div className="flex justify-center mb-6">
               <img
                 src={CalidroLogo}
                 alt="Calidro Logo"
-                className="h-12 w-auto object-contain" // Height set to h-12 (3rem) keeps it distinct but small
+                className="h-12 w-auto object-contain"
               />
             </div>
             <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
               Welcome to Calidro
             </h2>
-            <p className="text-[#c79a63] font-medium">
-              Securely access your venue bookings
-            </p>
             <div className="pt-2">
               <p className="text-sm text-gray-500 italic">
                 Please use your authorized Google account to continue.
