@@ -40,7 +40,7 @@ const UserChatbot = () => {
         "modify",
         "baguhin",
       ],
-      ans: "Click the icon on the upper right corner then click edit profile. You will be able to change your personal details such as your name, number, and address.",
+      ans: "Click the icon on the upper left corner then click edit profile. You will be able to change your personal details such as your name, number, and address.",
     },
     {
       id: "ocular_view",
@@ -169,7 +169,7 @@ const UserChatbot = () => {
     {
       id: "remaining_balance",
       keys: ["rembal", "remaining", "balance", "bal", "magkano", "babayaran"],
-      ans: "Go to the Book section, find your reservation, and select 'Update Payment'. The system will show the remaining balance.\n\nPlease settle this before your event!",
+      ans: "Go to the Book section and find your reservation. Click on it and then select update payment. The system will show the payment summary, including the remaining balance.\n\nPlease settle this before your event!",
     },
     {
       id: "cancellation_policy",
@@ -183,7 +183,7 @@ const UserChatbot = () => {
         "delete",
         "void",
       ],
-      ans: "Cancellations must be made 2 weeks before the event. The ₱5,000 reservation fee is non-refundable, but any amount paid beyond that can be refunded.",
+      ans: "Cancellations must be made 2 weeks before your scheduled event date. The ₱5,000 reservation fee is non-refundable. However, any amount paid beyond that can be refunded.",
     },
     {
       id: "reschedule_event",
@@ -227,7 +227,7 @@ const UserChatbot = () => {
         "attend",
         "occupancy",
       ],
-      ans: "Capacity:\nBanquet-style: Up to 180 guests\nStanding/Cocktail: Up to 250 guests",
+      ans: "Our venue capacity:\n- Banquet-style: Up to 180 guests\n- Standing/Cocktail: Up to 250 guests",
     },
     {
       id: "dimensions",
@@ -251,7 +251,7 @@ const UserChatbot = () => {
         "space",
         "coverage",
       ],
-      ans: "The indoor area is approx 338 sqm. Overall dimensions: 58.7 ft x 62 ft. Main hall: 43 ft x 62 ft.",
+      ans: "The indoor area is approximately 338 sqm. Overall dimensions: 58.7 ft by 62 ft. Main hall: 43 ft by 62 ft.",
     },
     {
       id: "areas_available",
@@ -274,7 +274,23 @@ const UserChatbot = () => {
         "parts",
         "locations",
       ],
-      ans: "Areas: Fountain entrance, Parking (15 cars), Service area, Restrooms, Reception, Celebrant's room, Main hall, and Emergency exit.",
+      ans: "The venue includes: Fountain entrance, Parking (15 cars), Service area, Restrooms, Reception area, Celebrant’s room, Main event hall, and Emergency exit.",
+    },
+    {
+      id: "reviews",
+      keys: [
+        "submit",
+        "review",
+        "leave",
+        "feedback",
+        "rate",
+        "service",
+        "experience",
+        "post",
+        "share",
+        "write",
+      ],
+      ans: "You can submit a review after your event is completed! You may rate us up to 5 stars, write a description, and upload photos of your experience.",
     },
     {
       id: "location",
@@ -295,7 +311,7 @@ const UserChatbot = () => {
         "pumunta",
         "directions",
       ],
-      ans: "We are located at 375 F. Antonio St, Malinao, Pasig City, near St. Gerrard and Pasig City Hall.",
+      ans: "We are located at 375 F. Antonio St, Malinao, Pasig City, Philippines, near St. Gerrard and Pasig City Hall.",
     },
     {
       id: "contacts",
@@ -312,7 +328,7 @@ const UserChatbot = () => {
         "your",
         "niyo",
       ],
-      ans: "Contact: 02 7500 3014\nEmail: calidro.reservations@gmail.com\n\nYou can also request a live agent here!",
+      ans: "Contact us at 02 7500 3014 or email calidro.reservations@gmail.com. You can also request to be connected to a live agent here.",
     },
     {
       id: "working_hrs",
@@ -332,7 +348,39 @@ const UserChatbot = () => {
         "hrs",
         "operating",
       ],
-      ans: "Office Hours:\nMon-Sat: 8am - 5pm\nSunday: 1pm - 5pm",
+      ans: "Office Hours:\nMonday to Saturday: 8am - 5pm\nSunday: 1pm - 5pm",
+    },
+    {
+      id: "venue_availability",
+      keys: [
+        "standard",
+        "duration",
+        "open",
+        "start",
+        "earliest",
+        "latest",
+        "end",
+        "extend",
+        "available",
+        "slot",
+        "vacant",
+        "availability",
+        "free",
+      ],
+      ans: "Check the Book section for our real-time calendar.\n- Mon-Sat: Starts as early as 8:00 AM\n- Sun: Starts as early as 1:00 PM\nLatest start time is 8:00 PM.",
+    },
+    {
+      id: "policies",
+      keys: [
+        "policy",
+        "policies",
+        "rule",
+        "rules",
+        "terms",
+        "conditions",
+        "guidelines",
+      ],
+      ans: "General Guidelines:\n1. ₱5,000 DP required to secure date.\n2. Cancellations/Rescheduling must be 2 weeks before the event.\n3. DP is non-refundable.",
     },
   ];
 
