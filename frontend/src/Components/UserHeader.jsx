@@ -330,7 +330,7 @@ const UserHeader = () => {
                     name="email"
                     value={formData.email}
                     readOnly
-                    className="w-full mt-1 p-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#f4dfba] text-[#4a3733]"
+                    className="w-full mt-1 p-3.5 bg-gray-100 border border-gray-100 rounded-2xl text-gray-500 cursor-not-allowed outline-none"
                     required
                   />
                 </div>
