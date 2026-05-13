@@ -184,6 +184,7 @@ const UserChatbot = () => {
         "settle",
         "rest",
         "kulang",
+        "how",
       ],
       ans: "Go to the Book section and find your reservation. Click on it and then select update payment. The system will show the payment summary, including the remaining balance.\n\nPlease settle this before your event!",
     },
