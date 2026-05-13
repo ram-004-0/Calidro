@@ -69,7 +69,7 @@ const Login = () => {
       style={{ backgroundImage: `url(${LoginBg})` }}
     >
       <div className="w-full max-w-lg bg-white/70 backdrop-blur-md shadow-xl p-8 rounded-2xl lg:ml-30 mx-auto">
-        {/* Header Section: Preserved as requested */}
+        {/* Header Section: Preserved */}
         <div className="flex justify-between mb-12">
           <button
             onClick={() => navigate("/")}
@@ -82,19 +82,26 @@ const Login = () => {
           </button>
         </div>
 
+        {/* Main Content Section */}
         <div className="space-y-10 pb-6">
+          {/* Welcome Text Section + Logo */}
           <div className="text-center space-y-4">
             {" "}
+            {/* Increased space-y to 4 for better breathing */}
+            {/* Calidro Logo Implementation */}
             <div className="flex justify-center mb-6">
               <img
                 src={CalidroLogo}
                 alt="Calidro Logo"
-                className="h-12 w-auto object-contain"
+                className="h-12 w-auto object-contain" // Height set to h-12 (3rem) keeps it distinct but small
               />
             </div>
             <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
               Welcome to Calidro
             </h2>
+            <p className="text-[#c79a63] font-medium">
+              Securely access your venue bookings
+            </p>
             <div className="pt-2">
               <p className="text-sm text-gray-500 italic">
                 Please use your authorized Google account to continue.
