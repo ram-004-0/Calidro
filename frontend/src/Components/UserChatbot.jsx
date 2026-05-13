@@ -405,17 +405,34 @@ const UserChatbot = () => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    if (isChatOpen && messages.length === 0) {
+      const welcomeText =
+        "Hi, I’m Calidro Bot! Feel free to ask me a question.\n\nIf ever I can’t help with your concern, you may also request a live agent during office hours (8:00 AM - 5:00 PM) by typing “admin”.";
+      const timer = setTimeout(() => {
+        sendMessage(welcomeText, "bot");
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isChatOpen, messages.length, sendMessage]);
+
   const handleSend = () => {
     const trimmedInput = input.trim();
     if (!trimmedInput) return;
+
+    if (trimmedInput.toLowerCase() === "admin") {
+      sendMessage(trimmedInput, "user");
+      setInput("");
+      startLiveChat();
+      return;
+    }
 
     sendMessage(trimmedInput, "user");
     setInput("");
 
     if (!isAdminMode) {
       const lowerInput = trimmedInput.toLowerCase();
-
-      // IMPLEMENTING THE SCORING LOGIC FROM YOUR C# EXAMPLE
       let bestMatch = null;
       let highestScore = 0;
 
