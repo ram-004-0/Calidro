@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
 import API from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,10 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const [paymentType, setPaymentType] = useState(
     isRestricted ? "full" : "partial",
   );
+
+  const handleBack = () => {
+    navigate("/user-bookings"); // Replace with your actual route path
+  };
 
   // 3. Hydration Guard for useMemo
   const totalAmount = useMemo(() => {
@@ -211,7 +216,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         </Row>
 
         <button
-          onClick={onBack}
+          onClick={handleBack}
           className="hidden md:block bg-gray-300 px-8 py-2 rounded-full uppercase text-sm font-bold"
         >
           Back
