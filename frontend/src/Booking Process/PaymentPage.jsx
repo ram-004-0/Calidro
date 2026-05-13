@@ -31,12 +31,10 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   );
 
   const handleBack = () => {
-    // If onBack was passed as a prop (likely from a parent state toggle), use it.
     if (onBack) {
       onBack();
     } else {
-      // Otherwise, use React Router to go back to the bookings list
-      navigate("/user-bookings");
+      navigate("/userbook");
     }
   };
 
@@ -222,7 +220,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         </Row>
 
         <button
-          type="button" // Good practice to prevent accidental form submissions
+          type="button"
           onClick={handleBack}
           className="hidden md:block bg-gray-300 px-8 py-2 rounded-full uppercase text-sm font-bold"
         >
