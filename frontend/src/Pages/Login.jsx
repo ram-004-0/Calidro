@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; //
 import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
-import CalidroLogo from "../assets/Images/calidrologo.png";
+import CalidroLogo from "../assets/calidrologo.png";
 import { ArrowLeft } from "lucide-react";
 const API_URL =
   "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
