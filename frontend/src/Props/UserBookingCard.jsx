@@ -123,6 +123,13 @@ const UserBookingCard = ({ booking: initialBooking }) => {
   });
 
   const handleSave = async () => {
+    const guestCount = parseInt(editData.noOfGuests);
+
+    if (guestCount < 10 || guestCount > 200) {
+      alert("Number of guests must be between 10 and 200.");
+      return;
+    }
+
     try {
       await axios.put(
         `${API_URL}/api/bookings/edit/${booking.booking_id}`,
@@ -195,7 +202,6 @@ const UserBookingCard = ({ booking: initialBooking }) => {
         </div>
       )}
       <div className="mb-4 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
-        {/* --- CARD HEADER --- */}
         <div
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex cursor-pointer items-center justify-between p-5 hover:bg-gray-50"
@@ -228,7 +234,6 @@ const UserBookingCard = ({ booking: initialBooking }) => {
           </div>
         </div>
 
-        {/* --- EXPANDABLE SECTION --- */}
         <div
           className={`transition-all duration-300 ease-in-out ${isExpanded ? "max-h-[1000px] border-t border-gray-100 opacity-100" : "max-h-0 opacity-0"}`}
         >
@@ -259,7 +264,6 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                 </div>
               </div>
 
-              {/* Event Info */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 border-b border-gray-200 pb-1 text-xs font-bold uppercase tracking-wider text-gray-400">
                   <Users size={14} /> Event Info
@@ -349,6 +353,8 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                     {isEditing ? (
                       <input
                         type="number"
+                        min="10"
+                        max="200"
                         className="border rounded px-1 w-full"
                         value={editData.noOfGuests}
                         onChange={(e) =>
