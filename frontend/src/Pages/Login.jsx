@@ -94,7 +94,7 @@ const Login = () => {
                 className="h-12 w-auto object-contain"
               />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
+            <h2 className="text-4xl font-bold text-gray-800 tracking-tight">
               Welcome to Calidro
             </h2>
             <div className="pt-2">
@@ -103,8 +103,6 @@ const Login = () => {
               </p>
             </div>
           </div>
-
-          {/* Google Login Section: handleGoogleSuccess remains unchanged */}
           <div className="flex justify-center">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
