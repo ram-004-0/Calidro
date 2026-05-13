@@ -406,16 +406,19 @@ const UserChatbot = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (isChatOpen && messages.length === 0) {
+    // Check if chat is open
+    if (isChatOpen) {
       const welcomeText =
         "Hi, I’m Calidro Bot! Feel free to ask me a question.\n\nIf ever I can’t help with your concern, you may also request a live agent during office hours (8:00 AM - 5:00 PM) by typing “admin”.";
+
+      // We remove the messages.length === 0 check so it triggers every time isChatOpen becomes true
       const timer = setTimeout(() => {
         sendMessage(welcomeText, "bot");
       }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [isChatOpen, messages.length, sendMessage]);
+  }, [isChatOpen, sendMessage]);
 
   const handleSend = () => {
     const trimmedInput = input.trim();
