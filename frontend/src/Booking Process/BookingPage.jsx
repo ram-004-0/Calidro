@@ -157,6 +157,15 @@ export default function BookingPage({ onNext }) {
       return;
     }
 
+    const guestNum = parseInt(guestCount);
+    if (
+      !isRescheduling &&
+      (isNaN(guestNum) || guestNum < 10 || guestNum > 200)
+    ) {
+      alert("Please enter a guest count between 10 and 200.");
+      return;
+    }
+
     const curDuration = Number(duration);
     const curIngress = Number(ingress);
     const curEgress = Number(egress);
@@ -295,7 +304,7 @@ export default function BookingPage({ onNext }) {
 
   const handleGuestChange = (e) => {
     const value = e.target.value;
-    if (value === "" || (parseInt(value) <= 200 && parseInt(value) >= 0)) {
+    if (value === "" || parseInt(value) <= 200) {
       setGuestCount(value);
     }
   };
@@ -469,9 +478,10 @@ export default function BookingPage({ onNext }) {
               type="number"
               value={guestCount}
               onChange={handleGuestChange}
-              disabled={isRescheduling} // <--- ADD THIS
+              disabled={isRescheduling}
+              min="10"
               max="200"
-              placeholder="Max 200 pax"
+              placeholder="Min 10 pax & Max 200 pax"
               className={`input-style w-full ${
                 parseInt(guestCount) === 200 ? "border-orange-400" : ""
               } ${isRescheduling ? "opacity-50 cursor-not-allowed" : ""}`}
