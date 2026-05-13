@@ -367,7 +367,7 @@ const UserChatbot = () => {
         "availability",
         "free",
       ],
-      ans: "Check the Book section for our real-time calendar.\n- Mon-Sat: Starts as early as 8:00 AM\n- Sun: Starts as early as 1:00 PM\nLatest start time is 8:00 PM.",
+      ans: "Go to the Book section and check our available dates in real time through our booking calendar.\nWe are open for bookings every day of the week.\nMonday to Saturday: Events can start as early as 8:00 AM\nSunday: Events can start as early as 1:00 PM\nOur standard event duration is 4 hours for the event proper, 2 hours ingress and 1 hour egress.\nThe latest allowable start time for events is 8:00 PM. Events may extend past midnight, provided there is no booking scheduled for the following day.",
     },
     {
       id: "policies",
