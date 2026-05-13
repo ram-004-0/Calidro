@@ -183,7 +183,7 @@ const UserChatbot = () => {
         "delete",
         "void",
       ],
-      ans: "Cancellations must be made 2 weeks before your scheduled event date. The ₱5,000 reservation fee is non-refundable. However, any amount paid beyond that can be refunded.",
+      ans: "Cancellations must be made 2 weeks before your scheduled event date. The 5000 pesos down payment is non-refundable. However, any amount paid beyond the reservation fee can still be refunded. If you have a refund concern, please contact the admin directly.",
     },
     {
       id: "reschedule_event",
@@ -203,7 +203,7 @@ const UserChatbot = () => {
         "transfer",
         "shift",
       ],
-      ans: "Rescheduling is allowed up to 2 weeks before the event, depending on availability. You can do this in the Book section under your reservation.",
+      ans: "Rescheduling must be made 2 weeks before your scheduled event date. You may choose a new date depending on the availability of our schedule. Note that you may only retain or increase the duration of your booking hours from your original reservation; reducing is not allowed.",
     },
     {
       id: "capacity_setup",
