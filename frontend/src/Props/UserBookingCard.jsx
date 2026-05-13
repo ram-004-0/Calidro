@@ -460,7 +460,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                         </button>
                         <button
                           disabled={isProcessing}
-                          onClick={handleCancel}
+                          onClick={() => setShowCancelModal(true)}
                           className={`flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 ${
                             isProcessing ? "opacity-50 cursor-not-allowed" : ""
                           }`}
