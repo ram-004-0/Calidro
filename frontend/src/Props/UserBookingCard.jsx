@@ -101,7 +101,7 @@ const UserBookingCard = ({ booking: initialBooking }) => {
         },
       );
       setBooking((prev) => ({ ...prev, bookingStatus: "cancelled" }));
-      setShowCancelModal(false); // Close modal on success
+      setShowCancelModal(false);
       alert("Booking cancelled successfully.");
     } catch (err) {
       console.error("Failed to cancel:", err);
@@ -153,7 +153,6 @@ const UserBookingCard = ({ booking: initialBooking }) => {
   };
   return (
     <>
-      {/* --- CUSTOM CANCEL MODAL --- */}
       {showCancelModal && (
         <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center space-y-5 border-t-4 border-red-500 animate-in fade-in zoom-in duration-200">
@@ -171,6 +170,9 @@ const UserBookingCard = ({ booking: initialBooking }) => {
                   "{booking.eventName}"
                 </span>
                 ? This action is permanent.
+                <span className="block mt-4 text-xs text-gray-500 italic">
+                  For refund concerns, please contact our customer support.
+                </span>
               </p>
             </div>
 
