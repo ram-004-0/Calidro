@@ -431,15 +431,15 @@ const UserChatbot = () => {
     if (!isAdminMode) {
       const lowerInput = trimmedInput.toLowerCase();
 
-      if (lowerInput === "admin") {
+      if (lowerInput.includes("admin")) {
         setTimeout(() => {
           sendMessage(
             "Understood. Would you like to be connected to a live Admin?",
             "bot",
-            true, // This 'true' flag triggers the Live Admin button in your UI
+            true,
           );
         }, 600);
-        return; // Exit the function early so it doesn't try to match FAQs
+        return;
       }
 
       let bestMatch = null;
