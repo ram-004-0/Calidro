@@ -384,41 +384,6 @@ const UserChatbot = () => {
     }
   };
 
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSend = () => {
-    const trimmedInput = input.trim();
-    if (!trimmedInput) return;
-
-    sendMessage(trimmedInput, "user");
-    setInput("");
-
-    if (!isAdminMode) {
-      const lowerInput = trimmedInput.toLowerCase();
-
-      // Detection logic
-      const match = faqs.find((f) =>
-        f.keys.some((keyword) => lowerInput.includes(keyword.toLowerCase())),
-      );
-
-      setTimeout(() => {
-        if (!isAdminMode) {
-          if (match) {
-            sendMessage(match.ans, "bot");
-          } else {
-            sendMessage(
-              "I'm not sure about that. Would you like to talk to a live Admin?",
-              "bot",
-              true,
-            );
-          }
-        }
-      }, 600);
-    }
-  };
-
   if (!isChatOpen) return null;
 
   return (
