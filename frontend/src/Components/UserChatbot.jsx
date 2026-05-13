@@ -380,7 +380,7 @@ const UserChatbot = () => {
         "conditions",
         "guidelines",
       ],
-      ans: "General Guidelines:\n1. ₱5,000 DP required to secure date.\n2. Cancellations/Rescheduling must be 2 weeks before the event.\n3. DP is non-refundable.",
+      ans: "Here are our general guidelines:\nBooking Confirmation: To secure a reservation, it is required to make a down payment of at least 5000 pesos. Once the payment pushed through, the date you booked it automatically reserved for you.\nCancellations: Cancellations must be made 2 weeks before your scheduled event date. The 5000 pesos down payment is non-refundable. However, any amount paid beyond the reservation fee can still be refunded. If you have a refund concern, please contact the admin directly.\nReschedule: Rescheduling must be made 2 weeks before your scheduled event date. You may choose a new date depending on the availability of our schedule. Note that you may only retain or increase the duration of your booking hours from your original reservation; reducing is not allowed.\nAvailability: All bookings are first-come, first-served based on real-time schedule availability.",
     },
   ];
 
