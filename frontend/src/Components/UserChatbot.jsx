@@ -406,14 +406,17 @@ const UserChatbot = () => {
   }, [messages]);
 
   useEffect(() => {
-    // Check if chat is open
-    if (isChatOpen) {
+    // Check if chat is open AND if we haven't sent a welcome message in this session yet
+    const hasSeenGreeting = sessionStorage.getItem("hasSeenGreeting");
+
+    if (isChatOpen && !hasSeenGreeting) {
       const welcomeText =
         "Hi, I’m Calidro Bot! Feel free to ask me a question.\n\nIf ever I can’t help with your concern, you may also request a live agent during office hours (8:00 AM - 5:00 PM) by typing “admin”.";
 
-      // We remove the messages.length === 0 check so it triggers every time isChatOpen becomes true
       const timer = setTimeout(() => {
         sendMessage(welcomeText, "bot");
+        // Mark as seen so it doesn't repeat until they refresh the page
+        sessionStorage.setItem("hasSeenGreeting", "true");
       }, 500);
 
       return () => clearTimeout(timer);
