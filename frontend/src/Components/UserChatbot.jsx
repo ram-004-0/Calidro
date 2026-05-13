@@ -406,7 +406,6 @@ const UserChatbot = () => {
   }, [messages]);
 
   useEffect(() => {
-    // Check if chat is open AND if we haven't sent a welcome message in this session yet
     const hasSeenGreeting = sessionStorage.getItem("hasSeenGreeting");
 
     if (isChatOpen && !hasSeenGreeting) {
@@ -415,7 +414,6 @@ const UserChatbot = () => {
 
       const timer = setTimeout(() => {
         sendMessage(welcomeText, "bot");
-        // Mark as seen so it doesn't repeat until they refresh the page
         sessionStorage.setItem("hasSeenGreeting", "true");
       }, 500);
 
@@ -432,6 +430,18 @@ const UserChatbot = () => {
 
     if (!isAdminMode) {
       const lowerInput = trimmedInput.toLowerCase();
+
+      if (lowerInput === "admin") {
+        setTimeout(() => {
+          sendMessage(
+            "Understood. Would you like to be connected to a live Admin?",
+            "bot",
+            true, // This 'true' flag triggers the Live Admin button in your UI
+          );
+        }, 600);
+        return; // Exit the function early so it doesn't try to match FAQs
+      }
+
       let bestMatch = null;
       let highestScore = 0;
 
