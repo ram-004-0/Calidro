@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; //
 import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
+import CalidroLogo from "../assets/Images/calidrologo.png";
 import { ArrowLeft } from "lucide-react";
 const API_URL =
   "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
@@ -81,16 +82,19 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Main Content Section */}
         <div className="space-y-10 pb-6">
-          {/* Welcome Text Replacement */}
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-4">
+            {" "}
+            <div className="flex justify-center mb-6">
+              <img
+                src={CalidroLogo}
+                alt="Calidro Logo"
+                className="h-12 w-auto object-contain"
+              />
+            </div>
             <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
               Welcome to Calidro
             </h2>
-            <p className="text-[#c79a63] font-medium">
-              Securely access your venue bookings
-            </p>
             <div className="pt-2">
               <p className="text-sm text-gray-500 italic">
                 Please use your authorized Google account to continue.
