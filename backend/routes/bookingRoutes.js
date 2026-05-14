@@ -113,6 +113,9 @@ router.post("/create-booking-and-checkout", async (req, res) => {
     const successMsg = `Your booking for "${eventName}" on ${formattedDate} at ${time} has been confirmed. Your payment was processed securely!`;
     await createNotification(userId, successMsg, bookingId);
 
+    const adminAlert = `New Booking: ${userData.username} booked "${eventName}" for ${formattedDate}.`;
+    await createNotification(userId, adminAlert, bookingId, "admin");
+
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
@@ -723,8 +726,6 @@ router.post("/webhook/paymongo", async (req, res) => {
       return;
     }
 
-    // --- STEP 1: UPDATE THE DATABASE ---
-    // We do this first so the money is recorded immediately.
     const updateSql = `
       UPDATE booking 
       SET 
@@ -748,8 +749,6 @@ router.post("/webhook/paymongo", async (req, res) => {
     ]);
     console.log(`💰 DB Updated for Booking ${bookingId}`);
 
-    // --- STEP 2: FETCH FRESH DATA FOR NOTIFICATION ---
-    // We fetch the data AFTER the update so we know exactly what the status is NOW.
     const [freshRows] = await db.query(
       "SELECT user_id, event_name, status, total_amount, amount_paid FROM booking WHERE booking_id = ?",
       [bookingId],
@@ -758,20 +757,25 @@ router.post("/webhook/paymongo", async (req, res) => {
     if (freshRows.length === 0) return;
     const freshBooking = freshRows[0];
 
-    // --- STEP 3: PREPARE THE MESSAGE ---
     const isNowConfirmed = freshBooking.status === "confirmed";
 
-    let notificationMsg = isNowConfirmed
+    let userMsg = isNowConfirmed
       ? `Payment Successful! Your booking for "${freshBooking.event_name}" is now fully paid and confirmed.`
       : `Payment received: ₱${paymentAmount.toLocaleString()} for "${freshBooking.event_name}". Your balance has been updated.`;
 
-    // --- STEP 4: SEND NOTIFICATION ---
-    // I wrapped this in its own try/catch so if notification fails, it doesn't crash the webhook
+    // B. Notification for the ADMIN (Public to Staff)
+    let adminMsg = `Payment Alert: ₱${paymentAmount.toLocaleString()} received from ${freshBooking.username} for "${freshBooking.event_name}". Status: ${freshBooking.status.toUpperCase()}.`;
+
     try {
+      // Send to User (Default type is 'booking_update' or 'user')
+      await createNotification(freshBooking.user_id, userMsg, bookingId);
+
+      // Send to Admin (Explicitly set type to 'admin')
       await createNotification(
         freshBooking.user_id,
-        notificationMsg,
+        adminMsg,
         bookingId,
+        "admin",
       );
       console.log(`🔔 Notification Sent to User ${freshBooking.user_id}`);
     } catch (notifErr) {

@@ -12,6 +12,8 @@ const createNotification = async (
       VALUES (?, ?, ?, ?)
     `;
     await db.query(query, [userId, message, type, bookingId]);
+
+    console.log(`Notification created as type: ${type}`);
   } catch (err) {
     console.error("Error creating notification:", err);
   }
@@ -81,13 +83,12 @@ const getAdminNotifications = async (req, res) => {
         DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
        FROM notifications n
        LEFT JOIN user u ON n.user_id = u.user_id
-       WHERE n.type IN ('admin', 'admin_alert', 'booking_update') -- Add 'booking_update' here
+       WHERE n.type = 'admin' -- STRICTLY only admin types
        ORDER BY n.created_at DESC 
        LIMIT 50`,
     );
     res.json(rows);
   } catch (error) {
-    console.error("Admin Notification Fetch Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
