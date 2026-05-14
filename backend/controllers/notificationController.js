@@ -36,8 +36,6 @@ const getNotifications = async (req, res) => {
   }
 };
 
-// controllers/notificationController.js (or similar)
-
 const deleteSelectedNotifications = async (req, res) => {
   const { notifIds } = req.body;
   const userId = req.user.id; // From your Auth middleware
@@ -66,8 +64,32 @@ const deleteSelectedNotifications = async (req, res) => {
   }
 };
 
+const getAdminNotifications = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        n.notif_id, 
+        u.username,
+        -- This combines the username with the message for the Admin view
+        CONCAT(u.username, ': ', n.message) AS text, 
+        n.booking_id,
+        DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time,
+        n.is_read 
+       FROM notifications n
+       JOIN user u ON n.user_id = u.user_id
+       ORDER BY n.created_at DESC 
+       LIMIT 50`,
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("Admin Notification Fetch Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   createNotification,
   getNotifications,
   deleteSelectedNotifications,
+  getAdminNotifications,
 };

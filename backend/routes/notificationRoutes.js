@@ -4,10 +4,13 @@ const db = require("../config/db");
 const {
   getNotifications,
   deleteSelectedNotifications,
+  getAdminNotifications,
 } = require("../controllers/notificationController");
 const { verifyToken } = require("../middleware/authMiddleware");
 
 router.delete("/delete-selected", verifyToken, deleteSelectedNotifications);
+
+router.get("/admin", verifyToken, getAdminNotifications);
 
 router.get("/:userId", getNotifications);
 

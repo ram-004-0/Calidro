@@ -209,9 +209,19 @@ const AdminHeader = () => {
                             className="mt-1 accent-[#433633] cursor-pointer"
                           />
                           <div className="flex-1">
-                            <p className="font-medium text-[11px] leading-tight">
-                              {n.message || n.text}
+                            {/* USER NAME BADGE */}
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="bg-[#433633] text-white text-[8px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">
+                                {n.username || "System"}
+                              </span>
+                            </div>
+
+                            {/* MESSAGE TEXT */}
+                            <p className="font-medium text-[11px] leading-tight text-gray-800">
+                              {n.text || n.message}
                             </p>
+
+                            {/* TIMESTAMP */}
                             <p className="text-[9px] text-gray-400 mt-1">
                               {n.time ||
                                 (n.created_at
