@@ -53,8 +53,6 @@ router.post("/test-post", (req, res) => {
 
 // 1. Create New Booking and Launch PayMongo
 router.post("/create-booking-and-checkout", async (req, res) => {
-  console.log("Full Payload Received:", req.body);
-
   try {
     const {
       userId,
@@ -71,8 +69,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       payment_methods,
     } = req.body;
 
-    const rawGuests =
-      req.body.noOfGuests || req.body.guests || req.body.guestCount || 0;
+    const rawGuests = req.body.noOfGuests || req.body.guests || 0;
     const finalGuestCount = parseInt(rawGuests, 10);
 
     const [userData] = await query(
@@ -100,22 +97,29 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       status: "pending",
     };
 
-    console.log("DEBUG: Final Object being INSERTED:", bookingData);
-
     const result = await query("INSERT INTO booking SET ?", [bookingData]);
     const bookingId = result.insertId;
+
+    // Notifications
     const formattedDate = new Date(eventDate).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
-    //confirmation notif
-    const successMsg = `Your booking for "${eventName}" on ${formattedDate} at ${time} has been confirmed. Your payment was processed securely!`;
-    await createNotification(userId, successMsg, bookingId);
 
-    const adminAlert = `New Booking: ${userData.username} booked "${eventName}" for ${formattedDate}.`;
-    await createNotification(userId, adminAlert, bookingId, "admin");
+    await createNotification(
+      userId,
+      `Your booking for "${eventName}" on ${formattedDate} is pending payment.`,
+      bookingId,
+    );
+    await createNotification(
+      userId,
+      `New Booking Alert: ${userData.username} reserved "${eventName}" for ${formattedDate}.`,
+      bookingId,
+      "admin",
+    );
 
+    // PayMongo Logic...
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
@@ -133,17 +137,14 @@ router.post("/create-booking-and-checkout", async (req, res) => {
               {
                 currency: "PHP",
                 amount: Math.round(amount_paid * 100),
-                name: `Calidro Booking: ${eventName}`,
+                name: `Booking: ${eventName}`,
                 quantity: 1,
               },
             ],
             payment_method_types: payment_methods,
             success_url: `https://calidro.vercel.app/ReviewDetails?bookingId=${bookingId}`,
             cancel_url: `https://calidro.vercel.app/userbook`,
-            metadata: {
-              bookingId: bookingId.toString(),
-              paymentType: paymentType,
-            },
+            metadata: { bookingId: bookingId.toString(), paymentType },
             reference_number: bookingId.toString(),
           },
         },
@@ -156,13 +157,14 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       },
     );
 
-    res.status(200).json({
-      bookingId,
-      checkout_url: paymongoResponse.data.data.attributes.checkout_url,
-    });
+    res
+      .status(200)
+      .json({
+        bookingId,
+        checkout_url: paymongoResponse.data.data.attributes.checkout_url,
+      });
   } catch (error) {
-    console.error("❌ FINAL ROUTE ERROR:", error.message);
-    res.status(500).json({ error: "Process failed", details: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 // 2. Fetch all bookings for User View w rate
@@ -244,82 +246,32 @@ router.put("/update-status/:id", async (req, res) => {
   const { status } = req.body;
   const { id } = req.params;
 
-  if (!id || id === "undefined") {
-    return res.status(400).json({ error: "Booking ID is required" });
-  }
-
   try {
-    // 1. Fetch the existing booking details first so we can use its data
     const [rows] = await db.query(
       "SELECT * FROM booking WHERE booking_id = ?",
       [id],
     );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Booking not found in DB" });
-    }
-
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Booking not found" });
     const booking = rows[0];
 
-    // 2. 🔔 CANCELLATION NOTIFICATION LOGIC (Do this BEFORE sending the final response!)
-    if (status === "cancelled") {
-      // 📅 Clean format for dates
-      const formattedDate = new Date(booking.event_date).toLocaleDateString(
-        "en-US",
-        {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        },
-      );
-
-      // 🕒 Clean format for time
-      let formattedTime = booking.event_time;
-      if (booking.event_time) {
-        const [hoursStr, minutesStr] = booking.event_time.split(":");
-        let hours = parseInt(hoursStr, 10);
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-
-        if (minutesStr === "00") {
-          formattedTime = `${hours} ${ampm}`;
-        } else {
-          formattedTime = `${hours}:${minutesStr} ${ampm}`;
-        }
-      }
-
-      const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${formattedTime} has been cancelled.`;
-
-      await createNotification(booking.user_id, cancellationMsg, id);
-      console.log(
-        `🔔 Cancellation notification written safely to DB for user ${booking.user_id}`,
-      );
-    }
-
-    // 3. Update the booking status in the database
     await db.query("UPDATE booking SET status = ? WHERE booking_id = ?", [
       status,
       id,
     ]);
 
-    // 📧 EMAIL LOGIC: If moving to confirmed, fire off the confirmation email
-    if (booking.status !== "confirmed" && status === "confirmed") {
-      try {
-        await sendBookingConfirmation(booking);
-        console.log("📧 Email sent successfully");
-      } catch (emailErr) {
-        console.error("📧 Email failed but DB was updated:", emailErr.message);
-      }
-    }
+    // Notify User & Admin
+    const statusMsg = `Your booking for "${booking.event_name}" is now ${status}.`;
+    const adminStatusMsg = `Status Update: Booking #${id} (${booking.username}) changed to ${status.toUpperCase()}.`;
 
-    // 4. NOW it is safe to respond to the frontend!
-    res.status(200).json({ message: "Status updated successfully" });
+    await createNotification(booking.user_id, statusMsg, id);
+    await createNotification(booking.user_id, adminStatusMsg, id, "admin");
+
+    if (status === "confirmed") await sendBookingConfirmation(booking);
+
+    res.status(200).json({ message: "Status updated" });
   } catch (err) {
-    console.error("❌ BACKEND CRASH:", err);
-    res
-      .status(500)
-      .json({ error: "Database update failed", details: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 // 4. Get specific booking details
@@ -573,9 +525,6 @@ router.put("/edit/:id", async (req, res) => {
 
 router.put("/reschedule/:id", async (req, res) => {
   const bookingId = req.params.id;
-
-  console.log("📥 RECEIVED PAYLOAD:", req.body);
-
   const {
     event_date,
     event_time,
@@ -587,202 +536,88 @@ router.put("/reschedule/:id", async (req, res) => {
   } = req.body;
 
   try {
-    // 1. Get current booking
-    const [currentBooking] = await db.query(
-      `SELECT event_duration, user_id FROM booking WHERE booking_id = ?`,
+    const [current] = await db.query(
+      "SELECT * FROM booking WHERE booking_id = ?",
       [bookingId],
     );
+    if (current.length === 0)
+      return res.status(404).json({ error: "Not found" });
 
-    if (currentBooking.length === 0) {
-      return res.status(404).json({ error: "Booking not found." });
-    }
-
-    const oldDuration = parseInt(currentBooking[0].event_duration) || 0;
-    const rawIncoming = req.body.event_duration;
-    const newDuration =
-      rawIncoming === undefined || rawIncoming === null || rawIncoming === 0
-        ? oldDuration
-        : parseInt(rawIncoming);
-
-    console.log(
-      `DEBUG: Comparing New(${newDuration}) against Old(${oldDuration})`,
+    // Update Query...
+    await db.query(
+      `UPDATE booking SET event_date=?, event_time=?, event_duration=?, ingress_time=?, egress_time=?, total_amount=GREATEST(total_amount, ?) WHERE booking_id=?`,
+      [
+        event_date,
+        event_time,
+        event_duration,
+        parseInt(ingress_time) || 0,
+        parseInt(egress_time) || 0,
+        total_amount || 0,
+        bookingId,
+      ],
     );
 
-    if (isNaN(newDuration)) {
-      return res.status(400).json({ error: "Invalid duration provided." });
-    }
-
-    if (newDuration < oldDuration) {
-      return res.status(400).json({
-        error: `Duration cannot be decreased. Original duration was ${oldDuration} hours.`,
-      });
-    }
-    // 3. Conflict Check
-    const [conflicts] = await db.query(
-      `SELECT * FROM booking 
-       WHERE event_date = ? 
-       AND event_time = ? 
-       AND status = 'confirmed' 
-       AND booking_id != ?`,
-      [event_date, event_time, bookingId],
-    );
-
-    if (conflicts.length > 0) {
-      return res.status(400).json({
-        error: "This schedule is already taken. Please pick another time.",
-      });
-    }
-
-    // 4. Execute Update
-    const updateQuery = `
-  UPDATE booking 
-  SET 
-    event_date = ?, 
-    event_time = ?, 
-    event_duration = ?, 
-    ingress_time = ?, 
-    egress_time = ?,
-    total_amount = GREATEST(total_amount, ?) 
-  WHERE booking_id = ?
-`;
-
-    await db.query(updateQuery, [
-      event_date,
-      event_time,
-      newDuration,
-      parseInt(ingress_time) || 0,
-      parseInt(egress_time) || 0,
-      total_amount || 0,
-      bookingId,
-    ]);
-
-    // 5. Notification Logic
-    let finalUserId = userId || currentBooking[0].user_id;
-
-    if (finalUserId) {
-      const formattedDate = new Date(event_date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-
-      let formattedTime = event_time;
-      if (event_time) {
-        const [hoursStr, minutesStr] = event_time.split(":");
-        let hours = parseInt(hoursStr, 10);
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-
-        if (!minutesStr || minutesStr === "00") {
-          formattedTime = `${hours} ${ampm}`;
-        } else {
-          formattedTime = `${hours}:${minutesStr} ${ampm}`;
-        }
-      }
-
-      const notificationMessage = `Your booking reschedule request was successful! Your new event schedule is set for ${formattedDate} at ${formattedTime}.`;
-
-      await createNotification(finalUserId, notificationMessage, bookingId);
-    }
-
-    res.status(200).json({
-      message: "Reschedule successful!",
-      newTotal: total_amount,
+    const formattedDate = new Date(event_date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
+    const userMsg = `Reschedule successful! New date: ${formattedDate} at ${event_time}.`;
+    const adminMsg = `Reschedule Alert: ${current[0].username} moved "${current[0].event_name}" to ${formattedDate}.`;
+
+    await createNotification(userId || current[0].user_id, userMsg, bookingId);
+    await createNotification(
+      userId || current[0].user_id,
+      adminMsg,
+      bookingId,
+      "admin",
+    );
+
+    res.status(200).json({ message: "Reschedule successful" });
   } catch (error) {
-    console.error("Backend Reschedule Error:", error);
-    res.status(500).json({ error: "Server error during rescheduling." });
+    res.status(500).json({ error: error.message });
   }
 });
 
 //PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
-  // 1. Always acknowledge PayMongo first
   res.status(200).send("ok");
 
   try {
     const payload = req.body;
     const resource = payload.data?.attributes?.data || payload.data;
     const attr = resource?.attributes || payload.data?.attributes;
-
     if (!attr) return;
 
     const bookingId =
-      attr.metadata?.bookingId ||
-      attr.payment_intent?.attributes?.metadata?.bookingId ||
-      payload.data?.attributes?.metadata?.bookingId;
+      attr.metadata?.bookingId || payload.data?.attributes?.metadata?.bookingId;
+    const paymentAmount =
+      (attr.payment_intent?.attributes?.amount || attr.amount || 0) / 100;
 
-    const amountInCents =
-      attr.payment_intent?.attributes?.amount ||
-      attr.amount ||
-      attr.line_items?.[0]?.amount ||
-      0;
+    if (!bookingId || paymentAmount <= 0) return;
 
-    const paymentAmount = Number(amountInCents) / 100;
+    // Update DB
+    await db.query(
+      `UPDATE booking SET amount_paid = amount_paid + ?, status = CASE WHEN (amount_paid + ?) >= (total_amount - 10) THEN 'confirmed' ELSE 'pending' END WHERE booking_id = ?`,
+      [paymentAmount, paymentAmount, bookingId],
+    );
 
-    if (!bookingId || paymentAmount <= 0) {
-      console.log("⚠️ Webhook: Invalid ID or Amount.");
-      return;
-    }
-
-    const updateSql = `
-      UPDATE booking 
-      SET 
-        amount_paid = amount_paid + ?,
-        status = CASE 
-          WHEN (amount_paid + ?) >= (total_amount - 10) THEN 'confirmed' 
-          ELSE 'pending' 
-        END,
-        payment_type = CASE 
-          WHEN (amount_paid + ?) >= (total_amount - 10) THEN 'full' 
-          ELSE 'partial' 
-        END
-      WHERE booking_id = ?
-    `;
-
-    await db.query(updateSql, [
-      paymentAmount,
-      paymentAmount,
-      paymentAmount,
-      bookingId,
-    ]);
-    console.log(`💰 DB Updated for Booking ${bookingId}`);
-
-    const [freshRows] = await db.query(
-      "SELECT user_id, event_name, status, total_amount, amount_paid FROM booking WHERE booking_id = ?",
+    // FETCH WITH USERNAME (Crucial for Admin Notification)
+    const [fresh] = await db.query(
+      "SELECT user_id, username, event_name, status FROM booking WHERE booking_id = ?",
       [bookingId],
     );
 
-    if (freshRows.length === 0) return;
-    const freshBooking = freshRows[0];
+    if (fresh.length > 0) {
+      const b = fresh[0];
+      const userMsg = `Payment received: ₱${paymentAmount.toLocaleString()} for "${b.event_name}".`;
+      const adminMsg = `Payment Alert: ₱${paymentAmount.toLocaleString()} received from ${b.username} for "${b.event_name}".`;
 
-    const isNowConfirmed = freshBooking.status === "confirmed";
-
-    let userMsg = isNowConfirmed
-      ? `Payment Successful! Your booking for "${freshBooking.event_name}" is now fully paid and confirmed.`
-      : `Payment received: ₱${paymentAmount.toLocaleString()} for "${freshBooking.event_name}". Your balance has been updated.`;
-
-    // B. Notification for the ADMIN (Public to Staff)
-    let adminMsg = `Payment Alert: ₱${paymentAmount.toLocaleString()} received from ${freshBooking.username} for "${freshBooking.event_name}". Status: ${freshBooking.status.toUpperCase()}.`;
-
-    try {
-      // Send to User (Default type is 'booking_update' or 'user')
-      await createNotification(freshBooking.user_id, userMsg, bookingId);
-
-      // Send to Admin (Explicitly set type to 'admin')
-      await createNotification(
-        freshBooking.user_id,
-        adminMsg,
-        bookingId,
-        "admin",
-      );
-      console.log(`🔔 Notification Sent to User ${freshBooking.user_id}`);
-    } catch (notifErr) {
-      console.error("❌ Notification Error:", notifErr.message);
+      await createNotification(b.user_id, userMsg, bookingId);
+      await createNotification(b.user_id, adminMsg, bookingId, "admin");
     }
   } catch (err) {
-    console.error("🔥 WEBHOOK CRASH:", err.message);
+    console.error("🔥 WEBHOOK ERROR:", err.message);
   }
 });
 
