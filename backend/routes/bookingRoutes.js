@@ -288,7 +288,6 @@ router.put("/update-status/:id", async (req, res) => {
 
       const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${formattedTime} has been cancelled.`;
 
-      // We block and wait for this notification to be written completely into the DB
       await createNotification(booking.user_id, cancellationMsg, id);
       console.log(
         `🔔 Cancellation notification written safely to DB for user ${booking.user_id}`,
@@ -517,14 +516,13 @@ router.get("/test-cleanup-manual", async (req, res) => {
         );
       });
 
-      // This fires all insert queries at the exact same time
       await Promise.all(notificationPromises);
 
       console.log(
         `🔔 Generated ${bookingsToComplete.length} completion notifications.`,
       );
     }
-    // 3. Proceed with the status update operation in the database
+
     const updateSql = `
       UPDATE booking 
       SET status = 'completed' 
@@ -651,7 +649,23 @@ router.put("/reschedule/:id", async (req, res) => {
         day: "numeric",
         year: "numeric",
       });
-      const notificationMessage = `Your booking reschedule request was successful! Your new event schedule is set for ${formattedDate} at ${event_time}.`;
+
+      let formattedTime = event_time;
+      if (event_time) {
+        const [hoursStr, minutesStr] = event_time.split(":");
+        let hours = parseInt(hoursStr, 10);
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+
+        if (!minutesStr || minutesStr === "00") {
+          formattedTime = `${hours} ${ampm}`;
+        } else {
+          formattedTime = `${hours}:${minutesStr} ${ampm}`;
+        }
+      }
+
+      const notificationMessage = `Your booking reschedule request was successful! Your new event schedule is set for ${formattedDate} at ${formattedTime}.`;
 
       await createNotification(finalUserId, notificationMessage, bookingId);
     }
