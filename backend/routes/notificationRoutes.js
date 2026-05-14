@@ -1,10 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
-const { getNotifications } = require("../controllers/notificationController");
+const {
+  getNotifications,
+  deleteSelectedNotifications,
+} = require("../controllers/notificationController");
 const { verifyToken } = require("../middleware/authMiddleware");
 
 router.delete("/delete-selected", verifyToken, deleteSelectedNotifications);
+
+router.get("/:userId", getNotifications);
 
 router.get("/trigger-reminders", async (req, res) => {
   try {
@@ -48,10 +53,6 @@ router.get("/trigger-reminders", async (req, res) => {
   }
 });
 
-// 2. GET USER NOTIFICATIONS
-router.get("/:userId", getNotifications);
-
-// 3. MARK AS READ
 router.patch("/read/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
@@ -62,28 +63,6 @@ router.patch("/read/:userId", async (req, res) => {
     res.json({ message: "Notifications marked as read" });
   } catch (error) {
     res.status(500).json({ error: "Failed to update notifications" });
-  }
-});
-
-router.delete("/delete-selected", async (req, res) => {
-  const { notifIds } = req.body; // Expects an array layout: [1, 2, 3]
-
-  if (!notifIds || !Array.isArray(notifIds) || notifIds.length === 0) {
-    return res.status(400).json({ error: "No notification IDs provided." });
-  }
-
-  try {
-    await db.query("DELETE FROM notifications WHERE notif_id IN (?)", [
-      notifIds,
-    ]);
-
-    res.json({
-      success: true,
-      message: "Selected notifications successfully deleted.",
-    });
-  } catch (error) {
-    console.error("Database error during batch delete:", error);
-    res.status(500).json({ error: "Failed to delete selected notifications" });
   }
 });
 

@@ -66,4 +66,8 @@ const deleteSelectedNotifications = async (req, res) => {
   }
 };
 
-module.exports = { createNotification, getNotifications };
+module.exports = {
+  createNotification,
+  getNotifications,
+  deleteSelectedNotifications,
+};
