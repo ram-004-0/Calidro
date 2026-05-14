@@ -73,16 +73,16 @@ const getAdminNotifications = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT 
-        n.notif_id, 
-        u.username,
-        n.message AS text, 
-        n.related_id,
-        n.is_read,
-        DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
-       FROM notifications n
-       LEFT JOIN user u ON n.user_id = u.user_id
-       ORDER BY n.created_at DESC 
-       LIMIT 50`,
+    n.notif_id, 
+    u.username,
+    n.message AS text, 
+    n.is_read,
+    DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
+   FROM notifications n
+   LEFT JOIN user u ON n.user_id = u.user_id
+   WHERE n.type = 'admin' OR n.type = 'admin_alert' -- Only fetch admin-specific types
+   ORDER BY n.created_at DESC 
+   LIMIT 50`,
     );
 
     // console.log("DEBUG: Notifications sent to frontend:", rows);
