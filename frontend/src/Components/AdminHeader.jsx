@@ -3,6 +3,10 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { Bell, CircleUserRound, Headset, Menu, X, Users } from "lucide-react";
 import { useChat } from "../context/ChatContext";
 import AdminChat from "./AdminChat";
+import axios from "axios";
+
+const API_URL =
+  "https://calidro-production.up.railway.app" || "http://localhost:5000";
 
 const AdminHeader = () => {
   const navigate = useNavigate();
@@ -43,7 +47,7 @@ const AdminHeader = () => {
     if (selectedNotifs.length === adminNotifications.length) {
       setSelectedNotifs([]);
     } else {
-      const allIds = adminNotifications.map((n) => n.notif_id || n.id);
+      const allIds = adminNotifications.map((n) => n.notif_id);
       setSelectedNotifs(allIds);
     }
   };
