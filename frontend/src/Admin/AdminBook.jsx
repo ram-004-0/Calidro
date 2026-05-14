@@ -80,7 +80,7 @@ const AdminBook = () => {
       case "partial":
         return "bg-amber-400 text-black";
       case "refund":
-        return "bg-orange-600 text-white";
+        return "bg-red-500 text-white";
       default:
         return "bg-gray-200 text-gray-700";
     }
@@ -303,7 +303,7 @@ const AdminBook = () => {
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-2">
+                        <td className="py-4 px-2 text-center">
                           <span
                             className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap ${getStatusStyles(
                               b.bookingStatus,
