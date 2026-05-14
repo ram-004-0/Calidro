@@ -499,19 +499,41 @@ router.get("/test-cleanup-manual", async (req, res) => {
   try {
     const today = new Date().toISOString().split("T")[0];
 
-    // This is the exact query that will run in the cron job
-    const sql = `
+    const selectSql = `
+      SELECT booking_id, user_id, event_name 
+      FROM booking 
+      WHERE event_date < ? 
+      AND status IN ('pending', 'confirmed')
+    `;
+    const [bookingsToComplete] = await db.query(selectSql, [today]);
+
+    if (bookingsToComplete.length > 0) {
+      for (const booking of bookingsToComplete) {
+        const completionMsg = `Thank you! Your event "${booking.event_name}" has been marked as completed. We hope you enjoyed your time with Calidro! You can now leave a review or rating by visiting your bookings section.`;
+        await createNotification(
+          booking.user_id,
+          completionMsg,
+          booking.booking_id,
+        );
+      }
+      console.log(
+        `🔔 Generated ${bookingsToComplete.length} completion notifications.`,
+      );
+    }
+
+    // 3. Proceed with the status update operation in the database
+    const updateSql = `
       UPDATE booking 
       SET status = 'completed' 
       WHERE event_date < ? 
       AND status IN ('pending', 'confirmed')
     `;
-
-    const [result] = await db.query(sql, [today]);
+    const [result] = await db.query(updateSql, [today]);
 
     res.json({
       message: "Cleanup triggered successfully",
       rowsUpdated: result.affectedRows,
+      notificationsSent: bookingsToComplete.length,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
