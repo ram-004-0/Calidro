@@ -80,17 +80,28 @@ const AdminHeader = () => {
     }
   };
 
-  // Fetch Logic (Matches UserHeader pattern)
   useEffect(() => {
+    // Use an AbortController to cancel the request if the component unmounts
+    const controller = new AbortController();
+
     const fetchAdminNotifications = async () => {
       try {
         const token = localStorage.getItem("token");
-        // Adjust endpoint if admin notifications use a different path
+
+        if (!token) {
+          console.warn("AdminHeader: No token found, skipping fetch.");
+          return;
+        }
+
         const response = await axios.get(`${API_URL}/api/notifications/admin`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token.trim()}`,
+          },
+          signal: controller.signal,
         });
 
         const data = Array.isArray(response.data) ? response.data : [];
+
         setAdminNotifications(data);
 
         const hasUnread = data.some(
@@ -98,13 +109,26 @@ const AdminHeader = () => {
         );
         setHasAdminUnread(hasUnread);
       } catch (err) {
-        console.error("Error fetching admin notifications:", err);
+        if (axios.isCancel(err)) {
+          console.log("Request canceled:", err.message);
+        } else if (err.response && err.response.status === 401) {
+          console.error(
+            "Unauthorized: Session might be expired. Redirecting to login...",
+          );
+        } else {
+          console.error("Error fetching admin notifications:", err);
+        }
       }
     };
 
     fetchAdminNotifications();
+
     const interval = setInterval(fetchAdminNotifications, 5000);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
   }, [setAdminNotifications, setHasAdminUnread]);
 
   const baseStyle =

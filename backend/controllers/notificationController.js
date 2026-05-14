@@ -38,29 +38,27 @@ const getNotifications = async (req, res) => {
 
 const deleteSelectedNotifications = async (req, res) => {
   const { notifIds } = req.body;
-  const userId = req.user.id;
-  const userRole = req.user.role;
-
-  if (!notifIds || !Array.isArray(notifIds) || notifIds.length === 0) {
-    return res.status(400).json({ message: "No notification IDs provided." });
-  }
+  const { id: requesterId, role } = req.user;
 
   try {
-    // If admin, delete without checking user_id. If user, only delete their own.
-    const query =
-      userRole === "admin"
-        ? "DELETE FROM notifications WHERE notif_id IN (?)"
-        : "DELETE FROM notifications WHERE notif_id IN (?) AND user_id = ?";
+    let query;
+    let params;
 
-    const params = userRole === "admin" ? [notifIds] : [notifIds, userId];
+    if (role === "admin") {
+      query = "DELETE FROM notifications WHERE notif_id IN (?)";
+      params = [notifIds];
+    } else {
+      query = "DELETE FROM notifications WHERE notif_id IN (?) AND user_id = ?";
+      params = [notifIds, requesterId];
+    }
 
     await db.query(query, params);
-    res.status(200).json({ message: "Deleted successfully" });
+    res.json({ message: "Deleted" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: error.message });
   }
 };
+
 const getAdminNotifications = async (req, res) => {
   try {
     const [rows] = await db.query(
