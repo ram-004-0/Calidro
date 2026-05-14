@@ -508,19 +508,22 @@ router.get("/test-cleanup-manual", async (req, res) => {
     const [bookingsToComplete] = await db.query(selectSql, [today]);
 
     if (bookingsToComplete.length > 0) {
-      for (const booking of bookingsToComplete) {
+      const notificationPromises = bookingsToComplete.map((booking) => {
         const completionMsg = `Thank you! Your event "${booking.event_name}" has been marked as completed. We hope you enjoyed your time with Calidro! You can now leave a review or rating by visiting your bookings section.`;
-        await createNotification(
+        return createNotification(
           booking.user_id,
           completionMsg,
           booking.booking_id,
         );
-      }
+      });
+
+      // This fires all insert queries at the exact same time
+      await Promise.all(notificationPromises);
+
       console.log(
         `🔔 Generated ${bookingsToComplete.length} completion notifications.`,
       );
     }
-
     // 3. Proceed with the status update operation in the database
     const updateSql = `
       UPDATE booking 
