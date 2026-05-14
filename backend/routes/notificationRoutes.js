@@ -63,14 +63,25 @@ router.patch("/read/:userId", async (req, res) => {
   }
 });
 
-// 4. CLEAR ALL
-router.delete("/clear/:userId", async (req, res) => {
-  const { userId } = req.params;
+router.delete("/delete-selected", async (req, res) => {
+  const { notifIds } = req.body; // Expects an array layout: [1, 2, 3]
+
+  if (!notifIds || !Array.isArray(notifIds) || notifIds.length === 0) {
+    return res.status(400).json({ error: "No notification IDs provided." });
+  }
+
   try {
-    await db.query("DELETE FROM notifications WHERE user_id = ?", [userId]);
-    res.json({ message: "Notifications cleared" });
+    await db.query("DELETE FROM notifications WHERE notif_id IN (?)", [
+      notifIds,
+    ]);
+
+    res.json({
+      success: true,
+      message: "Selected notifications successfully deleted.",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to clear notifications" });
+    console.error("Database error during batch delete:", error);
+    res.status(500).json({ error: "Failed to delete selected notifications" });
   }
 });
 

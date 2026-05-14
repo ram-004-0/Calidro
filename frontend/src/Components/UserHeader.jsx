@@ -64,20 +64,29 @@ const UserHeader = () => {
     try {
       const token = localStorage.getItem("token");
 
+      // Send selected notification IDs to your batch-delete endpoint
+      await axios.delete(`${API_URL}/api/notifications/delete-selected`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { notifIds: selectedNotifs },
+      });
+
+      // Optimistic state change updates UI immediately
       const remainingNotifs = userNotifications.filter(
         (n) => !selectedNotifs.includes(n.notif_id),
       );
 
       setUserNotifications(remainingNotifs);
       setSelectedNotifs([]);
+
       const hasUnread = remainingNotifs.some(
         (n) => n.is_read === 0 || n.is_read === false,
       );
       setHasAdminUnread(hasUnread);
 
-      alert("Selected notifications deleted successfully!");
+      alert("Notifications updated successfully!");
     } catch (err) {
-      console.error("Failed to delete notifications", err);
+      console.error("Failed to delete notifications from database:", err);
+      alert("Failed to sync deletion with server.");
     }
   };
 
