@@ -583,7 +583,13 @@ router.put("/reschedule/:id", async (req, res) => {
     let finalUserId = userId || currentBooking[0].user_id;
 
     if (finalUserId) {
-      const notificationMessage = `Your booking for ${event_date} has been successfully rescheduled.`;
+      const formattedDate = new Date(event_date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      const notificationMessage = `Your booking reschedule request was successful! Your new event schedule is set for ${formattedDate} at ${event_time}.`;
+
       await createNotification(finalUserId, notificationMessage, bookingId);
     }
 
