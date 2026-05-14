@@ -38,7 +38,12 @@ const getNotifications = async (req, res) => {
 
 const deleteSelectedNotifications = async (req, res) => {
   const { notifIds } = req.body;
-  const { id: requesterId, role } = req.user;
+
+  const { user_id, role } = req.user;
+
+  if (!notifIds || !Array.isArray(notifIds) || notifIds.length === 0) {
+    return res.status(400).json({ message: "No notification IDs provided." });
+  }
 
   try {
     let query;
@@ -49,13 +54,18 @@ const deleteSelectedNotifications = async (req, res) => {
       params = [notifIds];
     } else {
       query = "DELETE FROM notifications WHERE notif_id IN (?) AND user_id = ?";
-      params = [notifIds, requesterId];
+      params = [notifIds, user_id];
     }
 
-    await db.query(query, params);
-    res.json({ message: "Deleted" });
+    const [result] = await db.query(query, params);
+
+    res.status(200).json({
+      message: "Notifications deleted successfully",
+      deletedCount: result.affectedRows,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Database error during batch delete:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
