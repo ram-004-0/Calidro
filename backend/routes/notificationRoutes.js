@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 const { getNotifications } = require("../controllers/notificationController");
+const { verifyToken } = require("../middleware/authMiddleware");
 
-// 1. TRIGGER REMINDERS (Check for upcoming events)
+router.delete("/delete-selected", verifyToken, deleteSelectedNotifications);
+
 router.get("/trigger-reminders", async (req, res) => {
   try {
     const [upcoming] = await db.query(`

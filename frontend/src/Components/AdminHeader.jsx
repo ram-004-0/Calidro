@@ -10,7 +10,6 @@ const AdminHeader = () => {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
 
-  // Pull global state from ChatContext
   const {
     setIsChatOpen,
     isChatOpen,
@@ -23,21 +22,90 @@ const AdminHeader = () => {
     joinSupportRoom,
   } = useChat();
 
-  const baseStyle =
-    "block rounded-2xl px-3 py-2 text-base uppercase font-medium whitespace-nowrap transition-colors";
-  const activeStyle = "bg-white/80 text-[#4a3733]";
-  const inactiveStyle = "hover:bg-white/80 hover:text-[#4a3733]";
-
-  // --- NEW: Toggle Notification Logic ---
   const handleToggleNotifications = () => {
     setIsNotifyOpen(!isNotifyOpen);
-    setIsAccountOpen(false); // Close account menu if notifications are opened
-
-    // Clear the unread red dot when the panel is opened
+    setIsAccountOpen(false);
     if (!isNotifyOpen) {
       setHasAdminUnread(false);
     }
   };
+
+  const handleSelectNotif = (notifId) => {
+    if (selectedNotifs.includes(notifId)) {
+      setSelectedNotifs(selectedNotifs.filter((id) => id !== notifId));
+    } else {
+      setSelectedNotifs([...selectedNotifs, notifId]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedNotifs.length === adminNotifications.length) {
+      setSelectedNotifs([]);
+    } else {
+      const allIds = adminNotifications.map((n) => n.notif_id || n.id);
+      setSelectedNotifs(allIds);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedNotifs.length === 0) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/api/notifications/delete-selected`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { notifIds: selectedNotifs },
+      });
+
+      const remainingNotifs = adminNotifications.filter(
+        (n) => !selectedNotifs.includes(n.notif_id || n.id),
+      );
+
+      setAdminNotifications(remainingNotifs);
+      setSelectedNotifs([]);
+
+      const hasUnread = remainingNotifs.some(
+        (n) => n.is_read === 0 || n.is_read === false,
+      );
+      setHasAdminUnread(hasUnread);
+
+      alert("Notifications updated successfully!");
+    } catch (err) {
+      console.error("Failed to delete notifications:", err);
+      alert("Failed to sync deletion with server.");
+    }
+  };
+
+  // Fetch Logic (Matches UserHeader pattern)
+  useEffect(() => {
+    const fetchAdminNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        // Adjust endpoint if admin notifications use a different path
+        const response = await axios.get(`${API_URL}/api/notifications/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = Array.isArray(response.data) ? response.data : [];
+        setAdminNotifications(data);
+
+        const hasUnread = data.some(
+          (n) => n.is_read === 0 || n.is_read === false,
+        );
+        setHasAdminUnread(hasUnread);
+      } catch (err) {
+        console.error("Error fetching admin notifications:", err);
+      }
+    };
+
+    fetchAdminNotifications();
+    const interval = setInterval(fetchAdminNotifications, 5000);
+    return () => clearInterval(interval);
+  }, [setAdminNotifications, setHasAdminUnread]);
+
+  const baseStyle =
+    "block rounded-2xl px-3 py-2 text-base uppercase font-medium whitespace-nowrap transition-colors";
+  const activeStyle = "bg-white/80 text-[#4a3733]";
+  const inactiveStyle = "hover:bg-white/80 hover:text-[#4a3733]";
 
   const navLinks = [
     { path: "/admin-overview", label: "overview" },
@@ -70,16 +138,13 @@ const AdminHeader = () => {
           </div>
 
           <div className="flex items-center space-x-4 md:space-x-6">
-            {/* 1. Chat/Headset Logic */}
             <div className="relative">
               <Headset
                 onClick={() => setIsChatOpen(!isChatOpen)}
                 className={`cursor-pointer transition-transform hover:scale-110 ${isChatOpen ? "text-white" : ""}`}
               />
-              {/* Note: In ChatContext, ensure you have a separate check for Chat unread if desired */}
             </div>
 
-            {/* 2. Notification Bell (Exactly like UserHeader) */}
             <div className="relative">
               <div
                 className="relative cursor-pointer transition-transform hover:scale-110"
@@ -92,29 +157,67 @@ const AdminHeader = () => {
               </div>
 
               {isNotifyOpen && (
-                <div className="absolute right-0 mt-4 w-64 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
-                  <div className="flex justify-between items-center border-b pb-2 mb-2">
-                    <h3 className="font-bold text-sm uppercase tracking-wider">
-                      Notifications
-                    </h3>
-                    <button
-                      onClick={() => setAdminNotifications([])}
-                      className="text-[10px] text-gray-400 hover:text-red-500 font-bold"
-                    >
-                      CLEAR ALL
-                    </button>
+                <div className="absolute right-0 mt-4 w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
+                  <div className="flex flex-col gap-2 border-b pb-2 mb-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-sm uppercase tracking-wider">
+                        Notifications
+                      </h3>
+                      {selectedNotifs.length > 0 && (
+                        <button
+                          onClick={handleDeleteSelected}
+                          className="text-[10px] text-red-500 hover:text-red-700 font-bold flex items-center gap-1 bg-red-50 px-2 py-1 rounded"
+                        >
+                          <Trash2 size={10} /> DELETE ({selectedNotifs.length})
+                        </button>
+                      )}
+                    </div>
+                    {adminNotifications.length > 0 && (
+                      <div className="flex items-center gap-2 pt-1 text-[11px] text-gray-500">
+                        <input
+                          type="checkbox"
+                          checked={
+                            adminNotifications.length > 0 &&
+                            selectedNotifs.length === adminNotifications.length
+                          }
+                          onChange={handleSelectAll}
+                          className="accent-[#433633] cursor-pointer"
+                        />
+                        <span>Select All</span>
+                      </div>
+                    )}
                   </div>
+
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
                     {adminNotifications.length > 0 ? (
                       adminNotifications.map((n) => (
                         <div
-                          key={n.id}
-                          className="text-xs hover:bg-gray-50 p-2 rounded-lg cursor-default transition border-b border-gray-50 last:border-0"
+                          key={n.notif_id || n.id}
+                          className={`p-2 rounded-xl border-b last:border-0 transition flex items-start gap-2.5 ${
+                            n.is_read ? "bg-white" : "bg-blue-50/40"
+                          }`}
                         >
-                          <p className="font-medium">{n.text}</p>
-                          <p className="text-[10px] text-gray-400 mt-1">
-                            {n.time}
-                          </p>
+                          <input
+                            type="checkbox"
+                            checked={selectedNotifs.includes(
+                              n.notif_id || n.id,
+                            )}
+                            onChange={() =>
+                              handleSelectNotif(n.notif_id || n.id)
+                            }
+                            className="mt-1 accent-[#433633] cursor-pointer"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-[11px] leading-tight">
+                              {n.message || n.text}
+                            </p>
+                            <p className="text-[9px] text-gray-400 mt-1">
+                              {n.time ||
+                                (n.created_at
+                                  ? new Date(n.created_at).toLocaleDateString()
+                                  : "")}
+                            </p>
+                          </div>
                         </div>
                       ))
                     ) : (
@@ -127,7 +230,6 @@ const AdminHeader = () => {
               )}
             </div>
 
-            {/* 3. Account Settings */}
             <div className="relative">
               <CircleUserRound
                 className="cursor-pointer transition-transform hover:scale-110"
@@ -152,7 +254,6 @@ const AdminHeader = () => {
               )}
             </div>
 
-            {/* Mobile Toggle */}
             <button
               className="lg:hidden p-1 text-[#f4dfba]"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -162,7 +263,6 @@ const AdminHeader = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Drawer */}
         {isMobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 w-full bg-[#433633] border-t border-white/10 p-5 space-y-4 shadow-2xl z-50">
             {navLinks.map((link) => (
