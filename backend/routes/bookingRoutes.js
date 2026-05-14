@@ -695,6 +695,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
 //PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
+  // Always send 200 OK back to PayMongo immediately to prevent retries
   res.status(200).send("ok");
 
   try {
@@ -702,10 +703,7 @@ router.post("/webhook/paymongo", async (req, res) => {
     const resource = payload.data?.attributes?.data || payload.data;
     const attr = resource?.attributes || payload.data?.attributes;
 
-    if (!attr) {
-      console.log("⚠️ Webhook Error: Could not locate attributes in payload");
-      return;
-    }
+    if (!attr) return;
 
     const bookingId =
       attr.metadata?.bookingId ||
@@ -720,15 +718,22 @@ router.post("/webhook/paymongo", async (req, res) => {
 
     const paymentAmount = Number(amountInCents) / 100;
 
-    console.log(
-      `[WEBHOOK] Attempting Update: ID ${bookingId} | Amt ₱${paymentAmount}`,
+    if (!bookingId || paymentAmount <= 0) return;
+
+    // --- STEP 1: FETCH BOOKING DETAILS ---
+    // We NEED this to know the user_id and event_name for the notification!
+    const [rows] = await db.query(
+      "SELECT user_id, event_name, total_amount, amount_paid FROM booking WHERE booking_id = ?",
+      [bookingId],
     );
 
-    if (!bookingId || paymentAmount <= 0) {
-      console.log("⚠️ Webhook ignored: ID is still undefined or Amount is 0.");
+    if (rows.length === 0) {
+      console.log("⚠️ Webhook received for non-existent booking:", bookingId);
       return;
     }
+    const booking = rows[0];
 
+    // --- STEP 2: PERFORM THE UPDATE ---
     const updateSql = `
       UPDATE booking 
       SET 
@@ -744,20 +749,27 @@ router.post("/webhook/paymongo", async (req, res) => {
       WHERE booking_id = ?
     `;
 
-    const [result] = await db.query(updateSql, [
+    await db.query(updateSql, [
       paymentAmount,
       paymentAmount,
       paymentAmount,
       bookingId,
     ]);
 
-    if (result.affectedRows > 0) {
-      console.log(
-        `✅ SUCCESS: Booking ${bookingId} updated with ₱${paymentAmount}`,
-      );
-    } else {
-      console.log(`❌ DB ERROR: Booking ${bookingId} not found in database.`);
-    }
+    // --- STEP 3: CALCULATE STATUS FOR NOTIFICATION ---
+    const newTotalPaid = parseFloat(booking.amount_paid) + paymentAmount;
+    const isFullyPaid = booking.total_amount - newTotalPaid <= 10;
+
+    // --- STEP 4: SEND THE NOTIFICATION ---
+    let notificationMsg = isFullyPaid
+      ? `Payment Successful! Your booking for "${booking.event_name}" is now fully paid and confirmed.`
+      : `We've received your payment of ₱${paymentAmount.toLocaleString()} for "${booking.event_name}". Your updated balance is reflected in your bookings.`;
+
+    await createNotification(booking.user_id, notificationMsg, bookingId);
+
+    console.log(
+      `✅ SUCCESS: Notification sent to User ${booking.user_id} for Booking ${bookingId}`,
+    );
   } catch (err) {
     console.error("🔥 WEBHOOK CRASH:", err.message);
   }
