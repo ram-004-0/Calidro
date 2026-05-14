@@ -347,14 +347,14 @@ app.post("/api/bookings/checkout-balance", async (req, res) => {
   res.json({ message: "Hardcoded route is working!" });
 });
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
-
 app.use((req, res) => {
   console.log(`[404 ERROR] Path not found: ${req.method} ${req.originalUrl}`);
   res
     .status(404)
     .json({ error: `Route ${req.method} ${req.originalUrl} not found.` });
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });

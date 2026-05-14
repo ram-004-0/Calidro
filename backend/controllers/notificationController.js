@@ -18,12 +18,14 @@ const createNotification = async (userId, message, bookingId) => {
 };
 
 // Logic for fetching user-specific alerts
+// Logic for fetching user-specific alerts
 const getNotifications = async (req, res) => {
   try {
     const { userId } = req.params;
     const [rows] = await db.query(
       `SELECT notif_id, message AS text, 
-       DATE_FORMAT(created_at, '%b %d, %h:%i %p') AS time,
+       -- 🕒 CONVERT FROM UTC TO PHILIPPINES TIME (+08:00) BEFORE FORMATTING
+       DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time,
        is_read 
        FROM notifications 
        WHERE user_id = ? 
