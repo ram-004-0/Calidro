@@ -110,7 +110,7 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       year: "numeric",
     });
     //confirmation notif
-    const successMsg = `Success! Your booking for "${eventName}" on ${formattedDate} at ${time} has been confirmed. Your payment was processed securely!`;
+    const successMsg = `Your booking for "${eventName}" on ${formattedDate} at ${time} has been confirmed. Your payment was processed securely!`;
     await createNotification(userId, successMsg, bookingId);
 
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
