@@ -7,12 +7,8 @@ const createNotification = async (
   type = "user",
 ) => {
   try {
-    const query = `
-      INSERT INTO notifications (user_id, message, type, related_id) 
-      VALUES (?, ?, ?, ?)
-    `;
+    const query = `INSERT INTO notifications (user_id, message, type, related_id) VALUES (?, ?, ?, ?)`;
     await db.query(query, [userId, message, type, bookingId]);
-
     console.log(`Notification created as type: ${type}`);
   } catch (err) {
     console.error("Error creating notification:", err);
@@ -75,17 +71,12 @@ const deleteSelectedNotifications = async (req, res) => {
 const getAdminNotifications = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT 
-        n.notif_id, 
-        u.username,
-        n.message AS text, 
-        n.is_read,
-        DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
+      `SELECT n.notif_id, u.username, n.message AS text, n.is_read,
+       DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
        FROM notifications n
        LEFT JOIN user u ON n.user_id = u.user_id
        WHERE n.type = 'admin' 
-       ORDER BY n.created_at DESC 
-       LIMIT 50`,
+       ORDER BY n.created_at DESC LIMIT 50`,
     );
     res.json(rows);
   } catch (error) {
