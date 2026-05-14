@@ -695,7 +695,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
 //PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
-  // Always send 200 OK back to PayMongo immediately to prevent retries
+  // 1. Always acknowledge PayMongo first
   res.status(200).send("ok");
 
   try {
@@ -718,22 +718,13 @@ router.post("/webhook/paymongo", async (req, res) => {
 
     const paymentAmount = Number(amountInCents) / 100;
 
-    if (!bookingId || paymentAmount <= 0) return;
-
-    // --- STEP 1: FETCH BOOKING DETAILS ---
-    // We NEED this to know the user_id and event_name for the notification!
-    const [rows] = await db.query(
-      "SELECT user_id, event_name, total_amount, amount_paid FROM booking WHERE booking_id = ?",
-      [bookingId],
-    );
-
-    if (rows.length === 0) {
-      console.log("⚠️ Webhook received for non-existent booking:", bookingId);
+    if (!bookingId || paymentAmount <= 0) {
+      console.log("⚠️ Webhook: Invalid ID or Amount.");
       return;
     }
-    const booking = rows[0];
 
-    // --- STEP 2: PERFORM THE UPDATE ---
+    // --- STEP 1: UPDATE THE DATABASE ---
+    // We do this first so the money is recorded immediately.
     const updateSql = `
       UPDATE booking 
       SET 
@@ -755,21 +746,37 @@ router.post("/webhook/paymongo", async (req, res) => {
       paymentAmount,
       bookingId,
     ]);
+    console.log(`💰 DB Updated for Booking ${bookingId}`);
 
-    // --- STEP 3: CALCULATE STATUS FOR NOTIFICATION ---
-    const newTotalPaid = parseFloat(booking.amount_paid) + paymentAmount;
-    const isFullyPaid = booking.total_amount - newTotalPaid <= 10;
-
-    // --- STEP 4: SEND THE NOTIFICATION ---
-    let notificationMsg = isFullyPaid
-      ? `Payment Successful! Your booking for "${booking.event_name}" is now fully paid and confirmed.`
-      : `We've received your payment of ₱${paymentAmount.toLocaleString()} for "${booking.event_name}". Your updated balance is reflected in your bookings.`;
-
-    await createNotification(booking.user_id, notificationMsg, bookingId);
-
-    console.log(
-      `✅ SUCCESS: Notification sent to User ${booking.user_id} for Booking ${bookingId}`,
+    // --- STEP 2: FETCH FRESH DATA FOR NOTIFICATION ---
+    // We fetch the data AFTER the update so we know exactly what the status is NOW.
+    const [freshRows] = await db.query(
+      "SELECT user_id, event_name, status, total_amount, amount_paid FROM booking WHERE booking_id = ?",
+      [bookingId],
     );
+
+    if (freshRows.length === 0) return;
+    const freshBooking = freshRows[0];
+
+    // --- STEP 3: PREPARE THE MESSAGE ---
+    const isNowConfirmed = freshBooking.status === "confirmed";
+
+    let notificationMsg = isNowConfirmed
+      ? `Payment Successful! Your booking for "${freshBooking.event_name}" is now fully paid and confirmed.`
+      : `Payment received: ₱${paymentAmount.toLocaleString()} for "${freshBooking.event_name}". Your balance has been updated.`;
+
+    // --- STEP 4: SEND NOTIFICATION ---
+    // I wrapped this in its own try/catch so if notification fails, it doesn't crash the webhook
+    try {
+      await createNotification(
+        freshBooking.user_id,
+        notificationMsg,
+        bookingId,
+      );
+      console.log(`🔔 Notification Sent to User ${freshBooking.user_id}`);
+    } catch (notifErr) {
+      console.error("❌ Notification Error:", notifErr.message);
+    }
   } catch (err) {
     console.error("🔥 WEBHOOK CRASH:", err.message);
   }
