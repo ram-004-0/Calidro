@@ -284,11 +284,12 @@ const UserHeader = () => {
                               </p>
                               <div className="flex justify-between items-center mt-1">
                                 <p className="text-[9px] text-gray-400">
-                                  {n.created_at
-                                    ? new Date(
-                                        n.created_at,
-                                      ).toLocaleDateString()
-                                    : n.time}
+                                  {n.time ||
+                                    (n.created_at
+                                      ? new Date(
+                                          n.created_at,
+                                        ).toLocaleDateString()
+                                      : "")}
                                 </p>
                                 {(n.message?.includes("balance") ||
                                   n.text?.includes("balance")) && (
