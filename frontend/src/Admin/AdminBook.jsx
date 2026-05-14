@@ -9,28 +9,51 @@ const AdminBook = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
-  // HANDLE RESPONSIVENESS
+  const fetchBookings = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/bookings/all-bookings`);
+      if (!response.ok) throw new Error("Network response was not ok");
+      const data = await response.json();
+      setBookings(data);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    }
+  };
+
   useEffect(() => {
+    fetchBookings();
+
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // FETCH DATA FROM BACKEND
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/bookings/all-bookings`);
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data = await response.json();
-        setBookings(data);
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-      }
-    };
+  const handlePaymentUpdate = async (bookingId, newType) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/bookings/${bookingId}/update-payment-type`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentType: newType }),
+        },
+      );
 
-    fetchBookings();
-  }, []);
+      if (response.ok) {
+        await fetchBookings();
+
+        const msg =
+          newType === "refund"
+            ? "Successfully Refunded & Cancelled"
+            : `Updated to ${newType}`;
+        alert(msg);
+      } else {
+        alert("Failed to update payment type");
+      }
+    } catch (error) {
+      console.error("Error updating payment type:", error);
+    }
+  };
 
   const getStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
@@ -64,32 +87,6 @@ const AdminBook = () => {
     if (paid >= total) return "bg-emerald-500 text-white";
     if (paid > 0) return "bg-amber-400 text-black";
     return "bg-red-500 text-white";
-  };
-
-  const handlePaymentUpdate = async (bookingId, newType) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/bookings/${bookingId}/update-payment-type`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentType: newType }),
-        },
-      );
-
-      if (response.ok) {
-        setBookings((prev) =>
-          prev.map((b) =>
-            b.booking_id === bookingId ? { ...b, paymentType: newType } : b,
-          ),
-        );
-        alert(`Payment type updated to ${newType}`);
-      } else {
-        alert("Failed to update payment type");
-      }
-    } catch (error) {
-      console.error("Error updating payment type:", error);
-    }
   };
 
   return (
@@ -250,34 +247,54 @@ const AdminBook = () => {
                           </button>
                         </td>
                         <td className="py-4 px-2">
-                          <select
-                            value={b.paymentType || "partial"}
-                            onChange={(e) =>
-                              handlePaymentUpdate(b.booking_id, e.target.value)
-                            }
-                            className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer outline-none border-none ${getPaymentTypeStyles(
-                              b.paymentType,
-                            )}`}
-                          >
-                            <option
-                              value="partial"
-                              className="bg-white text-black"
+                          {/* 1. If it's already refunded, don't show a dropdown at all, just a static badge */}
+                          {b.paymentType?.toLowerCase() === "refund" ? (
+                            <span
+                              className={`${getPaymentTypeStyles("refund")} rounded-full px-3 py-1 text-[10px] font-bold uppercase`}
                             >
-                              Partial
-                            </option>
-                            <option
-                              value="full"
-                              className="bg-white text-black"
+                              Refunded
+                            </span>
+                          ) : (
+                            /* 2. Otherwise, show the select menu with conditional options */
+                            <select
+                              value={b.paymentType || "partial"}
+                              onChange={(e) =>
+                                handlePaymentUpdate(
+                                  b.booking_id,
+                                  e.target.value,
+                                )
+                              }
+                              className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer outline-none border-none ${getPaymentTypeStyles(b.paymentType)}`}
                             >
-                              Full
-                            </option>
-                            <option
-                              value="refund"
-                              className="bg-white text-black"
-                            >
-                              Refund
-                            </option>
-                          </select>
+                              {/* 3. Only show "Partial" if the current status IS partial */}
+                              {b.paymentType?.toLowerCase() === "partial" && (
+                                <option
+                                  value="partial"
+                                  className="bg-white text-black"
+                                >
+                                  Partial
+                                </option>
+                              )}
+
+                              {/* 4. "Full" is usually always an option unless already refunded */}
+                              <option
+                                value="full"
+                                className="bg-white text-black"
+                              >
+                                Full
+                              </option>
+
+                              {/* 5. "Refund" only shows if they paid enough (and aren't already refunded) */}
+                              {b.paid > 5000 && (
+                                <option
+                                  value="refund"
+                                  className="bg-white text-black"
+                                >
+                                  Refund
+                                </option>
+                              )}
+                            </select>
+                          )}
                         </td>
                         <td className="py-4 px-2">
                           <span

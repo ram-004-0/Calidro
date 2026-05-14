@@ -787,24 +787,39 @@ router.put("/:id/update-payment-type", async (req, res) => {
   const { paymentType } = req.body;
 
   try {
-    await db.query("UPDATE booking SET payment_type = ? WHERE booking_id = ?", [
-      paymentType,
-      id,
-    ]);
+    const [rows] = await db.query(
+      "SELECT user_id, event_name, amount_paid FROM booking WHERE booking_id = ?",
+      [id],
+    );
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Booking not found" });
+    const booking = rows[0];
+
+    let updateSql;
+    let queryParams;
 
     if (paymentType === "refund") {
-      const refundMsg = `Your payment for "${booking.event_name}" has been successfully refunded.`;
-
-      try {
-        await createNotification(booking.user_id, refundMsg, id);
-        console.log(`✅ Refund notification sent to User ${booking.user_id}`);
-      } catch (notifErr) {
-        console.error("❌ Notification failed to send:", notifErr.message);
-      }
+      // Logic: Update type to refund AND status to cancelled
+      updateSql =
+        "UPDATE booking SET payment_type = ?, status = 'cancelled' WHERE booking_id = ?";
+      queryParams = [paymentType, id];
+    } else {
+      updateSql = "UPDATE booking SET payment_type = ? WHERE booking_id = ?";
+      queryParams = [paymentType, id];
     }
 
-    res.json({ success: true, message: "Payment type updated" });
+    await db.query(updateSql, queryParams);
+
+    // 🔔 Notification Logic
+    if (paymentType === "refund") {
+      const refundMsg = `Your payment for "${booking.event_name}" has been successfully refunded. Your booking status is now: Cancelled.`;
+      await createNotification(booking.user_id, refundMsg, id);
+    }
+
+    res.json({ success: true, message: "Booking updated successfully" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
