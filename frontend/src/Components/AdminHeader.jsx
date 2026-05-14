@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Bell, CircleUserRound, Headset, Menu, X, Users } from "lucide-react";
+import {
+  Bell,
+  CircleUserRound,
+  Headset,
+  Menu,
+  X,
+  Users,
+  Trash2,
+} from "lucide-react";
 import { useChat } from "../context/ChatContext";
 import AdminChat from "./AdminChat";
 import axios from "axios";
@@ -81,55 +89,47 @@ const AdminHeader = () => {
   };
 
   useEffect(() => {
-    // Use an AbortController to cancel the request if the component unmounts
     const controller = new AbortController();
 
     const fetchAdminNotifications = async () => {
       try {
         const token = localStorage.getItem("token");
-
-        if (!token) {
-          console.warn("AdminHeader: No token found, skipping fetch.");
-          return;
-        }
+        if (!token) return;
 
         const response = await axios.get(`${API_URL}/api/notifications/admin`, {
-          headers: {
-            Authorization: `Bearer ${token.trim()}`,
-          },
+          headers: { Authorization: `Bearer ${token.trim()}` },
           signal: controller.signal,
         });
 
         const data = Array.isArray(response.data) ? response.data : [];
 
-        setAdminNotifications(data);
+        // Add checks before calling the functions
+        if (typeof setAdminNotifications === "function") {
+          setAdminNotifications(data);
+        }
 
-        const hasUnread = data.some(
-          (n) => n.is_read === 0 || n.is_read === false,
-        );
-        setHasAdminUnread(hasUnread);
-      } catch (err) {
-        if (axios.isCancel(err)) {
-          console.log("Request canceled:", err.message);
-        } else if (err.response && err.response.status === 401) {
-          console.error(
-            "Unauthorized: Session might be expired. Redirecting to login...",
+        if (typeof setHasAdminUnread === "function") {
+          const hasUnread = data.some(
+            (n) => n.is_read === 0 || n.is_read === false,
           );
-        } else {
+          setHasAdminUnread(hasUnread);
+        }
+      } catch (err) {
+        if (!axios.isCancel(err)) {
           console.error("Error fetching admin notifications:", err);
         }
       }
     };
 
     fetchAdminNotifications();
-
     const interval = setInterval(fetchAdminNotifications, 5000);
 
     return () => {
       clearInterval(interval);
       controller.abort();
     };
-  }, [setAdminNotifications, setHasAdminUnread]);
+    // Remove the setters from here to prevent unnecessary re-runs
+  }, []);
 
   const baseStyle =
     "block rounded-2xl px-3 py-2 text-base uppercase font-medium whitespace-nowrap transition-colors";
@@ -221,35 +221,28 @@ const AdminHeader = () => {
                     {adminNotifications.length > 0 ? (
                       adminNotifications.map((n) => (
                         <div
-                          key={n.notif_id || n.id}
+                          key={n.notif_id}
                           className={`p-2 rounded-xl border-b last:border-0 transition flex items-start gap-2.5 ${
                             n.is_read ? "bg-white" : "bg-blue-50/40"
                           }`}
                         >
                           <input
                             type="checkbox"
-                            checked={selectedNotifs.includes(
-                              n.notif_id || n.id,
-                            )}
-                            onChange={() =>
-                              handleSelectNotif(n.notif_id || n.id)
-                            }
+                            checked={selectedNotifs.includes(n.notif_id)}
+                            onChange={() => handleSelectNotif(n.notif_id)}
                             className="mt-1 accent-[#433633] cursor-pointer"
                           />
                           <div className="flex-1">
-                            {/* USER NAME BADGE */}
                             <div className="flex items-center gap-1.5 mb-0.5">
                               <span className="bg-[#433633] text-white text-[8px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">
                                 {n.username || "System"}
                               </span>
                             </div>
 
-                            {/* MESSAGE TEXT */}
                             <p className="font-medium text-[11px] leading-tight text-gray-800">
                               {n.text || n.message}
                             </p>
 
-                            {/* TIMESTAMP */}
                             <p className="text-[9px] text-gray-400 mt-1">
                               {n.time ||
                                 (n.created_at
