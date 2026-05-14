@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Bell, CircleUserRound, Headset, Menu, X } from "lucide-react";
+import { Bell, CircleUserRound, Headset, Menu, X, Trash2 } from "lucide-react";
 import { useChat } from "../context/ChatContext";
 import UserChatbot from "./UserChatbot";
 import axios from "axios";
