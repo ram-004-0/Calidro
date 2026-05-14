@@ -1,6 +1,5 @@
 const db = require("../config/db");
 
-// Internal helper for other controllers (e.g., when a booking is confirmed)
 const createNotification = async (userId, message, bookingId) => {
   console.log("🔔 NOTIFICATION TRIGGERED for User:", userId);
   try {
@@ -17,8 +16,6 @@ const createNotification = async (userId, message, bookingId) => {
   }
 };
 
-// Logic for fetching user-specific alerts
-// Logic for fetching user-specific alerts
 const getNotifications = async (req, res) => {
   try {
     const { userId } = req.params;

@@ -47,7 +47,6 @@ const formatTimeTo24H = (timeStr) => {
 };
 
 //testing langch
-
 router.post("/test-post", (req, res) => {
   res.json({ message: "POST matching is working!" });
 });
@@ -72,7 +71,6 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       payment_methods,
     } = req.body;
 
-    // 1. ROBUST GUEST CHECK: Check every possible name the frontend might send
     const rawGuests =
       req.body.noOfGuests || req.body.guests || req.body.guestCount || 0;
     const finalGuestCount = parseInt(rawGuests, 10);
@@ -106,8 +104,15 @@ router.post("/create-booking-and-checkout", async (req, res) => {
 
     const result = await query("INSERT INTO booking SET ?", [bookingData]);
     const bookingId = result.insertId;
+    const formattedDate = new Date(eventDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    //confirmation notif
+    const successMsg = `Success! Your booking for "${eventName}" on ${formattedDate} at ${time} has been confirmed. Your payment was processed securely!`;
+    await createNotification(userId, successMsg, bookingId);
 
-    // PayMongo Integration
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     const authHeader = `Basic ${Buffer.from(secretKey + ":").toString("base64")}`;
 
