@@ -656,7 +656,7 @@ router.put("/reschedule/:id", async (req, res) => {
         let hours = parseInt(hoursStr, 10);
         const ampm = hours >= 12 ? "PM" : "AM";
         hours = hours % 12;
-        hours = hours ? hours : 12;
+        hours = hours ? hours : 11;
 
         if (!minutesStr || minutesStr === "00") {
           formattedTime = `${hours} ${ampm}`;
