@@ -50,7 +50,6 @@ const formatTimeTo24H = (timeStr) => {
 router.post("/test-post", (req, res) => {
   res.json({ message: "POST matching is working!" });
 });
-
 // 1. Create New Booking and Launch PayMongo
 router.post("/create-booking-and-checkout", async (req, res) => {
   try {
@@ -157,12 +156,10 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       },
     );
 
-    res
-      .status(200)
-      .json({
-        bookingId,
-        checkout_url: paymongoResponse.data.data.attributes.checkout_url,
-      });
+    res.status(200).json({
+      bookingId,
+      checkout_url: paymongoResponse.data.data.attributes.checkout_url,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -241,7 +238,6 @@ router.get("/all-bookings", async (req, res) => {
   }
 });
 
-// Status updater route (Handles Confirmations, Cancellations, etc.)
 router.put("/update-status/:id", async (req, res) => {
   const { status } = req.body;
   const { id } = req.params;

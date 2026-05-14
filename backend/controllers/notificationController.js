@@ -24,11 +24,11 @@ const getNotifications = async (req, res) => {
     const { userId } = req.params;
     const [rows] = await db.query(
       `SELECT notif_id, message AS text, 
-       -- 🕒 CONVERT FROM UTC TO PHILIPPINES TIME (+08:00) BEFORE FORMATTING
        DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time,
        is_read 
        FROM notifications 
        WHERE user_id = ? 
+       AND type != 'admin' -- 👈 User should NOT see admin alerts
        ORDER BY created_at DESC`,
       [userId],
     );
@@ -83,12 +83,13 @@ const getAdminNotifications = async (req, res) => {
         DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
        FROM notifications n
        LEFT JOIN user u ON n.user_id = u.user_id
-       WHERE n.type = 'admin' -- STRICTLY only admin types
+       WHERE n.type = 'admin' 
        ORDER BY n.created_at DESC 
        LIMIT 50`,
     );
     res.json(rows);
   } catch (error) {
+    console.error("Admin Notif Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
