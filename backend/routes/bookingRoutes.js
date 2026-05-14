@@ -357,13 +357,12 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// 6. Update Payment (Works for both manual admin updates and PayMongo balance updates)
+// 6. Update Payment
 router.put("/:id/update-payment", async (req, res) => {
   const { id } = req.params;
-  const { paymentAmount } = req.body; // The additional amount being paid
+  const { paymentAmount } = req.body;
 
   try {
-    // 1. Fetch current booking
     const [rows] = await db.query(
       "SELECT * FROM booking WHERE booking_id = ?",
       [id],
@@ -374,7 +373,7 @@ router.put("/:id/update-payment", async (req, res) => {
     const booking = rows[0];
     const newTotalPaid =
       parseFloat(booking.amount_paid) + parseFloat(paymentAmount);
-    const remainingBalance = booking.total_amount - newTotalPaid;
+    const remainingBalance = Math.max(0, booking.total_amount - newTotalPaid);
 
     // 2. Logic: Status is 'confirmed' ONLY if fully paid, else 'partial'
     const newStatus = remainingBalance <= 0 ? "confirmed" : "pending";
@@ -385,17 +384,21 @@ router.put("/:id/update-payment", async (req, res) => {
       [newTotalPaid, newStatus, newPaymentType, id],
     );
 
-    let notificationMsg = "";
-    if (newStatus === "confirmed") {
-      notificationMsg = `Payment Complete! You have fully paid for "${booking.event_name}". We look forward to seeing you!`;
-    } else {
-      notificationMsg = `Partial payment received for "${booking.event_name}". Your updated remaining balance is ₱${remainingBalance.toLocaleString()}.`;
+    let notificationMsg = isFullyPaid
+      ? `Payment Complete! You have fully paid for "${booking.event_name}". We look forward to seeing you!`
+      : `Partial payment received for "${booking.event_name}". Your updated remaining balance is ₱${remainingBalance.toLocaleString()}.`;
+
+    console.log(`DEBUG: Sending notification to User ${booking.user_id}...`);
+
+    try {
+      await createNotification(booking.user_id, notificationMsg, id);
+      console.log("✅ Notification saved successfully.");
+    } catch (notifErr) {
+      console.error("❌ Notification Helper Failed:", notifErr.message);
+      // We don't crash the whole route if just the notification fails
     }
 
-    await createNotification(booking.user_id, notificationMsg, id);
-
-    // 3. Send email only if it just became fully paid
-    if (newStatus === "confirmed" && booking.status !== "confirmed") {
+    if (isFullyPaid && booking.status !== "confirmed") {
       await sendBookingConfirmation({
         ...booking,
         amount_paid: newTotalPaid,
@@ -405,6 +408,7 @@ router.put("/:id/update-payment", async (req, res) => {
 
     res.json({ success: true, remainingBalance, newStatus });
   } catch (err) {
+    console.error("❌ Update Payment Route Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
