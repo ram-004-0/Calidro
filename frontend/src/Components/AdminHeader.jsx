@@ -9,6 +9,7 @@ const AdminHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
+  const [selectedNotifs, setSelectedNotifs] = useState([]);
 
   const {
     setIsChatOpen,
