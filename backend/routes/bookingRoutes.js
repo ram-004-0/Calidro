@@ -286,7 +286,7 @@ router.put("/update-status/:id", async (req, res) => {
         },
       );
 
-      // 🕒 Clean format for time (turns "13:00:00" into "1:00 PM")
+      // 🕒 Clean format for time (turns "13:00:00" into "1 PM", or "13:30:00" into "1:30 PM")
       let formattedTime = booking.event_time;
       if (booking.event_time) {
         const [hoursStr, minutesStr] = booking.event_time.split(":");
@@ -294,7 +294,13 @@ router.put("/update-status/:id", async (req, res) => {
         const ampm = hours >= 12 ? "PM" : "AM";
         hours = hours % 12;
         hours = hours ? hours : 12; // The hour '0' should be '12'
-        formattedTime = `${hours}:${minutesStr} ${ampm}`;
+
+        // ✂️ If minutes are '00', completely remove them!
+        if (minutesStr === "00") {
+          formattedTime = `${hours} ${ampm}`;
+        } else {
+          formattedTime = `${hours}:${minutesStr} ${ampm}`;
+        }
       }
 
       const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${formattedTime} has been cancelled.`;
