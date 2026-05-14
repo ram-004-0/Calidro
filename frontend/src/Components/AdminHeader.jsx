@@ -218,7 +218,7 @@ const AdminHeader = () => {
                   </div>
 
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
-                    {adminNotifications.length > 0 ? (
+                    {adminNotifications && adminNotifications.length > 0 ? (
                       adminNotifications.map((n) => (
                         <div
                           key={n.notif_id}
@@ -239,23 +239,24 @@ const AdminHeader = () => {
                               </span>
                             </div>
 
+                            {/* Use n.text because of the SQL alias 'message AS text' */}
                             <p className="font-medium text-[11px] leading-tight text-gray-800">
-                              {n.text || n.message}
+                              {n.text}
                             </p>
 
+                            {/* Use n.time because of the SQL alias 'DATE_FORMAT AS time' */}
                             <p className="text-[9px] text-gray-400 mt-1">
-                              {n.time ||
-                                (n.created_at
-                                  ? new Date(n.created_at).toLocaleDateString()
-                                  : "")}
+                              {n.time}
                             </p>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-[10px] text-center py-4 text-gray-400">
-                        No new alerts
-                      </p>
+                      <div className="text-center py-6">
+                        <p className="text-[10px] text-gray-400">
+                          No notifications found.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>

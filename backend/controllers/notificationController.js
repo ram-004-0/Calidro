@@ -73,24 +73,25 @@ const getAdminNotifications = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT 
-    n.notif_id, 
-    IFNULL(u.username, 'System') AS username,
-    CONCAT(IFNULL(u.username, 'System'), ': ', n.message) AS text, 
-    n.related_id, -- Note: you used 'related_id' in createNotification but 'booking_id' here. Use related_id.
-    DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time,
-    n.is_read 
-   FROM notifications n
-   LEFT JOIN user u ON n.user_id = u.user_id
-   ORDER BY n.created_at DESC 
-   LIMIT 50`,
+        n.notif_id, 
+        u.username,
+        n.message AS text, 
+        n.related_id,
+        n.is_read,
+        DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
+       FROM notifications n
+       LEFT JOIN user u ON n.user_id = u.user_id
+       ORDER BY n.created_at DESC 
+       LIMIT 50`,
     );
+
+    // console.log("DEBUG: Notifications sent to frontend:", rows);
     res.json(rows);
   } catch (error) {
     console.error("Admin Notification Fetch Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 module.exports = {
   createNotification,
   getNotifications,
