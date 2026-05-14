@@ -276,7 +276,7 @@ router.put("/update-status/:id", async (req, res) => {
 
     // 🔔 CANCELLATION NOTIFICATION LOGIC
     if (status === "cancelled") {
-      // 📅 Format the event date cleanly (e.g., "May 25, 2026")
+      // 📅 Clean format for dates (turns "2026-05-25" into "May 25, 2026")
       const formattedDate = new Date(booking.event_date).toLocaleDateString(
         "en-US",
         {
@@ -286,10 +286,18 @@ router.put("/update-status/:id", async (req, res) => {
         },
       );
 
-      // 🕒 Get a clean string for the event time column
-      const eventTime = booking.event_time;
+      // 🕒 Clean format for time (turns "13:00:00" into "1:00 PM")
+      let formattedTime = booking.event_time;
+      if (booking.event_time) {
+        const [hoursStr, minutesStr] = booking.event_time.split(":");
+        let hours = parseInt(hoursStr, 10);
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        hours = hours ? hours : 12; // The hour '0' should be '12'
+        formattedTime = `${hours}:${minutesStr} ${ampm}`;
+      }
 
-      const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${eventTime} has been cancelled.`;
+      const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${formattedTime} has been cancelled.`;
 
       // Send it directly to the owner of this booking
       await createNotification(booking.user_id, cancellationMsg, id);
@@ -306,7 +314,6 @@ router.put("/update-status/:id", async (req, res) => {
       .json({ error: "Database update failed", details: err.message });
   }
 });
-
 // 4. Get specific booking details
 router.get("/details/:id", async (req, res) => {
   const { id } = req.params;
