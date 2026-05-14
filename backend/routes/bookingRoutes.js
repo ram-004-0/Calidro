@@ -258,7 +258,44 @@ router.put("/update-status/:id", async (req, res) => {
 
     const booking = rows[0];
 
-    // 2. Update the booking status in the database
+    // 2. 🔔 CANCELLATION NOTIFICATION LOGIC (Do this BEFORE sending the final response!)
+    if (status === "cancelled") {
+      // 📅 Clean format for dates
+      const formattedDate = new Date(booking.event_date).toLocaleDateString(
+        "en-US",
+        {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        },
+      );
+
+      // 🕒 Clean format for time
+      let formattedTime = booking.event_time;
+      if (booking.event_time) {
+        const [hoursStr, minutesStr] = booking.event_time.split(":");
+        let hours = parseInt(hoursStr, 10);
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+
+        if (minutesStr === "00") {
+          formattedTime = `${hours} ${ampm}`;
+        } else {
+          formattedTime = `${hours}:${minutesStr} ${ampm}`;
+        }
+      }
+
+      const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${formattedTime} has been cancelled.`;
+
+      // We block and wait for this notification to be written completely into the DB
+      await createNotification(booking.user_id, cancellationMsg, id);
+      console.log(
+        `🔔 Cancellation notification written safely to DB for user ${booking.user_id}`,
+      );
+    }
+
+    // 3. Update the booking status in the database
     await db.query("UPDATE booking SET status = ? WHERE booking_id = ?", [
       status,
       id,
@@ -274,44 +311,7 @@ router.put("/update-status/:id", async (req, res) => {
       }
     }
 
-    // 🔔 CANCELLATION NOTIFICATION LOGIC
-    if (status === "cancelled") {
-      // 📅 Clean format for dates (turns "2026-05-25" into "May 25, 2026")
-      const formattedDate = new Date(booking.event_date).toLocaleDateString(
-        "en-US",
-        {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        },
-      );
-
-      // 🕒 Clean format for time (turns "13:00:00" into "1 PM", or "13:30:00" into "1:30 PM")
-      let formattedTime = booking.event_time;
-      if (booking.event_time) {
-        const [hoursStr, minutesStr] = booking.event_time.split(":");
-        let hours = parseInt(hoursStr, 10);
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12;
-        hours = hours ? hours : 12; // The hour '0' should be '12'
-
-        // ✂️ If minutes are '00', completely remove them!
-        if (minutesStr === "00") {
-          formattedTime = `${hours} ${ampm}`;
-        } else {
-          formattedTime = `${hours}:${minutesStr} ${ampm}`;
-        }
-      }
-
-      const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${formattedTime} has been cancelled.`;
-
-      // Send it directly to the owner of this booking
-      await createNotification(booking.user_id, cancellationMsg, id);
-      console.log(
-        `🔔 Cancellation notification sent to user ${booking.user_id}`,
-      );
-    }
-
+    // 4. NOW it is safe to respond to the frontend!
     res.status(200).json({ message: "Status updated successfully" });
   } catch (err) {
     console.error("❌ BACKEND CRASH:", err);
