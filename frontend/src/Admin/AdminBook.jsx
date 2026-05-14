@@ -28,30 +28,33 @@ const AdminBook = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handlePaymentUpdate = async (bookingId, newType) => {
+  const handlePaymentUpdate = async (bookingId, newType, currentNote) => {
     try {
       const response = await fetch(
         `${API_URL}/api/bookings/${bookingId}/update-payment-type`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentType: newType }),
+
+          body: JSON.stringify({
+            paymentType: newType,
+            paymentNote: currentNote,
+          }),
         },
       );
 
       if (response.ok) {
         await fetchBookings();
 
-        const msg =
-          newType === "refund"
-            ? "Successfully Refunded & Cancelled"
-            : `Updated to ${newType}`;
-        alert(msg);
+        if (newType === "refund") {
+          alert("Successfully Refunded & Cancelled");
+        }
       } else {
-        alert("Failed to update payment type");
+        alert("Failed to update booking details");
       }
     } catch (error) {
-      console.error("Error updating payment type:", error);
+      console.error("Error updating booking:", error);
+      alert("A network error occurred.");
     }
   };
 
@@ -247,54 +250,56 @@ const AdminBook = () => {
                           </button>
                         </td>
                         <td className="py-4 px-2">
-                          {/* 1. If it's already refunded, don't show a dropdown at all, just a static badge */}
-                          {b.paymentType?.toLowerCase() === "refund" ? (
-                            <span
-                              className={`${getPaymentTypeStyles("refund")} rounded-full px-3 py-1 text-[10px] font-bold uppercase`}
-                            >
-                              Refunded
-                            </span>
-                          ) : (
-                            /* 2. Otherwise, show the select menu with conditional options */
-                            <select
-                              value={b.paymentType || "partial"}
-                              onChange={(e) =>
-                                handlePaymentUpdate(
-                                  b.booking_id,
-                                  e.target.value,
-                                )
-                              }
-                              className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer outline-none border-none ${getPaymentTypeStyles(b.paymentType)}`}
-                            >
-                              {/* 3. Only show "Partial" if the current status IS partial */}
-                              {b.paymentType?.toLowerCase() === "partial" && (
-                                <option
-                                  value="partial"
-                                  className="bg-white text-black"
-                                >
-                                  Partial
-                                </option>
-                              )}
-
-                              {/* 4. "Full" is usually always an option unless already refunded */}
-                              <option
-                                value="full"
-                                className="bg-white text-black"
+                          <div className="flex flex-col gap-2">
+                            {/* PAYMENT DROPDOWN (with your one-way logic) */}
+                            {b.paymentType?.toLowerCase() === "refund" ? (
+                              <span
+                                className={`${getPaymentTypeStyles("refund")} rounded-full px-3 py-1 text-[10px] font-bold uppercase text-center`}
                               >
-                                Full
-                              </option>
+                                Refunded
+                              </span>
+                            ) : (
+                              <select
+                                value={b.paymentType || "partial"}
+                                onChange={(e) =>
+                                  handlePaymentUpdate(
+                                    b.booking_id,
+                                    e.target.value,
+                                    b.payment_note,
+                                  )
+                                }
+                                className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer outline-none ${getPaymentTypeStyles(b.paymentType)}`}
+                              >
+                                {b.paymentType?.toLowerCase() === "partial" && (
+                                  <option value="partial">Partial</option>
+                                )}
+                                <option value="full">Full</option>
+                                {b.paid > 5000 && (
+                                  <option value="refund">Refund</option>
+                                )}
+                              </select>
+                            )}
 
-                              {/* 5. "Refund" only shows if they paid enough (and aren't already refunded) */}
-                              {b.paid > 5000 && (
-                                <option
-                                  value="refund"
-                                  className="bg-white text-black"
-                                >
-                                  Refund
-                                </option>
-                              )}
-                            </select>
-                          )}
+                            {/* NOTE SECTION */}
+                            <div className="flex flex-col">
+                              <label className="text-[9px] font-bold text-gray-400 uppercase">
+                                Note:
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Paid cash"
+                                defaultValue={b.payment_note || ""}
+                                onBlur={(e) =>
+                                  handlePaymentUpdate(
+                                    b.booking_id,
+                                    b.paymentType,
+                                    e.target.value,
+                                  )
+                                }
+                                className="text-[10px] border-b border-gray-300 bg-transparent focus:border-[#4a3733] outline-none py-1"
+                              />
+                            </div>
+                          </div>
                         </td>
                         <td className="py-4 px-2">
                           <span

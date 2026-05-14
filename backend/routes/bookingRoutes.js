@@ -784,7 +784,7 @@ router.post("/webhook/paymongo", async (req, res) => {
 
 router.put("/:id/update-payment-type", async (req, res) => {
   const { id } = req.params;
-  const { paymentType } = req.body;
+  const { paymentType, paymentNote } = req.body;
 
   try {
     const [rows] = await db.query(
@@ -792,22 +792,23 @@ router.put("/:id/update-payment-type", async (req, res) => {
       [id],
     );
 
-    if (rows.length === 0)
+    if (rows.length === 0) {
       return res.status(404).json({ error: "Booking not found" });
+    }
+
     const booking = rows[0];
 
-    let updateSql;
-    let queryParams;
+    // Build the query dynamically
+    // If refund, also set status to 'cancelled'. Otherwise, keep existing status.
+    let updateSql = `
+      UPDATE booking 
+      SET payment_type = ?, 
+          payment_note = ? 
+          ${paymentType === "refund" ? ", status = 'cancelled'" : ""} 
+      WHERE booking_id = ?
+    `;
 
-    if (paymentType === "refund") {
-      // Logic: Update type to refund AND status to cancelled
-      updateSql =
-        "UPDATE booking SET payment_type = ?, status = 'cancelled' WHERE booking_id = ?";
-      queryParams = [paymentType, id];
-    } else {
-      updateSql = "UPDATE booking SET payment_type = ? WHERE booking_id = ?";
-      queryParams = [paymentType, id];
-    }
+    const queryParams = [paymentType, paymentNote, id];
 
     await db.query(updateSql, queryParams);
 
@@ -819,7 +820,7 @@ router.put("/:id/update-payment-type", async (req, res) => {
 
     res.json({ success: true, message: "Booking updated successfully" });
   } catch (err) {
-    console.error(err);
+    console.error("Backend Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
