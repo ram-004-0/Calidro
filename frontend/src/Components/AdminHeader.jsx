@@ -22,6 +22,7 @@ const AdminHeader = () => {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [selectedNotifs, setSelectedNotifs] = useState([]);
+  const [localNotifs, setLocalNotifs] = useState([]);
 
   const {
     setIsChatOpen,
@@ -103,17 +104,13 @@ const AdminHeader = () => {
 
         const data = Array.isArray(response.data) ? response.data : [];
 
-        // Add checks before calling the functions
-        if (typeof setAdminNotifications === "function") {
-          setAdminNotifications(data);
-        }
+        if (setAdminNotifications) setAdminNotifications(data);
+        setLocalNotifs(data);
 
-        if (typeof setHasAdminUnread === "function") {
-          const hasUnread = data.some(
-            (n) => n.is_read === 0 || n.is_read === false,
-          );
-          setHasAdminUnread(hasUnread);
-        }
+        const hasUnread = data.some(
+          (n) => n.is_read === 0 || n.is_read === false,
+        );
+        if (setHasAdminUnread) setHasAdminUnread(hasUnread);
       } catch (err) {
         if (!axios.isCancel(err)) {
           console.error("Error fetching admin notifications:", err);
@@ -218,8 +215,9 @@ const AdminHeader = () => {
                   </div>
 
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
-                    {adminNotifications && adminNotifications.length > 0 ? (
-                      adminNotifications.map((n) => (
+                    {/* Using localNotifs as the primary source of truth for the UI */}
+                    {localNotifs && localNotifs.length > 0 ? (
+                      localNotifs.map((n) => (
                         <div
                           key={n.notif_id}
                           className={`p-2 rounded-xl border-b last:border-0 transition flex items-start gap-2.5 ${
@@ -237,14 +235,15 @@ const AdminHeader = () => {
                               <span className="bg-[#433633] text-white text-[8px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">
                                 {n.username || "System"}
                               </span>
+                              {!n.is_read && (
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                              )}
                             </div>
 
-                            {/* Use n.text because of the SQL alias 'message AS text' */}
                             <p className="font-medium text-[11px] leading-tight text-gray-800">
                               {n.text}
                             </p>
 
-                            {/* Use n.time because of the SQL alias 'DATE_FORMAT AS time' */}
                             <p className="text-[9px] text-gray-400 mt-1">
                               {n.time}
                             </p>
@@ -252,9 +251,9 @@ const AdminHeader = () => {
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-6">
-                        <p className="text-[10px] text-gray-400">
-                          No notifications found.
+                      <div className="text-center py-10">
+                        <p className="text-[11px] text-gray-400 font-medium">
+                          No notifications found
                         </p>
                       </div>
                     )}
