@@ -385,6 +385,15 @@ router.put("/:id/update-payment", async (req, res) => {
       [newTotalPaid, newStatus, newPaymentType, id],
     );
 
+    let notificationMsg = "";
+    if (newStatus === "confirmed") {
+      notificationMsg = `Payment Complete! You have fully paid for "${booking.event_name}". We look forward to seeing you!`;
+    } else {
+      notificationMsg = `Partial payment received for "${booking.event_name}". Your updated remaining balance is ₱${remainingBalance.toLocaleString()}.`;
+    }
+
+    await createNotification(booking.user_id, notificationMsg, id);
+
     // 3. Send email only if it just became fully paid
     if (newStatus === "confirmed" && booking.status !== "confirmed") {
       await sendBookingConfirmation({
