@@ -402,8 +402,14 @@ const UserChatbot = () => {
   ];
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (isChatOpen) {
+      const timer = setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [messages, isChatOpen]);
 
   const [hasGreeted, setHasGreeted] = useState(false);
 
