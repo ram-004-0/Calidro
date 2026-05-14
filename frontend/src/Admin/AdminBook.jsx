@@ -251,7 +251,7 @@ const AdminBook = () => {
                         </td>
                         <td className="py-4 px-2">
                           <div className="flex flex-col gap-2">
-                            {/* PAYMENT DROPDOWN (with your one-way logic) */}
+                            {/* PAYMENT STATUS / DROPDOWN */}
                             {b.paymentType?.toLowerCase() === "refund" ? (
                               <span
                                 className={`${getPaymentTypeStyles("refund")} rounded-full px-3 py-1 text-[10px] font-bold uppercase text-center`}
@@ -280,25 +280,27 @@ const AdminBook = () => {
                               </select>
                             )}
 
-                            {/* NOTE SECTION */}
-                            <div className="flex flex-col">
-                              <label className="text-[9px] font-bold text-gray-400 uppercase">
-                                Note:
-                              </label>
-                              <input
-                                type="text"
-                                placeholder="e.g. Paid cash"
-                                defaultValue={b.payment_note || ""}
-                                onBlur={(e) =>
-                                  handlePaymentUpdate(
-                                    b.booking_id,
-                                    b.paymentType,
-                                    e.target.value,
-                                  )
-                                }
-                                className="text-[10px] border-b border-gray-300 bg-transparent focus:border-[#4a3733] outline-none py-1"
-                              />
-                            </div>
+                            {/* CONDITIONAL NOTE SECTION: Only show if NOT refunded */}
+                            {b.paymentType?.toLowerCase() !== "refund" && (
+                              <div className="flex flex-col">
+                                <label className="text-[9px] font-bold text-gray-400 uppercase">
+                                  Note:
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Add note..."
+                                  defaultValue={b.payment_note || ""}
+                                  onBlur={(e) =>
+                                    handlePaymentUpdate(
+                                      b.booking_id,
+                                      b.paymentType,
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="text-[10px] border-b border-gray-300 bg-transparent focus:border-[#4a3733] outline-none py-1"
+                                />
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="py-4 px-2">
