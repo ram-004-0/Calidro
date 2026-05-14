@@ -1,16 +1,17 @@
 const db = require("../config/db");
 
-const createNotification = async (userId, message, bookingId) => {
-  console.log("🔔 NOTIFICATION TRIGGERED for User:", userId);
+const createNotification = async (
+  userId,
+  message,
+  bookingId,
+  type = "user",
+) => {
   try {
     const query = `
       INSERT INTO notifications (user_id, message, type, related_id) 
       VALUES (?, ?, ?, ?)
     `;
-    await db.query(query, [userId, message, "booking_update", bookingId]);
-    console.log(
-      `Notification created for User ${userId} regarding Booking ${bookingId}`,
-    );
+    await db.query(query, [userId, message, type, bookingId]);
   } catch (err) {
     console.error("Error creating notification:", err);
   }
@@ -73,25 +74,24 @@ const getAdminNotifications = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT 
-    n.notif_id, 
-    u.username,
-    n.message AS text, 
-    n.is_read,
-    DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
-   FROM notifications n
-   LEFT JOIN user u ON n.user_id = u.user_id
-   WHERE n.type = 'admin' OR n.type = 'admin_alert' -- Only fetch admin-specific types
-   ORDER BY n.created_at DESC 
-   LIMIT 50`,
+        n.notif_id, 
+        u.username,
+        n.message AS text, 
+        n.is_read,
+        DATE_FORMAT(CONVERT_TZ(n.created_at, '+00:00', '+08:00'), '%b %d, %h:%i %p') AS time
+       FROM notifications n
+       LEFT JOIN user u ON n.user_id = u.user_id
+       WHERE n.type IN ('admin', 'admin_alert', 'booking_update') -- Add 'booking_update' here
+       ORDER BY n.created_at DESC 
+       LIMIT 50`,
     );
-
-    // console.log("DEBUG: Notifications sent to frontend:", rows);
     res.json(rows);
   } catch (error) {
     console.error("Admin Notification Fetch Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 module.exports = {
   createNotification,
   getNotifications,
