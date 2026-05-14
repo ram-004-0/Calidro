@@ -236,7 +236,7 @@ router.get("/all-bookings", async (req, res) => {
   }
 });
 
-// Email keme
+// Status updater route (Handles Confirmations, Cancellations, etc.)
 router.put("/update-status/:id", async (req, res) => {
   const { status } = req.body;
   const { id } = req.params;
@@ -246,6 +246,7 @@ router.put("/update-status/:id", async (req, res) => {
   }
 
   try {
+    // 1. Fetch the existing booking details first so we can use its data
     const [rows] = await db.query(
       "SELECT * FROM booking WHERE booking_id = ?",
       [id],
@@ -257,11 +258,13 @@ router.put("/update-status/:id", async (req, res) => {
 
     const booking = rows[0];
 
+    // 2. Update the booking status in the database
     await db.query("UPDATE booking SET status = ? WHERE booking_id = ?", [
       status,
       id,
     ]);
 
+    // 📧 EMAIL LOGIC: If moving to confirmed, fire off the confirmation email
     if (booking.status !== "confirmed" && status === "confirmed") {
       try {
         await sendBookingConfirmation(booking);
@@ -269,6 +272,30 @@ router.put("/update-status/:id", async (req, res) => {
       } catch (emailErr) {
         console.error("📧 Email failed but DB was updated:", emailErr.message);
       }
+    }
+
+    // 🔔 CANCELLATION NOTIFICATION LOGIC
+    if (status === "cancelled") {
+      // 📅 Format the event date cleanly (e.g., "May 25, 2026")
+      const formattedDate = new Date(booking.event_date).toLocaleDateString(
+        "en-US",
+        {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        },
+      );
+
+      // 🕒 Get a clean string for the event time column
+      const eventTime = booking.event_time;
+
+      const cancellationMsg = `Notice: Your booking for "${booking.event_name}" originally scheduled on ${formattedDate} at ${eventTime} has been cancelled.`;
+
+      // Send it directly to the owner of this booking
+      await createNotification(booking.user_id, cancellationMsg, id);
+      console.log(
+        `🔔 Cancellation notification sent to user ${booking.user_id}`,
+      );
     }
 
     res.status(200).json({ message: "Status updated successfully" });
@@ -361,7 +388,6 @@ router.put("/:id/update-payment", async (req, res) => {
   }
 });
 
-// --- 1. THE ACTUAL POST HANDLER ---
 router.post("/checkout-balance", async (req, res) => {
   const { bookingId, payment_methods } = req.body;
 
@@ -493,7 +519,6 @@ router.put("/edit/:id", async (req, res) => {
   }
 });
 
-// PUT route to handle rescheduling
 router.put("/reschedule/:id", async (req, res) => {
   const bookingId = req.params.id;
 
@@ -603,7 +628,7 @@ router.put("/reschedule/:id", async (req, res) => {
   }
 });
 
-// 9. PayMongo Webhook (Finalizes the DB update)
+//PayMongo Webhook (Finalizes the DB update)
 router.post("/webhook/paymongo", async (req, res) => {
   res.status(200).send("ok");
 
