@@ -4,7 +4,6 @@ const db = require("../config/db");
 const { getNotifications } = require("../controllers/notificationController");
 
 // 1. TRIGGER REMINDERS (Check for upcoming events)
-// URL: /api/notifications/trigger-reminders
 router.get("/trigger-reminders", async (req, res) => {
   try {
     const [upcoming] = await db.query(`

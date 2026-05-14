@@ -14,6 +14,7 @@ const UserHeader = () => {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedNotifs, setSelectedNotifs] = useState([]);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -35,6 +36,48 @@ const UserHeader = () => {
     setIsNotifyOpen(!isNotifyOpen);
     if (!isNotifyOpen) {
       setHasAdminUnread(false);
+    }
+  };
+
+  const handleSelectNotif = (notifId) => {
+    if (selectedNotifs.includes(notifId)) {
+      setSelectedNotifs(selectedNotifs.filter((id) => id !== notifId));
+    } else {
+      setSelectedNotifs([...selectedNotifs, notifId]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedNotifs.length === userNotifications.length) {
+      // If everything is already selected, clear the selection
+      setSelectedNotifs([]);
+    } else {
+      // Otherwise, select all valid notification IDs
+      const allIds = userNotifications.map((n) => n.notif_id);
+      setSelectedNotifs(allIds);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedNotifs.length === 0) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const remainingNotifs = userNotifications.filter(
+        (n) => !selectedNotifs.includes(n.notif_id),
+      );
+
+      setUserNotifications(remainingNotifs);
+      setSelectedNotifs([]);
+      const hasUnread = remainingNotifs.some(
+        (n) => n.is_read === 0 || n.is_read === false,
+      );
+      setHasAdminUnread(hasUnread);
+
+      alert("Selected notifications deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete notifications", err);
     }
   };
 
@@ -82,7 +125,7 @@ const UserHeader = () => {
     const fetchMyNotifications = async () => {
       try {
         const savedUser = localStorage.getItem("user");
-        const token = localStorage.getItem("token"); // DEFINED TOKEN HERE
+        const token = localStorage.getItem("token");
 
         let uId = null;
         if (savedUser) {
@@ -91,13 +134,8 @@ const UserHeader = () => {
         }
 
         if (!uId) uId = localStorage.getItem("userId");
+        if (!uId) return;
 
-        if (!uId) {
-          console.warn("⚠️ No User ID found. User might not be logged in.");
-          return;
-        }
-
-        console.log("🚀 Fetching notifications for User:", uId);
         const response = await axios.get(
           `${API_URL}/api/notifications/${uId}`,
           {
@@ -105,7 +143,6 @@ const UserHeader = () => {
           },
         );
 
-        // Standardize the response to an array
         const data = Array.isArray(response.data) ? response.data : [];
         setUserNotifications(data);
 
@@ -175,43 +212,69 @@ const UserHeader = () => {
               </div>
 
               {isNotifyOpen && (
-                <div className="absolute right-0 mt-4 w-64 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
-                  <div className="flex justify-between items-center border-b pb-2 mb-2">
-                    <h3 className="font-bold text-sm uppercase tracking-wider">
-                      Notifications
-                    </h3>
-                    <button
-                      onClick={() => {
-                        setUserNotifications([]);
-                        setHasAdminUnread(false);
-                      }}
-                      className="text-[10px] text-gray-400 hover:text-red-500 font-bold"
-                    >
-                      CLEAR ALL
-                    </button>
+                <div className="absolute right-0 mt-4 w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
+                  {/* HEADER AREA WITH SELECT ALL & DELETE */}
+                  <div className="flex flex-col gap-2 border-b pb-2 mb-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-sm uppercase tracking-wider">
+                        Notifications
+                      </h3>
+                      {selectedNotifs.length > 0 && (
+                        <button
+                          onClick={handleDeleteSelected}
+                          className="text-[10px] text-red-500 hover:text-red-700 font-bold flex items-center gap-1 bg-red-50 px-2 py-1 rounded"
+                        >
+                          <Trash2 size={10} /> DELETE ({selectedNotifs.length})
+                        </button>
+                      )}
+                    </div>
+
+                    {/* SELECT ALL CHECKBOX TOOLBAR */}
+                    {userNotifications.length > 0 && (
+                      <div className="flex items-center gap-2 pt-1 text-[11px] text-gray-500">
+                        <input
+                          type="checkbox"
+                          checked={
+                            userNotifications.length > 0 &&
+                            selectedNotifs.length === userNotifications.length
+                          }
+                          onChange={handleSelectAll}
+                          className="accent-[#433633] cursor-pointer"
+                        />
+                        <span>Select All</span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* NOTIFICATION ITEM LIST */}
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
                     {userNotifications.length > 0 ? (
                       userNotifications.map((n) => (
                         <div
                           key={n.notif_id}
-                          className={`p-3 border-b last:border-0 transition ${
-                            n.is_read ? "bg-white" : "bg-blue-50/50"
+                          className={`p-2 rounded-xl border-b last:border-0 transition flex items-start gap-2.5 ${
+                            n.is_read ? "bg-white" : "bg-blue-50/40"
                           }`}
                         >
-                          <div className="flex items-start gap-2">
+                          {/* INDIVIDUAL CHECKBOX */}
+                          <input
+                            type="checkbox"
+                            checked={selectedNotifs.includes(n.notif_id)}
+                            onChange={() => handleSelectNotif(n.notif_id)}
+                            className="mt-1 accent-[#433633] cursor-pointer"
+                          />
+
+                          <div className="flex items-start gap-1.5 flex-1">
                             {!n.is_read && (
                               <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0" />
                             )}
 
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium text-[11px] leading-tight text-[#4a3733]">
-                                {/* Mapping to .message instead of .text */}
                                 {n.message || n.text}
                               </p>
                               <div className="flex justify-between items-center mt-1">
                                 <p className="text-[9px] text-gray-400">
-                                  {/* Mapping to .created_at instead of .time */}
                                   {n.created_at
                                     ? new Date(
                                         n.created_at,
