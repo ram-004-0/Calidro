@@ -165,7 +165,7 @@ const UserHeader = () => {
     };
 
     fetchMyNotifications();
-    const interval = setInterval(fetchMyNotifications, 30000);
+    const interval = setInterval(fetchMyNotifications, 5000);
     return () => clearInterval(interval);
   }, [setUserNotifications, setHasAdminUnread]);
 
