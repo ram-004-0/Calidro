@@ -322,9 +322,8 @@ cron.schedule("0 0 * * *", async () => {
   console.log("🕒 Running daily booking cleanup task...");
 
   try {
-    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
 
-    // Update status to 'completed' if the event date has passed
     const sql = `
       UPDATE booking 
       SET status = 'completed' 

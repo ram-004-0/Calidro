@@ -47,10 +47,49 @@ const AdminBook = () => {
     }
   };
 
+  const getPaymentTypeStyles = (type) => {
+    switch (type?.toLowerCase()) {
+      case "full":
+        return "bg-emerald-500 text-white";
+      case "partial":
+        return "bg-amber-400 text-black";
+      case "refund":
+        return "bg-orange-600 text-white";
+      default:
+        return "bg-gray-200 text-gray-700";
+    }
+  };
+
   const getPaymentStatusStyles = (paid, total) => {
     if (paid >= total) return "bg-emerald-500 text-white";
     if (paid > 0) return "bg-amber-400 text-black";
     return "bg-red-500 text-white";
+  };
+
+  const handlePaymentUpdate = async (bookingId, newType) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/bookings/${bookingId}/update-payment-type`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentType: newType }),
+        },
+      );
+
+      if (response.ok) {
+        setBookings((prev) =>
+          prev.map((b) =>
+            b.booking_id === bookingId ? { ...b, paymentType: newType } : b,
+          ),
+        );
+        alert(`Payment type updated to ${newType}`);
+      } else {
+        alert("Failed to update payment type");
+      }
+    } catch (error) {
+      console.error("Error updating payment type:", error);
+    }
   };
 
   return (
@@ -211,9 +250,34 @@ const AdminBook = () => {
                           </button>
                         </td>
                         <td className="py-4 px-2">
-                          <span className="bg-gray-200 text-gray-800 rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap">
-                            {b.paymentType || "N/A"}
-                          </span>
+                          <select
+                            value={b.paymentType || "partial"}
+                            onChange={(e) =>
+                              handlePaymentUpdate(b.booking_id, e.target.value)
+                            }
+                            className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer outline-none border-none ${getPaymentTypeStyles(
+                              b.paymentType,
+                            )}`}
+                          >
+                            <option
+                              value="partial"
+                              className="bg-white text-black"
+                            >
+                              Partial
+                            </option>
+                            <option
+                              value="full"
+                              className="bg-white text-black"
+                            >
+                              Full
+                            </option>
+                            <option
+                              value="refund"
+                              className="bg-white text-black"
+                            >
+                              Refund
+                            </option>
+                          </select>
                         </td>
                         <td className="py-4 px-2">
                           <span
