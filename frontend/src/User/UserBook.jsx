@@ -98,32 +98,29 @@ const UserBook = () => {
 
       <section className="relative pb-2 w-full flex-1 flex flex-col items-center">
         <div className="max-w-365 w-full mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl p-6 h-140 flex flex-col">
-          <div className="flex flex-row justify-between items-baseline mb-4 shrink-0 border-b border-gray-200 pb-2">
+          <div className="flex flex-row justify-between items-center mb-5 shrink-0 border-b border-gray-200/60 pb-3">
             <h1 className="text-2xl font-bold text-[#4a3733] uppercase">
               Bookings
             </h1>
 
             <div className="flex items-center gap-2">
-              <label
-                htmlFor="sort"
-                className="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
-              >
-                Sort By
-              </label>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:inline">
+                Sort By:
+              </span>
               <div className="relative">
                 <select
                   id="sort"
                   value={sortType}
                   onChange={(e) => setSortType(e.target.value)}
-                  className="appearance-none bg-transparent border-none text-[#4a3733] text-[11px] font-bold pr-5 outline-none cursor-pointer hover:text-[#8b735b] transition-colors"
+                  className="appearance-none bg-white border border-gray-200 text-[#4a3733] text-xs font-semibold py-2 pl-4 pr-9 rounded-full outline-none cursor-pointer shadow-sm hover:border-[#4a3733]/30 focus:border-[#4a3733]/50 transition-all"
                 >
                   <option value="newest">Newest to Oldest</option>
                   <option value="oldest">Oldest to Newest</option>
                   <option value="dateAdded">Date Added</option>
                 </select>
                 <ChevronDown
-                  size={10}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  size={13}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                 />
               </div>
             </div>
