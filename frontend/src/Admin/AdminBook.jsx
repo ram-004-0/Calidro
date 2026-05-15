@@ -212,9 +212,9 @@ const AdminBook = () => {
       {/* TABLE SECTION */}
       <section className="relative pb-2 w-full">
         {/* Consistent Container Wrapper */}
-        <div className="max-w-7xl mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
+        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
           <div className="p-6 flex flex-col w-full h-full">
-            <div className="flex flex-row justify-between items-center mb-5 shrink-0 border-b border-gray-200/60 pb-3">
+            <div className="flex flex-row justify-between items-center mb-4 flex-shrink-0">
               <h1 className="text-2xl font-bold text-[#4a3733] uppercase">
                 Reservations
               </h1>
