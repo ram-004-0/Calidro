@@ -627,13 +627,12 @@ router.put("/:id/update-payment-type", async (req, res) => {
       [id],
     );
 
-    if (rows.length === 0) {
+    if (rows.length === 0)
       return res.status(404).json({ error: "Booking not found" });
-    }
 
     const booking = rows[0];
 
-    // Status logic: if it's a refund, cancel it. Otherwise, keep it as is.
+    // Status logic remains yours
     let updateSql = `
       UPDATE booking 
       SET payment_type = ?, 
@@ -642,22 +641,32 @@ router.put("/:id/update-payment-type", async (req, res) => {
       WHERE booking_id = ?
     `;
 
-    const queryParams = [paymentType, paymentNote, id];
-    await db.query(updateSql, queryParams);
+    await db.query(updateSql, [paymentType, paymentNote, id]);
 
-    // 🔔 Updated Notification Logic
+    // 🔔 Notification Logic
     if (paymentType === "refund") {
-      // 1. Notify the USER (Shows up in User's notification list)
-      const refundMsg = `Your payment for "${booking.event_name}" has been successfully refunded. Status: Cancelled.`;
-      await createNotification(booking.user_id, refundMsg, id, "user");
-
-      // 2. Notify the ADMIN (This makes it "pop up" in the AdminHeader)
-      const adminMsg = `Refund processed for "${booking.event_name}" (Booking ID: ${id})`;
-      await createNotification(booking.user_id, adminMsg, id, "admin");
+      // Notify User
+      await createNotification(
+        booking.user_id,
+        `Your payment for "${booking.event_name}" has been refunded. Status: Cancelled.`,
+        id,
+        "user",
+      );
+      // Notify Admin (The Pop-up)
+      await createNotification(
+        booking.user_id,
+        `ADMIN: Refund processed for ${booking.event_name}`,
+        id,
+        "admin",
+      );
     } else {
-      // Optional: Notify user of general payment updates
-      const updateMsg = `The payment details for your booking "${booking.event_name}" have been updated to: ${paymentType}.`;
-      await createNotification(booking.user_id, updateMsg, id, "user");
+      // General Update Notification
+      await createNotification(
+        booking.user_id,
+        `Payment updated to ${paymentType} for "${booking.event_name}".`,
+        id,
+        "user",
+      );
     }
 
     res.json({ success: true, message: "Booking updated successfully" });
