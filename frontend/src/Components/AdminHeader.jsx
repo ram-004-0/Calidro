@@ -98,10 +98,11 @@ const AdminHeader = () => {
         if (!token) return;
 
         const response = await axios.get(`${API_URL}/api/notifications/admin`, {
-          headers: { Authorization: `Bearer ${token.trim()}` },
+          headers: {
+            Authorization: `Bearer ${token.replace(/['"]+/g, "")}`,
+          },
           signal: controller.signal,
         });
-
         const data = Array.isArray(response.data) ? response.data : [];
 
         if (setAdminNotifications) setAdminNotifications(data);

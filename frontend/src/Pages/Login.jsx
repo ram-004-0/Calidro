@@ -5,8 +5,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import LoginBg from "../assets/LoginBg.png";
 import CalidroLogo from "../assets/calidrologo.png";
 import { ArrowLeft } from "lucide-react";
-const API_URL =
-  "https://calidro-production.up.railway.app/api" || "http://localhost:5000";
+
+const API_URL = "https://calidro-production.up.railway.app/api";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -42,7 +42,7 @@ const Login = () => {
   // Logic for Google Success
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await fetch(`${API_URL}/auth/google-login`, {
+      const res = await fetch(`${API_URL}/api/auth/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken: credentialResponse.credential }),
