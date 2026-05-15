@@ -148,7 +148,7 @@ const AdminHeader = () => {
         <div className="flex items-center justify-between h-20 md:h-24">
           <h2
             onClick={() => navigate("/admin-overview")}
-            className="text-4xl md:text-5xl font-imperialscript shrink-0"
+            className="text-4xl md:text-5xl font-imperialscript shrink-0 cursor-pointer select-none transition-opacity hover:opacity-80"
           >
             Calidro
           </h2>
