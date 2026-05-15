@@ -6,15 +6,13 @@ import React, {
   useCallback,
 } from "react";
 import { io } from "socket.io-client";
-//tangina talaga
 const API_URL =
   "https://calidro-production.up.railway.app" || "http://localhost:5000";
-// Example for your Socket connection
+
 const socket = io("https://calidro-production.up.railway.app");
 
 const ChatContext = createContext();
 
-// Persistent ID so refreshing the browser doesn't break the room
 const getPersistentUserId = () => {
   let id = localStorage.getItem("calidro_chat_id");
   if (!id) {
@@ -36,7 +34,6 @@ export const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     const handleConnect = () => {
-      // User joins their persistent room ID
       socket.emit("join_chat", userId);
     };
 
@@ -84,7 +81,6 @@ export const ChatProvider = ({ children }) => {
         }),
       };
 
-      // Optimistic Update (Show message immediately for the sender)
       setMessagesByRoom((prev) => ({
         ...prev,
         [targetRoom]: [...(prev[targetRoom] || []), newMessage],

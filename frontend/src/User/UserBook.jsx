@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import UserHeader from "../Components/UserHeader";
 import UserBookingCard from "../Props/UserBookingCard";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import axios from "axios";
 
 const API_URL = "https://calidro-production.up.railway.app";
@@ -11,6 +12,7 @@ const UserBook = () => {
   const [loading, setLoading] = useState(true);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const location = useLocation();
+  const [sortType, setSortType] = useState("newest");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +61,26 @@ const UserBook = () => {
     fetchData();
   }, [location.key]);
 
+  const getSortedBookings = () => {
+    let sorted = [...bookings];
+    switch (sortType) {
+      case "newest":
+        // Sort by event date (Newest first)
+        return sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+      case "oldest":
+        // Sort by event date (Oldest first)
+        return sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+      case "dateAdded":
+        // Assuming your DB returns a created_at or id that increments
+        return sorted.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at),
+        );
+
+      default:
+        return sorted;
+    }
+  };
+
   const handleCreateBookingClick = (e) => {
     if (!isProfileComplete) {
       e.preventDefault(); // Stop the Link from navigating
@@ -68,9 +90,7 @@ const UserBook = () => {
     }
   };
 
-  const sortedBookings = [...bookings].sort(
-    (a, b) => new Date(b.date) - new Date(a.date),
-  );
+  const displayedBookings = getSortedBookings();
 
   return (
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-screen overflow-hidden">
@@ -78,13 +98,40 @@ const UserBook = () => {
 
       <section className="relative pb-2 w-full flex-1 flex flex-col items-center">
         <div className="max-w-365 w-full mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl p-6 h-140 flex flex-col">
-          <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase shrink-0">
-            Bookings
-          </h1>
+          <div className="flex flex-row justify-between items-baseline mb-4 shrink-0 border-b border-gray-200 pb-2">
+            <h1 className="text-2xl font-bold text-[#4a3733] uppercase">
+              Bookings
+            </h1>
+
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="sort"
+                className="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
+              >
+                Sort By
+              </label>
+              <div className="relative">
+                <select
+                  id="sort"
+                  value={sortType}
+                  onChange={(e) => setSortType(e.target.value)}
+                  className="appearance-none bg-transparent border-none text-[#4a3733] text-[11px] font-bold pr-5 outline-none cursor-pointer hover:text-[#8b735b] transition-colors"
+                >
+                  <option value="newest">Newest to Oldest</option>
+                  <option value="oldest">Oldest to Newest</option>
+                  <option value="dateAdded">Date Added</option>
+                </select>
+                <ChevronDown
+                  size={10}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="flex flex-col gap-4 overflow-y-auto pr-2 flex-1 min-h-0">
-            {sortedBookings.length > 0 ? (
-              sortedBookings.map((booking) => (
+            {displayedBookings.length > 0 ? (
+              displayedBookings.map((booking) => (
                 <div key={booking.id} className="w-full shrink-0">
                   <UserBookingCard booking={booking} />
                 </div>
