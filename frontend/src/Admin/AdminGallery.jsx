@@ -409,7 +409,7 @@ const AdminGallery = () => {
                     Loading Events...
                   </p>
                 </div>
-              ) : sortedEvents.length > 0 ? (
+              ) : displayEvents.length > 0 ? (
                 displayEvents.map((item) => (
                   <AdminGalleryCard
                     key={item.id}
