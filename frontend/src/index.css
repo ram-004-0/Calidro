@@ -1,13 +1,17 @@
-@font-face {
-  font-family: ImperialScript;
-  src: url("./assets/fonts/ImperialScript-Regular.ttf");
-}
-
 @import "tailwindcss";
 
-@theme {
-  --font-imperialscript: "ImperialScript";
+@font-face {
+  font-family: "ImperialScript";
+  src: url("./assets/fonts/ImperialScript-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
 }
+
+@theme {
+  --font-imperialscript: "ImperialScript", cursive;
+}
+
 html {
   scroll-behavior: smooth;
 }
