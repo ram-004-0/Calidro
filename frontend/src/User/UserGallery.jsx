@@ -39,12 +39,11 @@ const UserGallery = () => {
     fetchEvents();
   }, []);
 
-  const filteredAndSortedEvents = (events || []) // Ensure events isn't null
+  const filteredAndSortedEvents = (events || [])
     .filter((event) => {
-      if (!event) return false; // Skip null entries
+      if (!event) return false;
 
       const matchesType = eventType === "" || event.type === eventType;
-      // Use optional chaining and fallback for search
       const matchesSearch = (event.title || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -52,8 +51,6 @@ const UserGallery = () => {
       return matchesType && matchesSearch;
     })
     .sort((a, b) => {
-      // Use 'date' because that is the alias you set in your SQL query
-      // Fallback to 0 if the date is missing
       const dateA = new Date(a?.date || 0).getTime();
       const dateB = new Date(b?.date || 0).getTime();
 

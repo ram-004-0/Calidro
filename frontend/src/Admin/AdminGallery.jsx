@@ -9,20 +9,11 @@ const AdminGallery = () => {
   const [events, setEvents] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sortOrder, setSortOrder] = useState("newest");
-  const [searchTerm, setSearchTerm] = useState("");
 
-  const displayEvents = events
-    .filter(
-      (ev) =>
-        ev.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ev.type.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-    .sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-    });
+  // --- FIXED/NEW: Added all necessary Filter and Search States ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [eventType, setEventType] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
 
   // --- NEW: State for the dynamic Add Form ---
   const [isAdding, setIsAdding] = useState(false);
@@ -37,6 +28,7 @@ const AdminGallery = () => {
 
   const fetchEvents = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${API_URL}/api/gallery/all`);
       const formattedEvents = response.data.map((ev) => ({
         id: ev.previous_events_id,
@@ -47,9 +39,9 @@ const AdminGallery = () => {
         images: ev.images || [],
       }));
       setEvents(formattedEvents);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching events:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -58,16 +50,23 @@ const AdminGallery = () => {
     fetchEvents();
   }, []);
 
-  const sortedEvents = [...events].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
+  // --- FIXED: Consolidated filter/sort logic matching the User Gallery layout ---
+  const displayEvents = (events || [])
+    .filter((event) => {
+      if (!event) return false;
 
-    if (sortOrder === "newest") {
-      return dateB - dateA; // Recent dates first
-    } else {
-      return dateA - dateB; // Older dates first
-    }
-  });
+      const matchesType = eventType === "" || event.type === eventType;
+      const matchesSearch =
+        (event.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.type || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+      return matchesType && matchesSearch;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a?.date || 0).getTime();
+      const dateB = new Date(b?.date || 0).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
 
   // --- DYNAMIC ADD LOGIC ---
   const handleSaveNewEvent = async () => {
@@ -113,12 +112,11 @@ const AdminGallery = () => {
     }
   };
 
-  // --- PLACEHOLDERS FOR FUTURE LOGIC ---
   const handleUpdateEvent = async (id, updatedData) => {
     try {
       const response = await axios.put(`${API_URL}/api/gallery/update/${id}`, {
         title: updatedData.title,
-        event_date: updatedData.date, // Card uses .date, DB uses event_date
+        event_date: updatedData.date,
         event_type: updatedData.type,
         description: updatedData.description,
       });
@@ -136,19 +134,14 @@ const AdminGallery = () => {
 
   const handleImageUpload = async (eventId, files) => {
     const fileArray = Array.from(files);
-
-    // Set loading state if you have one, or show a toast
     console.log(`Starting upload for ${fileArray.length} files...`);
 
     try {
-      // Process each file
       for (const file of fileArray) {
-        // 1. Prepare FormData for Cloudinary
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "gallery_unsigned"); // Required by Cloudinary
+        formData.append("upload_preset", "gallery_unsigned");
 
-        // 2. Upload to Cloudinary API
         const cloudRes = await axios.post(
           "https://api.cloudinary.com/v1_1/da4fp4fsr/image/upload",
           formData,
@@ -156,13 +149,11 @@ const AdminGallery = () => {
 
         const secureUrl = cloudRes.data.secure_url;
 
-        // 3. Save the permanent URL to your MySQL database
         await axios.post(`${API_URL}/api/gallery/add-image/${eventId}`, {
           image_url: secureUrl,
         });
       }
 
-      // 4. Refresh the UI once all images are saved
       alert("Images uploaded and saved successfully!");
       fetchEvents();
     } catch (error) {
@@ -172,12 +163,9 @@ const AdminGallery = () => {
   };
 
   const handleRemoveImage = async (eventId, imageId, imageUrl) => {
-    // 1. Confirmation check
     if (!window.confirm("Are you sure you want to remove this image?")) return;
 
     try {
-      // 2. Call backend with the data wrapped in the 'data' key
-      // This is required by Axios for DELETE requests to send a body
       await axios.delete(`${API_URL}/api/gallery/delete-image`, {
         data: {
           eventId: eventId,
@@ -185,7 +173,6 @@ const AdminGallery = () => {
         },
       });
 
-      // 3. Update local state for immediate feedback
       setEvents((prev) =>
         prev.map((ev) => {
           if (ev.id === eventId) {
@@ -197,8 +184,6 @@ const AdminGallery = () => {
       );
 
       alert("Image removed successfully.");
-
-      // 4. Re-fetch to ensure the state matches the DB exactly
       fetchEvents();
     } catch (error) {
       console.error(
@@ -223,13 +208,13 @@ const AdminGallery = () => {
             {/* Search/Filter Bar */}
             <div className="overflow-x-auto no-scrollbar mb-6 flex-shrink-0">
               <div className="grid grid-cols-4 gap-4 md:gap-6 min-w-[800px] lg:min-w-full">
+                {/* FIXED: Hooked up eventType state and default structure */}
                 <select
                   className="bg-white border border-gray-300 rounded-full p-3 outline-none cursor-pointer text-sm md:text-base"
-                  defaultValue=""
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value)}
                 >
-                  <option value="" disabled>
-                    Select an event type
-                  </option>
+                  <option value="">All Event Types</option>
 
                   <optgroup label="Social Events">
                     <option value="Birthday Party">Birthday Party</option>
@@ -265,29 +250,36 @@ const AdminGallery = () => {
                     <option value="Other">Other</option>
                   </optgroup>
                 </select>
+
                 <input
-                  className="bg-white border rounded-full p-3 outline-none"
+                  className="bg-white border rounded-full p-3 outline-none text-sm md:text-base"
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsAdding(true)}
-                    className="flex-1 bg-[#f4dfba] hover:bg-[#e9d1a8] py-2 rounded-full font-bold transition"
+                    className="flex-1 bg-[#f4dfba] hover:bg-[#e9d1a8] py-2 rounded-full font-bold text-sm transition"
                   >
                     + Add New
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={!selectedId}
-                    className={`flex-1 py-2 rounded-full font-bold transition ${selectedId ? "bg-red-400 text-white" : "bg-gray-300 text-gray-500"}`}
+                    className={`flex-1 py-2 rounded-full font-bold text-sm transition ${
+                      selectedId
+                        ? "bg-red-400 text-white"
+                        : "bg-gray-300 text-gray-500"
+                    }`}
                   >
                     Delete
                   </button>
                 </div>
+
                 <select
-                  className="bg-white border rounded-full p-3 outline-none cursor-pointer"
+                  className="bg-white border rounded-full p-3 outline-none cursor-pointer text-sm md:text-base"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
                 >
@@ -418,8 +410,7 @@ const AdminGallery = () => {
                   </p>
                 </div>
               ) : sortedEvents.length > 0 ? (
-                // Use sortedEvents (or displayEvents if you added search logic)
-                sortedEvents.map((item) => (
+                displayEvents.map((item) => (
                   <AdminGalleryCard
                     key={item.id}
                     event={item}

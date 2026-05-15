@@ -4,7 +4,7 @@ const verifyToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  console.log("DEBUG: Auth Header received:", authHeader); // See if the token is arriving
+  console.log("DEBUG: Auth Header received:", authHeader);
 
   if (!token) {
     return res
