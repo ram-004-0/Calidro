@@ -9,43 +9,64 @@ const API_URL = "https://calidro-production.up.railway.app";
 const UserBook = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchData = async () => {
       try {
         const storedUser = localStorage.getItem("user");
         const token = localStorage.getItem("token");
         const user = storedUser ? JSON.parse(storedUser) : null;
 
-        // Safety Check: If no user or token, don't even try the request
         if (!user?.user_id || !token) {
-          console.warn("No user ID or token found in localStorage");
           setLoading(false);
           return;
         }
 
-        const response = await axios.get(
+        // 1. Fetch Bookings
+        const bookingRes = await axios.get(
           `${API_URL}/api/bookings/my-bookings/${user.user_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         );
-        setBookings(response.data);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          console.error("Session expired. Please log in again.");
+        setBookings(bookingRes.data);
+
+        // 2. Check Profile Completion
+        const profileRes = await axios.get(`${API_URL}/api/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const { phone_number, address } = profileRes.data;
+        // Logic: Access is granted only if phone and address are not empty/null
+        if (
+          phone_number &&
+          address &&
+          phone_number.trim() !== "" &&
+          address.trim() !== ""
+        ) {
+          setIsProfileComplete(true);
+        } else {
+          setIsProfileComplete(false);
         }
-        console.error("Error fetching bookings:", err);
+      } catch (err) {
+        console.error("Error fetching data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBookings();
+    fetchData();
   }, [location.key]);
+
+  const handleCreateBookingClick = (e) => {
+    if (!isProfileComplete) {
+      e.preventDefault(); // Stop the Link from navigating
+      alert(
+        "Please complete your profile (Phone and Address) before creating a booking!",
+      );
+    }
+  };
 
   const sortedBookings = [...bookings].sort(
     (a, b) => new Date(b.date) - new Date(a.date),
@@ -80,8 +101,13 @@ const UserBook = () => {
       <div className="w-full shrink-0">
         <div className="flex justify-end text-[#4a3733] uppercase font-medium px-7 py-3">
           <Link
-            to="/booking"
-            className="bg-[#f4dfba] hover:bg-white hover:text-[#4a3733] px-10 py-3 rounded-full text-sm font-bold uppercase transition-colors shadow-md"
+            to={isProfileComplete ? "/booking" : "#"}
+            onClick={handleCreateBookingClick}
+            className={`px-10 py-3 rounded-full text-sm font-bold uppercase transition-all shadow-md ${
+              isProfileComplete
+                ? "bg-[#f4dfba] hover:bg-white text-[#4a3733]"
+                : "bg-gray-400 cursor-not-allowed text-gray-200"
+            }`}
           >
             Create new booking
           </Link>
