@@ -42,7 +42,7 @@ const Login = () => {
   // Logic for Google Success
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await fetch(`${API_URL}/auth/google-login`, {
+      const res = await fetch(`${API_URL}/api/auth/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken: credentialResponse.credential }),
@@ -51,7 +51,7 @@ const Login = () => {
 
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        login(data.user); // 4. Critical: Ensure the server returns the user object
+        login(data.user);
 
         const userRole = data.user.role;
         navigate(userRole === "admin" ? "/admin-overview" : "/userhome");
