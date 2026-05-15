@@ -106,14 +106,22 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       year: "numeric",
     });
 
+    let formattedTime = time;
+    if (time) {
+      const [hours] = time.split(":");
+      const h = parseInt(hours);
+      const ampm = h >= 12 ? "PM" : "AM";
+      formattedTime = `${h % 12 || 12} ${ampm}`;
+    }
+
     await createNotification(
       userId,
-      `Your booking for "${eventName}" on ${formattedDate} is pending payment.`,
+      `Your booking for "${eventName}" on ${formattedDate} at ${formattedTime} has been confirmed. Your payment was processed securely!`,
       bookingId,
     );
     await createNotification(
       userId,
-      `New Booking Alert: ${userData.username} reserved "${eventName}" for ${formattedDate}.`,
+      `New Booking Alert: ${userData.username} reserved "${eventName}" for ${formattedDate} at ${formattedTime}.`,
       bookingId,
       "admin",
     );
@@ -326,7 +334,8 @@ router.put("/:id/update-payment", async (req, res) => {
       parseFloat(booking.amount_paid) + parseFloat(paymentAmount);
     const remainingBalance = Math.max(0, booking.total_amount - newTotalPaid);
 
-    // 2. Logic: Status is 'confirmed' ONLY if fully paid, else 'partial'
+    const isFullyPaid = remainingBalance <= 0;
+
     const newStatus = remainingBalance <= 0 ? "confirmed" : "pending";
     const newPaymentType = remainingBalance <= 0 ? "full" : "partial";
 
@@ -336,17 +345,25 @@ router.put("/:id/update-payment", async (req, res) => {
     );
 
     let notificationMsg = isFullyPaid
-      ? `Payment Complete! You have fully paid for "${booking.event_name}". We look forward to seeing you!`
+      ? `Payment Successful! Your booking for "${booking.event_name}" is now fully paid and confirmed.`
       : `Partial payment received for "${booking.event_name}". Your updated remaining balance is ₱${remainingBalance.toLocaleString()}.`;
-
     console.log(`DEBUG: Sending notification to User ${booking.user_id}...`);
 
     try {
-      await createNotification(booking.user_id, notificationMsg, id);
+      await createNotification(booking.user_id, notificationMsg, id, "user");
+
+      if (isFullyPaid) {
+        await createNotification(
+          booking.user_id,
+          `Payment Alert: ${booking.username} fully paid for "${booking.event_name}".`,
+          id,
+          "admin",
+        );
+      }
+
       console.log("✅ Notification saved successfully.");
     } catch (notifErr) {
       console.error("❌ Notification Helper Failed:", notifErr.message);
-      // We don't crash the whole route if just the notification fails
     }
 
     if (isFullyPaid && booking.status !== "confirmed") {
