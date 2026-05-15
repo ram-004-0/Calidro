@@ -1,10 +1,8 @@
 @import "tailwindcss";
 
 @font-face {
-  /* I removed the space to keep it super safe */
   font-family: "ImperialScript";
-  /* Check if you need ../ if your css is inside a 'src' folder */
-  src: url("./assets/fonts/ImperialScript-Regular.ttf") format("truetype");
+  src: url("./assets/Fonts/ImperialScript-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
