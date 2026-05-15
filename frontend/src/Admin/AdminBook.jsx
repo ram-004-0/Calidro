@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import AdminHeader from "../Components/AdminHeader";
+import { ChevronDown } from "lucide-react";
 
-const API_URL =
-  "https://calidro-production.up.railway.app" || "http://localhost:5000";
+const API_URL = "https://calidro-production.up.railway.app";
 
 const AdminBook = () => {
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+  const [sortType, setSortType] = useState("newest");
 
   const fetchBookings = async () => {
     try {
@@ -27,6 +28,32 @@ const AdminBook = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const getSortedBookings = () => {
+    let sorted = [...bookings];
+    switch (sortType) {
+      case "newest":
+        return sorted.sort(
+          (a, b) =>
+            (new Date(b.date).getTime() || 0) -
+            (new Date(a.date).getTime() || 0),
+        );
+      case "oldest":
+        return sorted.sort(
+          (a, b) =>
+            (new Date(a.date).getTime() || 0) -
+            (new Date(b.date).getTime() || 0),
+        );
+      case "dateAdded":
+        return sorted.sort(
+          (a, b) => (b.booking_id || b.id || 0) - (a.booking_id || a.id || 0),
+        );
+      default:
+        return sorted;
+    }
+  };
+
+  const displayedBookings = getSortedBookings();
 
   const handlePaymentUpdate = async (bookingId, newType, currentNote) => {
     try {
@@ -84,12 +111,6 @@ const AdminBook = () => {
       default:
         return "bg-gray-200 text-gray-700";
     }
-  };
-
-  const getPaymentStatusStyles = (paid, total) => {
-    if (paid >= total) return "bg-emerald-500 text-white";
-    if (paid > 0) return "bg-amber-400 text-black";
-    return "bg-red-500 text-white";
   };
 
   return (
@@ -191,12 +212,34 @@ const AdminBook = () => {
       {/* TABLE SECTION */}
       <section className="relative pb-2 w-full">
         {/* Consistent Container Wrapper */}
-        <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
-          {/* Inner Content Wrapper with Padding */}
+        <div className="max-w-7xl mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
           <div className="p-6 flex flex-col w-full h-full">
-            <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase flex-shrink-0">
-              Reservations
-            </h1>
+            <div className="flex flex-row justify-between items-center mb-5 shrink-0 border-b border-gray-200/60 pb-3">
+              <h1 className="text-2xl font-bold text-[#4a3733] uppercase">
+                Reservations
+              </h1>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:inline">
+                  Sort By:
+                </span>
+                <div className="relative">
+                  <select
+                    value={sortType}
+                    onChange={(e) => setSortType(e.target.value)}
+                    className="appearance-none bg-white border border-gray-200 text-[#4a3733] text-xs font-semibold py-2 pl-4 pr-9 rounded-full outline-none cursor-pointer shadow-sm hover:border-[#4a3733]/30 transition-all"
+                  >
+                    <option value="newest">Newest to Oldest</option>
+                    <option value="oldest">Oldest to Newest</option>
+                    <option value="dateAdded">Date Added</option>
+                  </select>
+                  <ChevronDown
+                    size={13}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  />
+                </div>
+              </div>
+            </div>
 
             <div className="bg-white border rounded-lg shadow-lg flex-1 overflow-hidden flex flex-col">
               {/* Horizontal Scroll wrapper for Mobile, Vertical for both */}
@@ -216,104 +259,118 @@ const AdminBook = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {bookings.map((b) => (
-                      <tr key={b.id} className="hover:bg-gray-50">
-                        <td className="py-4 px-2 truncate">{b.userName}</td>
-                        <td className="py-4 px-2 truncate">{b.contactNo}</td>
-                        <td className="py-4 px-2 truncate text-sm">
-                          {b.email}
-                        </td>
-                        <td className="py-4 px-2 truncate">{b.eventName}</td>
-                        <td className="py-4 px-2 text-sm whitespace-nowrap">
-                          {new Date(b.date).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                          <br />
-                          {new Date(`1970-01-01T${b.time}`).toLocaleTimeString(
-                            "en-US",
-                            {
+                    {displayedBookings.map((b) => {
+                      const currentPaymentType = b.paymentType || "partial";
+                      return (
+                        <tr
+                          key={b.booking_id || b.id}
+                          className="hover:bg-gray-50"
+                        >
+                          <td className="py-4 px-2 truncate">{b.userName}</td>
+                          <td className="py-4 px-2 truncate">{b.contactNo}</td>
+                          <td className="py-4 px-2 truncate text-sm">
+                            {b.email}
+                          </td>
+                          <td className="py-4 px-2 truncate">{b.eventName}</td>
+                          <td className="py-4 px-2 text-sm whitespace-nowrap">
+                            {new Date(b.date).toLocaleDateString("en-US", {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                            <br />
+                            {new Date(
+                              `1970-01-01T${b.time}`,
+                            ).toLocaleTimeString("en-US", {
                               hour: "numeric",
                               minute: "2-digit",
                               hour12: true,
-                            },
-                          )}
-                        </td>
-                        <td className="py-4 px-2">
-                          {b.typeOfEvent}
-                          <button
-                            onClick={() => setSelectedBooking(b)}
-                            className="block text-blue-600 text-xs mt-1 hover:underline font-bold uppercase"
-                          >
-                            View Details
-                          </button>
-                        </td>
-                        <td className="py-4 px-2">
-                          <div className="flex flex-col gap-2">
-                            {/* PAYMENT STATUS / DROPDOWN */}
-                            {b.paymentType?.toLowerCase() === "refund" ? (
-                              <span
-                                className={`${getPaymentTypeStyles("refund")} rounded-full px-3 py-1 text-[10px] font-bold uppercase text-center`}
-                              >
-                                Refunded
-                              </span>
-                            ) : (
-                              <select
-                                value={b.paymentType || "partial"}
-                                onChange={(e) =>
-                                  handlePaymentUpdate(
-                                    b.booking_id,
-                                    e.target.value,
-                                    b.payment_note,
-                                  )
-                                }
-                                className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer outline-none ${getPaymentTypeStyles(b.paymentType)}`}
-                              >
-                                {b.paymentType?.toLowerCase() === "partial" && (
-                                  <option value="partial">Partial</option>
-                                )}
-                                <option value="full">Full</option>
-                                {b.paid > 5000 && (
-                                  <option value="refund">Refund</option>
-                                )}
-                              </select>
-                            )}
-
-                            {/* CONDITIONAL NOTE SECTION: Only show if NOT refunded */}
-                            {b.paymentType?.toLowerCase() !== "refund" && (
-                              <div className="flex flex-col">
-                                <label className="text-[9px] font-bold text-gray-400 uppercase">
-                                  Note:
-                                </label>
-                                <input
-                                  type="text"
-                                  placeholder="Add note..."
-                                  defaultValue={b.payment_note || ""}
-                                  onBlur={(e) =>
+                            })}
+                          </td>
+                          <td className="py-4 px-2">
+                            {b.typeOfEvent}
+                            <button
+                              onClick={() => setSelectedBooking(b)}
+                              className="block text-blue-600 text-xs mt-1 hover:underline font-bold uppercase"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                          <td className="py-4 px-2">
+                            <div className="flex flex-col gap-2">
+                              {/* PAYMENT STATUS / DROPDOWN */}
+                              {currentPaymentType.toLowerCase() === "refund" ? (
+                                <span
+                                  className={`${getPaymentTypeStyles("refund")} rounded-full px-3 py-1 text-[10px] font-bold uppercase text-center`}
+                                >
+                                  Refunded
+                                </span>
+                              ) : (
+                                <select
+                                  id={`select-pay-${b.booking_id || b.id}`}
+                                  value={currentPaymentType}
+                                  onChange={(e) =>
                                     handlePaymentUpdate(
-                                      b.booking_id,
-                                      b.paymentType,
+                                      b.booking_id || b.id,
                                       e.target.value,
+                                      b.payment_note,
                                     )
                                   }
-                                  className="text-[10px] border-b border-gray-300 bg-transparent focus:border-[#4a3733] outline-none py-1"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-4 px-2 text-center">
-                          <span
-                            className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap ${getStatusStyles(
-                              b.bookingStatus,
-                            )}`}
-                          >
-                            {b.bookingStatus}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                                  className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer outline-none ${getPaymentTypeStyles(currentPaymentType)}`}
+                                >
+                                  {currentPaymentType.toLowerCase() ===
+                                    "partial" && (
+                                    <option value="partial">Partial</option>
+                                  )}
+                                  <option value="full">Full</option>
+                                  {b.paid > 5000 && (
+                                    <option value="refund">Refund</option>
+                                  )}
+                                </select>
+                              )}
+
+                              {/* CONDITIONAL NOTE SECTION: Only show if NOT refunded */}
+                              {currentPaymentType.toLowerCase() !==
+                                "refund" && (
+                                <div className="flex flex-col">
+                                  <label className="text-[9px] font-bold text-gray-400 uppercase">
+                                    Note:
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Add note..."
+                                    defaultValue={b.payment_note || ""}
+                                    onBlur={(e) => {
+                                      const selectEl = document.getElementById(
+                                        `select-pay-${b.booking_id || b.id}`,
+                                      );
+                                      const activeType = selectEl
+                                        ? selectEl.value
+                                        : currentPaymentType;
+                                      handlePaymentUpdate(
+                                        b.booking_id || b.id,
+                                        activeType,
+                                        e.target.value,
+                                      );
+                                    }}
+                                    className="text-[10px] border-b border-gray-300 bg-transparent focus:border-[#4a3733] outline-none py-1"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-2 text-center">
+                            <span
+                              className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase whitespace-nowrap ${getStatusStyles(
+                                b.bookingStatus,
+                              )}`}
+                            >
+                              {b.bookingStatus}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
