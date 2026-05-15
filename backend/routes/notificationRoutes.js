@@ -10,7 +10,7 @@ const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 
 router.delete("/delete-selected", verifyToken, deleteSelectedNotifications);
 
-router.get("/admin", getAdminNotifications);
+router.get("/admin", verifyToken, isAdmin, getAdminNotifications);
 
 router.get("/:userId", getNotifications);
 

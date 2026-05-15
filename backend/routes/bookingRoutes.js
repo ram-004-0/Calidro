@@ -633,8 +633,7 @@ router.put("/:id/update-payment-type", async (req, res) => {
 
     const booking = rows[0];
 
-    // Build the query dynamically
-    // If refund, also set status to 'cancelled'. Otherwise, keep existing status.
+    // Status logic: if it's a refund, cancel it. Otherwise, keep it as is.
     let updateSql = `
       UPDATE booking 
       SET payment_type = ?, 
@@ -644,13 +643,21 @@ router.put("/:id/update-payment-type", async (req, res) => {
     `;
 
     const queryParams = [paymentType, paymentNote, id];
-
     await db.query(updateSql, queryParams);
 
-    // 🔔 Notification Logic
+    // 🔔 Updated Notification Logic
     if (paymentType === "refund") {
-      const refundMsg = `Your payment for "${booking.event_name}" has been successfully refunded. Your booking status is now: Cancelled.`;
-      await createNotification(booking.user_id, refundMsg, id);
+      // 1. Notify the USER (Shows up in User's notification list)
+      const refundMsg = `Your payment for "${booking.event_name}" has been successfully refunded. Status: Cancelled.`;
+      await createNotification(booking.user_id, refundMsg, id, "user");
+
+      // 2. Notify the ADMIN (This makes it "pop up" in the AdminHeader)
+      const adminMsg = `Refund processed for "${booking.event_name}" (Booking ID: ${id})`;
+      await createNotification(booking.user_id, adminMsg, id, "admin");
+    } else {
+      // Optional: Notify user of general payment updates
+      const updateMsg = `The payment details for your booking "${booking.event_name}" have been updated to: ${paymentType}.`;
+      await createNotification(booking.user_id, updateMsg, id, "user");
     }
 
     res.json({ success: true, message: "Booking updated successfully" });
