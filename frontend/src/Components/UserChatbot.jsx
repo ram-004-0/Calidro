@@ -244,7 +244,7 @@ const UserChatbot = () => {
         "attend",
         "occupancy",
       ],
-      ans: "Our venue capacity:\n- Banquet-style: Up to 180 guests\n- Standing/Cocktail: Up to 250 guests",
+      ans: "Our venue capacity:\n- Banquet-style: Up to 180 guests\n- Standing/Cocktail: Up to 200 guests",
     },
     {
       id: "dimensions",

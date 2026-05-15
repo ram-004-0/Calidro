@@ -266,7 +266,7 @@ router.put("/update-status/:id", async (req, res) => {
 
     // Notify User & Admin
     const statusMsg = `Your booking for "${booking.event_name}" is now ${status}.`;
-    const adminStatusMsg = `Status Update: Booking #${id} (${booking.username}) changed to ${status.toUpperCase()}.`;
+    //const adminStatusMsg = `Status Update: Booking #${id} (${booking.username}) changed to ${status.toUpperCase()}.`;
 
     await createNotification(booking.user_id, statusMsg, id);
     await createNotification(booking.user_id, adminStatusMsg, id, "admin");
