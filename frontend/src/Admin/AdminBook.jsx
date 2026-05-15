@@ -195,7 +195,7 @@ const AdminBook = () => {
           {/* Inner Content Wrapper with Padding */}
           <div className="p-6 flex flex-col w-full h-full">
             <h1 className="text-2xl font-bold text-[#4a3733] mb-4 uppercase flex-shrink-0">
-              Reservation Requests
+              Reservations
             </h1>
 
             <div className="bg-white border rounded-lg shadow-lg flex-1 overflow-hidden flex flex-col">
