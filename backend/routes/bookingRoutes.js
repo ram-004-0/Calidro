@@ -609,22 +609,41 @@ router.post("/webhook/paymongo", async (req, res) => {
 
     if (!bookingId || paymentAmount <= 0) return;
 
+    // 1. Update the database amount
     await db.query(
       `UPDATE booking SET amount_paid = amount_paid + ?, status = CASE WHEN (amount_paid + ?) >= (total_amount - 10) THEN 'confirmed' ELSE 'pending' END WHERE booking_id = ?`,
       [paymentAmount, paymentAmount, bookingId],
     );
 
+    // 2. ADDED CRITICAL COLUMNS: total_amount and amount_paid
     const [fresh] = await db.query(
-      "SELECT user_id, username, event_name, status FROM booking WHERE booking_id = ?",
+      "SELECT user_id, username, event_name, status, total_amount, amount_paid FROM booking WHERE booking_id = ?",
       [bookingId],
     );
 
     if (fresh.length > 0) {
       const b = fresh[0];
+
+      // 3. CALCULATE THE MISSING VARIABLES
+      const remainingBalance = Math.max(
+        0,
+        parseFloat(b.total_amount) - parseFloat(b.amount_paid),
+      );
+      const isFullyPaid = remainingBalance <= 0 || b.status === "confirmed";
+
+      const paymentStatusText = isFullyPaid
+        ? "fully paid and confirmed"
+        : "partially paid";
+      const balanceFollowUp = isFullyPaid
+        ? "Your booking is now secured!"
+        : `Your updated remaining balance is ₱${remainingBalance.toLocaleString()}.`;
+
+      // 4. Strings can now safely use them
       const userMsg = `Payment received: ₱${paymentAmount.toLocaleString()} for "${b.event_name}". This booking is now ${paymentStatusText}. ${balanceFollowUp}`;
       const adminMsg = `Payment Alert: ₱${paymentAmount.toLocaleString()} received from ${b.username} for "${b.event_name}" (${paymentStatusText}).`;
 
-      await createNotification(b.user_id, userMsg, bookingId);
+      // 5. Fire notifications (Explicitly passing types)
+      await createNotification(b.user_id, userMsg, bookingId, "user");
       await createNotification(b.user_id, adminMsg, bookingId, "admin");
     }
   } catch (err) {
