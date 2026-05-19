@@ -71,16 +71,6 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     }
   }, [isMounted, user, bookingData]);
 
-  // 5. CRITICAL: The return guard
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl font-semibold text-gray-400 animate-pulse">
-          Loading Payment Details...
-        </div>
-      </div>
-    );
-  }
   const formatNumber = (val) => Number(val).toLocaleString("en-PH");
 
   const handleUpdateBalance = async (methods) => {
@@ -202,6 +192,16 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
 
     return () => clearInterval(intervalId);
   }, [isMounted, targetDate, isRestricted, navigate]);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl font-semibold text-gray-400 animate-pulse">
+          Loading Payment Details...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 p-8">
