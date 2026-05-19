@@ -11,9 +11,8 @@ const AdminOverview = () => {
   const [activeTab, setActiveTab] = useState("overview-virtualTour");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Mobile View Detection Utility Function
   const isMobileView = () => {
-    return window.innerWidth < 1024; // 1024px matches Tailwind's lg breakpoint
+    return window.innerWidth < 1024;
   };
 
   const tabLabels = {
@@ -50,21 +49,18 @@ const AdminOverview = () => {
         <div
           className={`max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl flex ${
             isMobileView()
-              ? "flex-col h-auto" // Removes fixed heights on mobile so it expands naturally
-              : "h-[600px] overflow-hidden" // Exact original layout desktop rules
+              ? "flex-col h-[600px] relative"
+              : "h-[600px] overflow-hidden"
           }`}
         >
           {/* ---------------- SIDE BAR ---------------- */}
-          {/* Kept normal block placement on mobile so it pushes content below it when expanded */}
           <div
             className={`bg-[#efe7e3] p-6 flex flex-col shrink-0 ${
-              isMobileView()
-                ? "w-full border-b border-[#e7d8cf] gap-3 rounded-t-3xl"
-                : "w-64"
+              isMobileView() ? "w-full border-b border-[#e7d8cf] z-20" : "w-64"
             }`}
           >
             <div
-              className={`flex items-center justify-between ${isMobileView() ? "cursor-pointer select-none" : ""}`}
+              className={`flex items-center justify-between cursor-pointer select-none`}
               onClick={() => isMobileView() && setIsSidebarOpen(!isSidebarOpen)}
             >
               <h2
@@ -86,38 +82,52 @@ const AdminOverview = () => {
               )}
             </div>
 
-            {(!isMobileView() || isSidebarOpen) && (
-              <div className="flex flex-col gap-2 transition-all duration-200">
+            {/* Mobile Dropdown Overlay */}
+            {isMobileView() && isSidebarOpen && (
+              <div className="absolute top-[72px] left-0 w-full bg-[#efe7e3] p-4 border-b border-[#e7d8cf] shadow-xl z-50 rounded-b-2xl animate-in fade-in slide-in-from-top-2">
+                <div className="flex flex-col gap-2">
+                  {Object.keys(tabLabels).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => handleTabClick(tab)}
+                      className={getButtonClass(tab)}
+                    >
+                      {tabLabels[tab]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Sidebar Always Visible */}
+            {!isMobileView() && (
+              <div className="flex flex-col gap-2">
                 <button
-                  onClick={() => handleTabClick("overview-virtualTour")}
+                  onClick={() => setActiveTab("overview-virtualTour")}
                   className={getButtonClass("overview-virtualTour")}
                 >
                   Virtual Tour
                 </button>
-
                 <button
-                  onClick={() => handleTabClick("overview-aboutUs")}
+                  onClick={() => setActiveTab("overview-aboutUs")}
                   className={getButtonClass("overview-aboutUs")}
                 >
                   About Us
                 </button>
-
                 <button
-                  onClick={() => handleTabClick("overview-events")}
+                  onClick={() => setActiveTab("overview-events")}
                   className={getButtonClass("overview-events")}
                 >
                   Previous Events
                 </button>
-
                 <button
-                  onClick={() => handleTabClick("overview-book")}
+                  onClick={() => setActiveTab("overview-book")}
                   className={getButtonClass("overview-book")}
                 >
                   Book
                 </button>
-
                 <button
-                  onClick={() => handleTabClick("overview-contact")}
+                  onClick={() => setActiveTab("overview-contact")}
                   className={getButtonClass("overview-contact")}
                 >
                   Contact
@@ -127,9 +137,8 @@ const AdminOverview = () => {
           </div>
 
           {/* ---------------- CONTENT AREA ---------------- */}
-          {/* Placed relative and static underneath the sidebar block flow on mobile viewports */}
           <div
-            className={`flex-1 ${isMobileView() ? "p-4 h-auto" : "p-8 overflow-y-auto"}`}
+            className={`flex-1 ${isMobileView() ? "p-4 overflow-y-auto" : "p-8 overflow-y-auto"}`}
           >
             {activeTab === "overview-virtualTour" && <OverviewVirtualTour />}
             {activeTab === "overview-aboutUs" && <OverviewAboutUs />}
