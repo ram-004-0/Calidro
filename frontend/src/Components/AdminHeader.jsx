@@ -126,7 +126,6 @@ const AdminHeader = () => {
       clearInterval(interval);
       controller.abort();
     };
-    // Remove the setters from here to prevent unnecessary re-runs
   }, []);
 
   const baseStyle =
@@ -187,7 +186,9 @@ const AdminHeader = () => {
               </div>
 
               {isNotifyOpen && (
-                <div className="absolute right-0 mt-4 w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
+                /* MODIFIED CONTAINER: Replaced 'absolute right-0' with a responsive config 
+                   keeping it right-aligned safely on mobile viewports */
+                <div className="fixed md:absolute right-4 left-auto md:right-0 mt-4 max-w-[calc(100vw-2rem)] w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
                   <div className="flex flex-col gap-2 border-b pb-2 mb-2">
                     <div className="flex justify-between items-center">
                       <h3 className="font-bold text-sm uppercase tracking-wider">
@@ -219,7 +220,6 @@ const AdminHeader = () => {
                   </div>
 
                   <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
-                    {/* Using localNotifs as the primary source of truth for the UI */}
                     {localNotifs && localNotifs.length > 0 ? (
                       localNotifs.map((n) => (
                         <div
