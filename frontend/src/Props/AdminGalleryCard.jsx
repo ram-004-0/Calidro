@@ -12,6 +12,10 @@ const AdminGalleryCard = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ ...event });
 
+  // Mobile View Detection
+  const isMobileView = () =>
+    typeof window !== "undefined" && window.innerWidth < 1024;
+
   useEffect(() => {
     setEditData({ ...event });
   }, [event]);
@@ -38,7 +42,9 @@ const AdminGalleryCard = ({
   return (
     <div
       onClick={() => !isEditing && onSelect(event.id)}
-      className={`grid grid-cols-4 gap-4 p-4 rounded-lg shadow-lg cursor-pointer transition-all border-2 flex-shrink-0 min-h-[280px] ${
+      className={`grid gap-4 p-4 rounded-lg shadow-lg cursor-pointer transition-all border-2 flex-shrink-0 min-h-[280px] ${
+        isMobileView() ? "grid-cols-1" : "grid-cols-4" // Switches to single column on mobile
+      } ${
         isSelected
           ? "border-[#4a3733] bg-[#fdfdfd] scale-[1.01]"
           : "border-transparent bg-white hover:border-gray-200"
@@ -90,7 +96,6 @@ const AdminGalleryCard = ({
               <option value="" disabled>
                 Select an event type
               </option>
-
               <optgroup label="Social Events">
                 <option value="Birthday Party">Birthday Party</option>
                 <option value="Debut">Debut (18th Birthday)</option>
@@ -98,14 +103,12 @@ const AdminGalleryCard = ({
                 <option value="Wedding Reception">Wedding Reception</option>
                 <option value="Anniversary">Anniversary Celebration</option>
               </optgroup>
-
               <optgroup label="Family Milestones">
                 <option value="Baby Shower">Baby Shower</option>
                 <option value="Gender Reveal">Gender Reveal</option>
                 <option value="Baptism">Baptism / Christening</option>
                 <option value="Graduation Party">Graduation Party</option>
               </optgroup>
-
               <optgroup label="Corporate Events">
                 <option value="Corporate Meeting">Corporate Meeting</option>
                 <option value="Seminar">Seminar / Workshop</option>
@@ -113,7 +116,6 @@ const AdminGalleryCard = ({
                 <option value="Team Building">Team Building Event</option>
                 <option value="Company Party">Company Party</option>
               </optgroup>
-
               <optgroup label="Creative / Others">
                 <option value="Exhibit">Exhibit / Art Showcase</option>
                 <option value="Pop-up Market">Pop-up Market / Bazaar</option>
@@ -185,7 +187,6 @@ const AdminGalleryCard = ({
           className="relative group bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center h-40 shadow-inner overflow-hidden self-center"
         >
           <img src={img} alt="event" className="w-full h-full object-cover" />
-
           {isSelected && (
             <button
               onClick={(e) => {
