@@ -201,7 +201,7 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
     const intervalId = setInterval(checkAvailabilityRealtime, 5000);
 
     return () => clearInterval(intervalId);
-  }, [targetDate, navigate]);
+  }, [isMounted, targetDate, isRestricted, navigate]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 p-8">
