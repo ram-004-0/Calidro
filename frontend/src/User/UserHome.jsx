@@ -7,7 +7,7 @@ const API_URL = "https://calidro-production.up.railway.app";
 
 const UserHome = () => {
   const [homeCards, setHomeCards] = useState([]);
-  const [reviews, setReviews] = useState([]); // Default to empty array
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
 
@@ -103,39 +103,45 @@ const UserHome = () => {
 
       {/* --- Dynamic Ratings Section --- */}
       <section className="relative py-20 w-full bg-[#f1f1f1]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-white rounded-3xl shadow-xl p-8 md:p-14">
-            <h1 className="text-2xl font-bold text-[#4a3733] mb-10 uppercase tracking-widest">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="bg-white rounded-3xl shadow-xl p-5 md:p-14">
+            <h1 className="text-xl md:text-2xl font-bold text-[#4a3733] mb-6 md:mb-10 uppercase tracking-widest text-center md:text-left">
               Ratings
             </h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-16 mb-12 pb-12 border-b border-gray-100">
-              <div className="flex flex-col items-center justify-center border-r border-gray-100 pr-8">
-                <span className="text-8xl font-bold text-[#4a3733]">
+            {/* Adjusted gap on mobile to shrink the overall footprint */}
+            <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 md:gap-16 mb-8 md:mb-12 pb-8 md:pb-12 border-b border-gray-100">
+              {/* Scaled text size down on mobile; changed side border to a bottom border on mobile */}
+              <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-8">
+                <span className="text-6xl md:text-8xl font-bold text-[#4a3733]">
                   {averageRating}
                 </span>
-                <div className="text-yellow-500 text-2xl my-3">
+                <div className="text-yellow-500 text-xl md:text-2xl my-2 md:my-3">
                   {"★".repeat(Math.round(parseFloat(averageRating)))}
                   {"☆".repeat(5 - Math.round(parseFloat(averageRating)))}
                 </div>
-                <p className="text-gray-400 text-sm font-semibold uppercase">
+                <p className="text-gray-400 text-xs md:text-sm font-semibold uppercase">
                   {totalReviews} Ratings
                 </p>
               </div>
 
-              <div className="space-y-4 flex flex-col justify-center">
+              {/* Progress bars: optimized spacing and heights for small screen displays */}
+              <div className="space-y-2 md:space-y-4 flex flex-col justify-center">
                 {ratingStats.map((stat) => (
-                  <div key={stat.label} className="flex items-center gap-6">
-                    <span className="text-sm font-bold text-[#4a3733] w-16">
+                  <div
+                    key={stat.label}
+                    className="flex items-center gap-4 md:gap-6"
+                  >
+                    <span className="text-xs md:text-sm font-bold text-[#4a3733] w-12 md:w-16 whitespace-nowrap">
                       {stat.label}
                     </span>
-                    <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-3 md:h-4 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#4a3733]"
                         style={{ width: stat.percent }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-400 w-10">
+                    <span className="text-xs md:text-sm text-gray-400 w-8 md:w-10 text-right">
                       {stat.count}
                     </span>
                   </div>
@@ -143,15 +149,15 @@ const UserHome = () => {
               </div>
             </div>
 
-            {/* --- Filter Buttons --- */}
-            <div className="flex flex-wrap gap-4 mb-12">
+            {/* --- Filter Buttons with an elegant side-scroll path on mobile view --- */}
+            <div className="flex flex-row md:flex-wrap gap-2 md:gap-4 mb-8 md:mb-12 overflow-x-auto md:overflow-visible pb-3 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x -mx-5 px-5 md:mx-0 md:px-0">
               {["All", "5", "4", "3", "2", "1"].map((star) => (
                 <button
                   key={star}
                   onClick={() => setActiveFilter(star)}
-                  className={`px-6 py-2 rounded-full border text-sm font-bold transition-all duration-300 ${
+                  className={`px-4 md:px-6 py-2 rounded-full border text-xs md:text-sm font-bold transition-all duration-300 whitespace-nowrap snap-tight ${
                     activeFilter === star
-                      ? "bg-[#4a3733] text-white border-[#4a3733] shadow-lg scale-105"
+                      ? "bg-[#4a3733] text-white border-[#4a3733] shadow-md md:shadow-lg scale-105"
                       : "bg-white text-[#4a3733] border-gray-200 hover:border-[#4a3733]"
                   }`}
                 >
@@ -161,7 +167,7 @@ const UserHome = () => {
             </div>
 
             {/* --- Filtered Review Cards --- */}
-            <div className="space-y-8">
+            <div className="space-y-6 md:space-y-8">
               {filteredReviews.length > 0 ? (
                 filteredReviews.map((rev) => (
                   <UserRatingCard
@@ -174,7 +180,7 @@ const UserHome = () => {
                   />
                 ))
               ) : (
-                <div className="py-20 text-center text-gray-400 italic text-lg">
+                <div className="py-12 md:py-20 text-center text-gray-400 italic text-base md:text-lg">
                   No {activeFilter} star ratings found for Calidro.
                 </div>
               )}
