@@ -10,6 +10,11 @@ const OverviewContact = () => {
     weekendHours: "8:00am - 11:00pm",
   });
 
+  // Mobile View Detection Utility Function
+  const isMobileView = () => {
+    return window.innerWidth < 1024; // 1024px matches Tailwind's lg breakpoint
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setContact((prev) => ({ ...prev, [name]: value }));
