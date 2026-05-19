@@ -151,6 +151,22 @@ const AdminBook = () => {
                   {selectedBooking.noOfGuests} Pax
                 </p>
               </div>
+              <div>
+                <p className="text-gray-400 font-bold uppercase text-[10px]">
+                  Ingress
+                </p>
+                <p className="font-medium text-gray-700">
+                  {selectedBooking.ingress}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 font-bold uppercase text-[10px]">
+                  Egress
+                </p>
+                <p className="font-medium text-gray-700">
+                  {selectedBooking.egress}
+                </p>
+              </div>
               <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-100 grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-400 font-bold uppercase text-[10px]">
