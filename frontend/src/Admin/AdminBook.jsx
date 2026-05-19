@@ -305,7 +305,6 @@ const AdminBook = () => {
               </table>
 
               {/* MOBILE CARD VIEW */}
-              {/* MOBILE CARD VIEW */}
               <div className="md:hidden flex flex-col p-2 gap-3">
                 {displayedBookings.map((b) => (
                   <div
@@ -339,8 +338,8 @@ const AdminBook = () => {
                       </p>
                     </div>
 
-                    {/* MOBILE PAYMENT CONTROLS */}
-                    <div className="border-t pt-3 mt-1 flex flex-col gap-2">
+                    {/* COMPACT MOBILE PAYMENT CONTROLS */}
+                    <div className="border-t pt-3 mt-1 grid grid-cols-5 gap-2 items-center">
                       <select
                         value={b.paymentType || "partial"}
                         onChange={(e) =>
@@ -350,7 +349,7 @@ const AdminBook = () => {
                             b.payment_note,
                           )
                         }
-                        className={`w-full rounded-full px-3 py-1.5 text-[10px] font-bold uppercase cursor-pointer ${getPaymentTypeStyles(b.paymentType)}`}
+                        className={`col-span-2 rounded-full px-2 py-1.5 text-[9px] font-bold uppercase cursor-pointer ${getPaymentTypeStyles(b.paymentType)}`}
                       >
                         <option value="partial">Partial</option>
                         <option value="full">Full</option>
@@ -362,7 +361,7 @@ const AdminBook = () => {
                       <input
                         type="text"
                         defaultValue={b.payment_note || ""}
-                        placeholder="Note: cash eg."
+                        placeholder="Note: cash..."
                         onBlur={(e) =>
                           handlePaymentUpdate(
                             b.booking_id || b.id,
@@ -370,12 +369,12 @@ const AdminBook = () => {
                             e.target.value,
                           )
                         }
-                        className="w-full text-[10px] border border-gray-200 rounded-lg p-2 outline-none"
+                        className="col-span-3 text-[10px] border-b border-gray-300 pb-1 outline-none"
                       />
 
                       <button
                         onClick={() => setSelectedBooking(b)}
-                        className="text-blue-600 text-[10px] font-bold uppercase underline mt-1"
+                        className="col-span-5 text-blue-600 text-[10px] font-bold uppercase underline mt-1 self-start"
                       >
                         View Full Details
                       </button>
