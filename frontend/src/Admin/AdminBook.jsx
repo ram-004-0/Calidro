@@ -287,12 +287,29 @@ const AdminBook = () => {
                         {b.bookingStatus}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      {b.eventName} | {new Date(b.date).toLocaleDateString()}
-                    </p>
+
+                    <div className="text-xs text-gray-600 flex flex-col gap-0.5">
+                      <p>
+                        <span className="font-bold text-gray-400">EVENT:</span>{" "}
+                        {b.eventName}
+                      </p>
+                      <p>
+                        <span className="font-bold text-gray-400">DATE:</span>{" "}
+                        {new Date(b.date).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <span className="font-bold text-gray-400">PHONE:</span>{" "}
+                        {b.contactNo}
+                      </p>
+                      <p>
+                        <span className="font-bold text-gray-400">EMAIL:</span>{" "}
+                        {b.email}
+                      </p>
+                    </div>
+
                     <button
                       onClick={() => setSelectedBooking(b)}
-                      className="text-blue-600 text-[10px] font-bold uppercase underline self-start"
+                      className="text-blue-600 text-[10px] font-bold uppercase underline self-start mt-1"
                     >
                       View Details & Update Payment
                     </button>
