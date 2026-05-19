@@ -220,7 +220,9 @@ const UserHeader = () => {
               </div>
 
               {isNotifyOpen && (
-                <div className="fixed md:absolute left-4 right-4 md:left-auto md:right-0 mx-auto md:mx-0 mt-4 w-auto md:w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
+                /* MODIFIED CONTAINER: Uses 'fixed right-4 left-4 max-w-[calc(100vw-2rem)]' on mobile 
+                   to securely anchor it to the right side while preventing horizontal clipping. */
+                <div className="fixed md:absolute right-4 left-auto md:right-0 mt-4 max-w-[calc(100vw-2rem)] w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
                   {/* HEADER AREA WITH SELECT ALL & DELETE */}
                   <div className="flex flex-col gap-2 border-b pb-2 mb-2">
                     <div className="flex justify-between items-center">
