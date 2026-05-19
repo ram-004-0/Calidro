@@ -281,6 +281,7 @@ const AdminBook = () => {
                         <input
                           type="text"
                           defaultValue={b.payment_note || ""}
+                          placeholder="Note: cash eg."
                           onBlur={(e) =>
                             handlePaymentUpdate(
                               b.booking_id || b.id,
