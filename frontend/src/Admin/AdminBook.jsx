@@ -305,11 +305,12 @@ const AdminBook = () => {
               </table>
 
               {/* MOBILE CARD VIEW */}
+              {/* MOBILE CARD VIEW */}
               <div className="md:hidden flex flex-col p-2 gap-3">
                 {displayedBookings.map((b) => (
                   <div
                     key={b.booking_id || b.id}
-                    className="bg-white border rounded-xl p-4 shadow-sm border-gray-100 flex flex-col gap-2"
+                    className="bg-white border rounded-xl p-4 shadow-sm border-gray-100 flex flex-col gap-3"
                   >
                     <div className="flex justify-between items-center">
                       <h3 className="font-bold text-sm text-[#4a3733]">
@@ -321,7 +322,8 @@ const AdminBook = () => {
                         {b.bookingStatus}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-600 flex flex-col gap-0.5">
+
+                    <div className="text-xs text-gray-600 flex flex-col gap-1">
                       <p>
                         <strong>EVENT:</strong> {b.eventName}
                       </p>
@@ -336,12 +338,48 @@ const AdminBook = () => {
                         <strong>EMAIL:</strong> {b.email}
                       </p>
                     </div>
-                    <button
-                      onClick={() => setSelectedBooking(b)}
-                      className="text-blue-600 text-[10px] font-bold uppercase underline self-start mt-1"
-                    >
-                      View Details
-                    </button>
+
+                    {/* MOBILE PAYMENT CONTROLS */}
+                    <div className="border-t pt-3 mt-1 flex flex-col gap-2">
+                      <select
+                        value={b.paymentType || "partial"}
+                        onChange={(e) =>
+                          handlePaymentUpdate(
+                            b.booking_id || b.id,
+                            e.target.value,
+                            b.payment_note,
+                          )
+                        }
+                        className={`w-full rounded-full px-3 py-1.5 text-[10px] font-bold uppercase cursor-pointer ${getPaymentTypeStyles(b.paymentType)}`}
+                      >
+                        <option value="partial">Partial</option>
+                        <option value="full">Full</option>
+                        {b.paid > 5000 && (
+                          <option value="refund">Refund</option>
+                        )}
+                      </select>
+
+                      <input
+                        type="text"
+                        defaultValue={b.payment_note || ""}
+                        placeholder="Note: cash eg."
+                        onBlur={(e) =>
+                          handlePaymentUpdate(
+                            b.booking_id || b.id,
+                            b.paymentType || "partial",
+                            e.target.value,
+                          )
+                        }
+                        className="w-full text-[10px] border border-gray-200 rounded-lg p-2 outline-none"
+                      />
+
+                      <button
+                        onClick={() => setSelectedBooking(b)}
+                        className="text-blue-600 text-[10px] font-bold uppercase underline mt-1"
+                      >
+                        View Full Details
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
