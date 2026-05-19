@@ -68,6 +68,22 @@ router.post("/create-booking-and-checkout", async (req, res) => {
       payment_methods,
     } = req.body;
 
+    // ⚡ ADDED CONCURRENCY SHIELD HERE ⚡
+    const [existingBookings] = await db.query(
+      "SELECT booking_id FROM booking WHERE event_date = ? AND status IN ('pending', 'confirmed')",
+      [eventDate],
+    );
+
+    if (existingBookings.length > 0) {
+      console.log(`❌ BLOCKING: Date ${eventDate} is already taken.`);
+      return res.status(409).json({
+        error: "Conflict",
+        details:
+          "This date was secured by another client just moments ago. Your account has not been charged.",
+      });
+    }
+    // ⚡ END OF CONCURRENCY SHIELD ⚡
+
     const rawGuests = req.body.noOfGuests || req.body.guests || 0;
     const finalGuestCount = parseInt(rawGuests, 10);
 
@@ -707,6 +723,25 @@ router.put("/:id/update-payment-type", async (req, res) => {
   } catch (err) {
     console.error("Backend Error:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// New Endpoint: Check if a specific date is already taken
+router.get("/check-availability", async (req, res) => {
+  const { date } = req.query;
+  if (!date) {
+    return res.status(400).json({ error: "Date parameter is required" });
+  }
+
+  try {
+    const [results] = await db.query(
+      "SELECT booking_id FROM booking WHERE event_date = ? AND status IN ('pending', 'confirmed')",
+      [date],
+    );
+    res.status(200).json({ isAvailable: results.length === 0 });
+  } catch (err) {
+    console.error("Availability query error:", err);
+    res.status(500).json({ error: "Database verification failed" });
   }
 });
 

@@ -26,6 +26,8 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
   const isRestricted = state?.paymentTypeRestriction === "Full";
   const amountToPayFromState = state?.amountToPay;
 
+  const targetDate = bookingData?.eventDate || bookingData?.event_date;
+
   const [paymentType, setPaymentType] = useState(
     isRestricted ? "full" : "partial",
   );
@@ -159,11 +161,47 @@ const PaymentPage = ({ onBack, bookingData: propBookingData }) => {
         window.location.href = response.data.checkout_url;
       }
     } catch (err) {
-      alert("Error: " + (err.response?.data?.details || err.message));
+      if (err.response?.status === 409) {
+        alert(err.response.data.details || "This date is no longer available.");
+        navigate("/userbook");
+      } else {
+        alert(
+          "Error initiating checkout: " +
+            (err.response?.data?.error || err.message),
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isMounted || !targetDate || isRestricted) return;
+    const checkAvailabilityRealtime = async () => {
+      try {
+        const response = await axios.get(
+          `https://calidro-production.up.railway.app/api/bookings/check-availability`,
+          { params: { date: targetDate } },
+        );
+
+        // If another user completed payment, this will return false
+        if (!response.data.isAvailable) {
+          alert(
+            "Notice: This date was just officially booked by another user while you were processing your request. Redirecting you back to select a new date.",
+          );
+          navigate("/userbook");
+        }
+      } catch (error) {
+        console.error("Silent availability check failed:", error);
+      }
+    };
+
+    checkAvailabilityRealtime();
+
+    const intervalId = setInterval(checkAvailabilityRealtime, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [targetDate, navigate]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 p-8">
