@@ -111,7 +111,7 @@ const AdminBook = () => {
     <div className="min-h-screen bg-[#433633] text-[#4a3733] flex flex-col h-full relative">
       <AdminHeader />
 
-      {/* MODAL OVERLAY - Unchanged */}
+      {/* MODAL OVERLAY */}
       {selectedBooking && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[95vh] flex flex-col">
@@ -201,7 +201,7 @@ const AdminBook = () => {
         </div>
       )}
 
-      {/* TABLE/CARD SECTION */}
+      {/* TABLE SECTION */}
       <section className="relative pb-2 w-full">
         <div className="max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl h-[600px] flex overflow-hidden">
           <div className="p-6 flex flex-col w-full h-full">
@@ -227,7 +227,7 @@ const AdminBook = () => {
             </div>
 
             <div className="bg-white border rounded-lg shadow-lg flex-1 overflow-auto">
-              {/* DESKTOP TABLE - UNCHANGED */}
+              {/* DESKTOP TABLE */}
               <table className="hidden md:table table-fixed w-full min-w-[1000px] text-left border-collapse">
                 <thead className="sticky top-0 bg-white z-10 border-b shadow-sm">
                   <tr>
@@ -242,51 +242,68 @@ const AdminBook = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {displayedBookings.map((b) => {
-                    const currentPaymentType = b.paymentType || "partial";
-                    return (
-                      <tr
-                        key={b.booking_id || b.id}
-                        className="hover:bg-gray-50"
-                      >
-                        <td className="py-4 px-2 truncate">{b.userName}</td>
-                        <td className="py-4 px-2 truncate">{b.contactNo}</td>
-                        <td className="py-4 px-2 truncate">{b.email}</td>
-                        <td className="py-4 px-2 truncate">{b.eventName}</td>
-                        <td className="py-4 px-2">
-                          {new Date(b.date).toLocaleDateString()}
-                        </td>
-                        <td className="py-4 px-2">
-                          {b.typeOfEvent}
-                          <button
-                            onClick={() => setSelectedBooking(b)}
-                            className="block text-blue-600 text-[10px] mt-1 hover:underline font-bold uppercase"
-                          >
-                            View
-                          </button>
-                        </td>
-                        <td className="py-4 px-2">
-                          {/* Simplified Payment Dropdown for logic consistency */}
-                          <span
-                            className={`px-2 py-1 text-[10px] rounded-full ${getPaymentTypeStyles(currentPaymentType)}`}
-                          >
-                            {currentPaymentType}
-                          </span>
-                        </td>
-                        <td className="py-4 px-2">
-                          <span
-                            className={`px-3 py-1 rounded-full text-[10px] font-bold ${getStatusStyles(b.bookingStatus)}`}
-                          >
-                            {b.bookingStatus}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {displayedBookings.map((b) => (
+                    <tr key={b.booking_id || b.id} className="hover:bg-gray-50">
+                      <td className="py-4 px-2 truncate">{b.userName}</td>
+                      <td className="py-4 px-2 truncate">{b.contactNo}</td>
+                      <td className="py-4 px-2 truncate">{b.email}</td>
+                      <td className="py-4 px-2 truncate">{b.eventName}</td>
+                      <td className="py-4 px-2">
+                        {new Date(b.date).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 px-2">
+                        {b.typeOfEvent}
+                        <button
+                          onClick={() => setSelectedBooking(b)}
+                          className="block text-blue-600 text-[10px] mt-1 hover:underline font-bold uppercase"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                      <td className="py-4 px-2">
+                        <select
+                          value={b.paymentType || "partial"}
+                          onChange={(e) =>
+                            handlePaymentUpdate(
+                              b.booking_id || b.id,
+                              e.target.value,
+                              b.payment_note,
+                            )
+                          }
+                          className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase cursor-pointer ${getPaymentTypeStyles(b.paymentType)}`}
+                        >
+                          <option value="partial">Partial</option>
+                          <option value="full">Full</option>
+                          {b.paid > 5000 && (
+                            <option value="refund">Refund</option>
+                          )}
+                        </select>
+                        <input
+                          type="text"
+                          defaultValue={b.payment_note || ""}
+                          onBlur={(e) =>
+                            handlePaymentUpdate(
+                              b.booking_id || b.id,
+                              b.paymentType || "partial",
+                              e.target.value,
+                            )
+                          }
+                          className="text-[10px] border-b border-gray-300 w-full mt-1 outline-none"
+                        />
+                      </td>
+                      <td className="py-4 px-2">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold ${getStatusStyles(b.bookingStatus)}`}
+                        >
+                          {b.bookingStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
 
-              {/* MOBILE CARD VIEW - NEW ADDITION */}
+              {/* MOBILE CARD VIEW */}
               <div className="md:hidden flex flex-col p-2 gap-3">
                 {displayedBookings.map((b) => (
                   <div
@@ -303,31 +320,26 @@ const AdminBook = () => {
                         {b.bookingStatus}
                       </span>
                     </div>
-
                     <div className="text-xs text-gray-600 flex flex-col gap-0.5">
                       <p>
-                        <span className="font-bold text-gray-400">EVENT:</span>{" "}
-                        {b.eventName}
+                        <strong>EVENT:</strong> {b.eventName}
                       </p>
                       <p>
-                        <span className="font-bold text-gray-400">DATE:</span>{" "}
+                        <strong>DATE:</strong>{" "}
                         {new Date(b.date).toLocaleDateString()}
                       </p>
                       <p>
-                        <span className="font-bold text-gray-400">PHONE:</span>{" "}
-                        {b.contactNo}
+                        <strong>PHONE:</strong> {b.contactNo}
                       </p>
                       <p>
-                        <span className="font-bold text-gray-400">EMAIL:</span>{" "}
-                        {b.email}
+                        <strong>EMAIL:</strong> {b.email}
                       </p>
                     </div>
-
                     <button
                       onClick={() => setSelectedBooking(b)}
                       className="text-blue-600 text-[10px] font-bold uppercase underline self-start mt-1"
                     >
-                      View Details & Update Payment
+                      View Details
                     </button>
                   </div>
                 ))}
