@@ -49,10 +49,8 @@ const UserHeader = () => {
 
   const handleSelectAll = () => {
     if (selectedNotifs.length === userNotifications.length) {
-      // If everything is already selected, clear the selection
       setSelectedNotifs([]);
     } else {
-      // Otherwise, select all valid notification IDs
       const allIds = userNotifications.map((n) => n.notif_id);
       setSelectedNotifs(allIds);
     }
@@ -64,13 +62,11 @@ const UserHeader = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Send selected notification IDs to your batch-delete endpoint
       await axios.delete(`${API_URL}/api/notifications/delete-selected`, {
         headers: { Authorization: `Bearer ${token}` },
         data: { notifIds: selectedNotifs },
       });
 
-      // Optimistic state change updates UI immediately
       const remainingNotifs = userNotifications.filter(
         (n) => !selectedNotifs.includes(n.notif_id),
       );
@@ -224,7 +220,7 @@ const UserHeader = () => {
               </div>
 
               {isNotifyOpen && (
-                <div className="absolute right-0 mt-4 w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
+                <div className="fixed md:absolute left-4 right-4 md:left-auto md:right-0 mx-auto md:mx-0 mt-4 w-auto md:w-72 bg-white shadow-xl rounded-2xl p-4 text-[#4a3733] z-50">
                   {/* HEADER AREA WITH SELECT ALL & DELETE */}
                   <div className="flex flex-col gap-2 border-b pb-2 mb-2">
                     <div className="flex justify-between items-center">
