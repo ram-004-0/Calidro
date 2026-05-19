@@ -65,17 +65,13 @@ const UserBook = () => {
     let sorted = [...bookings];
     switch (sortType) {
       case "newest":
-        // Sort by event date (Newest first)
         return sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
       case "oldest":
-        // Sort by event date (Oldest first)
         return sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
       case "dateAdded":
-        // Assuming your DB returns a created_at or id that increments
         return sorted.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at),
+          (a, b) => (b.booking_id || b.id || 0) - (a.booking_id || a.id || 0),
         );
-
       default:
         return sorted;
     }
