@@ -138,12 +138,12 @@ const UserBook = () => {
         </div>
       </section>
 
-      <div className="w-full shrink-0">
-        <div className="flex justify-end text-[#4a3733] uppercase font-medium px-7 py-3">
+      <div className="w-full shrink-0 px-6 pb-4">
+        <div className="max-w-365 w-full mx-auto flex justify-center md:justify-end text-[#4a3733] uppercase font-medium">
           <Link
             to={isProfileComplete ? "/booking" : "#"}
             onClick={handleCreateBookingClick}
-            className={`px-10 py-3 rounded-full text-sm font-bold uppercase transition-all shadow-md ${
+            className={`w-full md:w-auto text-center px-10 py-3 rounded-full text-sm font-bold uppercase transition-all shadow-md ${
               isProfileComplete
                 ? "bg-[#f4dfba] hover:bg-white text-[#4a3733]"
                 : "bg-gray-400 cursor-not-allowed text-gray-200"
