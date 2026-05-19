@@ -10,10 +10,8 @@ const OverviewContact = () => {
     weekendHours: "8:00am - 11:00pm",
   });
 
-  // Mobile View Detection Utility Function
-  const isMobileView = () => {
-    return window.innerWidth < 1024; // 1024px matches Tailwind's lg breakpoint
-  };
+  const isMobileView = () =>
+    typeof window !== "undefined" && window.innerWidth < 1024;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,7 +21,6 @@ const OverviewContact = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Updated Contact Info:", contact);
-    // Add your axios/fetch call here
   };
 
   return (
@@ -32,11 +29,12 @@ const OverviewContact = () => {
         Contact Information
       </h1>
 
-      <div className="flex gap-6 items-start">
-        {/* Main Form Card */}
-        <div className="bg-white rounded-2xl shadow-md p-6 w-105 border border-gray-100">
+      {/* Changed 'flex' to 'flex-col lg:flex-row' to stack on mobile */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Main Form Card: Removed fixed 'w-105', now uses 'w-full' */}
+        <div className="bg-white rounded-2xl shadow-md p-6 w-full lg:w-[420px] border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Phone Field */}
+            {/* ... (Fields remain exactly the same as your original code) ... */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                 <Phone size={12} /> Phone Number
@@ -50,7 +48,6 @@ const OverviewContact = () => {
               />
             </div>
 
-            {/* Email Field */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                 <Mail size={12} /> Email Address
@@ -64,7 +61,6 @@ const OverviewContact = () => {
               />
             </div>
 
-            {/* Location Field */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                 <MapPin size={12} /> Location
@@ -78,7 +74,6 @@ const OverviewContact = () => {
               />
             </div>
 
-            {/* Hours Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
@@ -89,7 +84,6 @@ const OverviewContact = () => {
                   name="weekdayHours"
                   value={contact.weekdayHours}
                   onChange={handleChange}
-                  placeholder="8:00am-9:00pm"
                   className="w-full bg-[#fcfaf9] border border-gray-100 rounded-xl p-3 text-xs text-[#4a3733] focus:outline-none focus:border-[#4a3733]"
                 />
               </div>
@@ -102,7 +96,6 @@ const OverviewContact = () => {
                   name="weekendHours"
                   value={contact.weekendHours}
                   onChange={handleChange}
-                  placeholder="8:00am-11:00pm"
                   className="w-full bg-[#fcfaf9] border border-gray-100 rounded-xl p-3 text-xs text-[#4a3733] focus:outline-none focus:border-[#4a3733]"
                 />
               </div>
@@ -112,14 +105,13 @@ const OverviewContact = () => {
               type="submit"
               className="mt-4 w-full bg-[#4a3733] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#3a2c28] transition-all shadow-sm active:scale-95"
             >
-              <Save size={18} />
-              Save Contact Info
+              <Save size={18} /> Save Contact Info
             </button>
           </form>
         </div>
 
-        {/* Live Preview / Sidebar */}
-        <div className="w-80 space-y-4">
+        {/* Live Preview / Sidebar: Removed fixed 'w-80', now uses 'w-full' */}
+        <div className="w-full lg:w-80 space-y-4">
           <div className="bg-[#fdfcfb] p-6 rounded-2xl shadow-sm border border-dashed border-gray-300">
             <h2 className="text-sm font-bold mb-4 text-[#4a3733] uppercase flex items-center gap-2">
               <Info size={16} /> Live Preview
