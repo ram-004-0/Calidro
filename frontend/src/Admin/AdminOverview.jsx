@@ -50,16 +50,16 @@ const AdminOverview = () => {
         <div
           className={`max-w-365 mx-auto bg-[#f1f1f1] rounded-3xl shadow-xl flex ${
             isMobileView()
-              ? "flex-col min-h-[600px]"
-              : "h-[600px] overflow-hidden" // Kept exact original desktop overflow hidden
+              ? "flex-col h-auto" // Removes fixed heights on mobile so it expands naturally
+              : "h-[600px] overflow-hidden" // Exact original layout desktop rules
           }`}
         >
           {/* ---------------- SIDE BAR ---------------- */}
-          {/* Added 'sticky top-20 z-30' on mobile to anchor beneath your AdminHeader */}
+          {/* Kept normal block placement on mobile so it pushes content below it when expanded */}
           <div
             className={`bg-[#efe7e3] p-6 flex flex-col shrink-0 ${
               isMobileView()
-                ? "w-full border-b border-[#e7d8cf] gap-3 sticky top-20 z-30 shadow-md rounded-t-3xl"
+                ? "w-full border-b border-[#e7d8cf] gap-3 rounded-t-3xl"
                 : "w-64"
             }`}
           >
@@ -87,7 +87,7 @@ const AdminOverview = () => {
             </div>
 
             {(!isMobileView() || isSidebarOpen) && (
-              <div className="flex flex-col gap-2 transition-all duration-200 animate-in fade-in slide-in-from-top-2">
+              <div className="flex flex-col gap-2 transition-all duration-200">
                 <button
                   onClick={() => handleTabClick("overview-virtualTour")}
                   className={getButtonClass("overview-virtualTour")}
@@ -127,9 +127,9 @@ const AdminOverview = () => {
           </div>
 
           {/* ---------------- CONTENT AREA ---------------- */}
-          {/* Removed strict desktop overflow rules on mobile layouts so window scrolling works natively */}
+          {/* Placed relative and static underneath the sidebar block flow on mobile viewports */}
           <div
-            className={`flex-1 ${isMobileView() ? "p-4" : "p-8 overflow-y-auto"}`}
+            className={`flex-1 ${isMobileView() ? "p-4 h-auto" : "p-8 overflow-y-auto"}`}
           >
             {activeTab === "overview-virtualTour" && <OverviewVirtualTour />}
             {activeTab === "overview-aboutUs" && <OverviewAboutUs />}
