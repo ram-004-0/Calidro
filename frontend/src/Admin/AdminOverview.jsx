@@ -56,7 +56,9 @@ const AdminOverview = () => {
           {/* ---------------- SIDE BAR ---------------- */}
           <div
             className={`bg-[#efe7e3] p-6 flex flex-col shrink-0 ${
-              isMobileView() ? "w-full border-b border-[#e7d8cf] z-20" : "w-64"
+              isMobileView()
+                ? "w-full border-b border-[#e7d8cf] z-20"
+                : "w-64 rounded-tl-3xl rounded-bl-3xl"
             }`}
           >
             <div
